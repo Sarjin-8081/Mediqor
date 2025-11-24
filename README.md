@@ -1,1 +1,1 @@
-# Mediqor
+# MediQor
