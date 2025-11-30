@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">MediQor</string>
+    <string name="title_activity_onboarding">OnboardingActivity</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_register">RegisterActivity</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="title_activity_pharmacy_list">PharmacyListActivity</string>
+    <string name="title_activity_pharmacy_details">PharmacyDetailsActivity</string>
+    <string name="title_activity_medicine_details">MedicineDetailsActivity</string>
+    <string name="title_activity_cart">CartActivity</string>
+    <string name="title_activity_checkout">CheckoutActivity</string>
+    <string name="title_activity_orders">OrdersActivity</string>
+    <string name="title_activity_hospital_clinic">HospitalClinicActivity</string>
+    <string name="title_activity_chatbot">ChatbotActivity</string>
+    <string name="title_activity_profile">ProfileActivity</string>
+    <string name="title_activity_admin_login">AdminLoginActivity</string>
+    <string name="title_activity_manage_orders">ManageOrdersActivity</string>
+    <string name="title_activity_add_product">AddProductActivity</string>
+    <string name="title_activity_add_pharmacy">AddPharmacyActivity</string>
+</resources>

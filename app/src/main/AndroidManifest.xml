@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MediQor">
+        <activity
+            android:name=".ui.screens.admin.AddPharmacyActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_pharmacy"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.admin.AddProductActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_product"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.admin.ManageOrdersActivity"
+            android:exported="false"
+            android:label="@string/title_activity_manage_orders"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.admin.AdminLoginActivity"
+            android:exported="false"
+            android:label="@string/title_activity_admin_login"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.profile.ProfileActivity"
+            android:exported="false"
+            android:label="@string/title_activity_profile"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.chatbot.ChatbotActivity"
+            android:exported="false"
+            android:label="@string/title_activity_chatbot"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.hospital.HospitalClinicActivity"
+            android:exported="false"
+            android:label="@string/title_activity_hospital_clinic"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.orders.OrdersActivity"
+            android:exported="false"
+            android:label="@string/title_activity_orders"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.checkout.CheckoutActivity"
+            android:exported="false"
+            android:label="@string/title_activity_checkout"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.cart.CartActivity"
+            android:exported="false"
+            android:label="@string/title_activity_cart"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.medicine.MedicineDetailsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_medicine_details"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.pharmacy.PharmacyDetailsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_pharmacy_details"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.pharmacy.PharmacyListActivity"
+            android:exported="false"
+            android:label="@string/title_activity_pharmacy_list"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.home.HomeActivity"
+            android:exported="false"
+            android:label="@string/title_activity_home"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.auth.RegisterActivity"
+            android:exported="false"
+            android:label="@string/title_activity_register"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.auth.LoginActivity"
+            android:exported="false"
+            android:label="@string/title_activity_login"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.auth.OnboardingActivity"
+            android:exported="false"
+            android:label="@string/title_activity_onboarding"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MediQor">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
