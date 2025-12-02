@@ -301,4 +301,3 @@ fun PreviewLogin() {
 
 // Paste this at the very bottom of your file
 class DashboardActivity : ComponentActivity()
-class RegistrationActivity : ComponentActivity()
