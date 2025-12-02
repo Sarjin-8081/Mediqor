@@ -34,9 +34,15 @@
             android:theme="@style/Theme.MediQor" />
         <activity
             android:name=".ui.screens.profile.ProfileActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_profile"
-            android:theme="@style/Theme.MediQor" />
+            android:theme="@style/Theme.MediQor" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
         <activity
             android:name=".ui.screens.chatbot.ChatbotActivity"
             android:exported="false"
@@ -84,21 +90,17 @@
             android:theme="@style/Theme.MediQor" />
         <activity
             android:name=".ui.screens.auth.RegisterActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_register"
             android:theme="@style/Theme.MediQor" />
+
+
         <activity
             android:name=".ui.screens.auth.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login1"
-            android:theme="@style/Theme.MediQor">
+            android:theme="@style/Theme.MediQor"/>
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-        </activity>
 
         <activity
             android:name=".ui.screens.auth.OnboardingActivity"
