@@ -1,5 +1,4 @@
 package com.mediqor.app.ui.screens.auth
-
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
@@ -47,7 +46,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mediqor.app.R
-import com.mediqor.app.ui.theme.Purple80
+import com.mediqor.app.ui.theme.MintGreen
+
 import com.mediqor.app.ui.theme.PurpleGrey80
 
 
@@ -91,7 +91,7 @@ fun RegistrationBody() {
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp,
-                    color = Color.Blue
+                    color = Color.Black
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -149,7 +149,7 @@ fun RegistrationBody() {
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("***") },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = PurpleGrey80,
+                    focusedContainerColor = MintGreen,
                     unfocusedContainerColor = PurpleGrey80,
 
                     unfocusedIndicatorColor = Color.Transparent
@@ -198,6 +198,10 @@ fun RegistrationBody() {
                     .height(60.dp),
                 elevation = ButtonDefaults.buttonElevation(15.dp),
                 shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MintGreen,)
+
+
 
             ) {
                 Text("Sign up")
@@ -235,11 +239,16 @@ fun CharacterNew(
             .fillMaxWidth()
             .padding(horizontal = 15.dp),
         shape = RoundedCornerShape(15.dp),
+
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = PurpleGrey80,
+
+            focusedContainerColor = MintGreen,
             unfocusedContainerColor = PurpleGrey80,
-            unfocusedIndicatorColor = Color.Transparent
-        )
+            unfocusedIndicatorColor = Color.Transparent,
+
+
+
+            )
     )
 }
 
