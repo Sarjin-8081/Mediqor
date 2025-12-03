@@ -168,7 +168,7 @@ fun RegistrationBody() {
                         checkmarkColor = Color.White
                     )
                 )
-                Text("I agree to terms & conditions")
+                Text("I agree to the terms & conditions")
             }
 
             Button(
@@ -211,7 +211,7 @@ fun RegistrationBody() {
                 buildAnnotatedString {
                     append("Already have account? ")
                     withStyle(SpanStyle(color = Color.Blue)) {
-                        append("Sign up")
+                        append("LOGIN")
                     }
                 },
                 modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp)
