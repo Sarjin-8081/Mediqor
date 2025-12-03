@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">MediQor</string>
     <string name="title_activity_onboarding">OnboardingActivity</string>
+    <string name="title_activity_splash">Splash</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_register">RegisterActivity</string>
     <string name="title_activity_home">HomeActivity</string>

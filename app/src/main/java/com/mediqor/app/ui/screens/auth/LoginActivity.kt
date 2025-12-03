@@ -255,17 +255,15 @@ fun LoginBody() {
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                .padding(horizontal = 15.dp,
-                    vertical = 10.dp)
-                .clickable{
-                    val intent = Intent(
-                        context,
-                        RegistrationActivity::class.java
-                    )
+                    .padding(horizontal = 15.dp, vertical = 10.dp)
+                    .clickable{
+                        val intent = Intent(
+                            context,
+                            RegistrationActivity::class.java
+                        )
+                        context.startActivity(intent)
+                    })
 
-                    context.startActivity(intent)
-
-                })
         }
     }
 }
@@ -301,4 +299,3 @@ fun PreviewLogin() {
 
 // Paste this at the very bottom of your file
 class DashboardActivity : ComponentActivity()
-class RegistrationActivity : ComponentActivity()
