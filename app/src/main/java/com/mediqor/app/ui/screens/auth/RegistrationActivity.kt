@@ -1,11 +1,16 @@
 package com.mediqor.app.ui.screens.auth
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +18,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -32,12 +39,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -71,7 +80,7 @@ fun RegistrationBody() {
     var terms by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = context as Activity
+    val activity = try { context as Activity } catch (e: Exception) { null }
 
     val sharedPreference = context.getSharedPreferences("User", Context.MODE_PRIVATE)
     val editor = sharedPreference.edit()
@@ -80,180 +89,165 @@ fun RegistrationBody() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-        )
-        {
+                .padding(horizontal = 24.dp)
+                .background(Color.White)
+        ) {
+            // Logo top-right
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.mediqor),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(80.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(50.dp))
 
             Text(
-                "Sign Up",
+                "SIGN UP",
                 style = TextStyle(
                     textAlign = TextAlign.Center,
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    color = Color.Black
+                    fontSize = 28.sp
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            Text(
-                "Enter your email",
-                style = TextStyle(fontSize = 16.sp),
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            CharacterNew(
+            // Email field
+            OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = "Username",
-
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp),
+                shape = RoundedCornerShape(15.dp),
+                placeholder = { Text("Email") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color(0xFF0B8FAC),
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Text(
-                "Enter your password",
-                style = TextStyle(fontSize = 16.sp),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
+            // Password field
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 trailingIcon = {
                     IconButton(onClick = { visibility = !visibility }) {
                         Icon(
-                            painter = painterResource(
-                                if (visibility)
-                                    R.drawable.baseline_visibility_24
-                                else
-                                    R.drawable.baseline_visibility_off_24
-                            ),
+                            painter = if (visibility)
+                                painterResource(R.drawable.baseline_visibility_off_24)
+                            else
+                                painterResource(R.drawable.baseline_visibility_24),
                             contentDescription = null
                         )
                     }
                 },
-                visualTransformation = if (visibility)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
+                visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp),
                 shape = RoundedCornerShape(15.dp),
-                placeholder = { Text("***") },
+                placeholder = { Text("Password") },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MintGreen,
-                    unfocusedContainerColor = PurpleGrey80,
-
-                    unfocusedIndicatorColor = Color.Transparent
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color(0xFF0B8FAC),
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 )
             )
 
+            Spacer(modifier = Modifier.height(15.dp))
+
+            // Terms & conditions
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
+                androidx.compose.material3.Checkbox(
                     checked = terms,
                     onCheckedChange = { terms = it },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = Color.Blue,
+                    colors = androidx.compose.material3.CheckboxDefaults.colors(
+                        checkedColor = Color(0xFF0B8FAC),
                         checkmarkColor = Color.White
                     )
                 )
                 Text("I agree to the terms & conditions")
             }
 
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Sign Up Button
             Button(
                 onClick = {
-
                     if (email.isEmpty() || password.isEmpty()) {
                         Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-
                     if (!terms) {
                         Toast.makeText(context, "Please agree to terms & conditions", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-
                     editor.putString("email", email)
                     editor.putString("password", password)
                     editor.apply()
-
                     Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
-                    activity.finish()
-
+                    activity?.finish()
                 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0B8FAC),
+                    contentColor = Color.White
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp)
                     .height(60.dp),
-                elevation = ButtonDefaults.buttonElevation(15.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MintGreen,)
-
-
-
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 15.dp),
+                shape = RoundedCornerShape(32.dp)
             ) {
-                Text("Sign up")
+                Text("SIGN UP")
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Already have account
             Text(
                 buildAnnotatedString {
-                    append("Already have account? ")
-                    withStyle(SpanStyle(color = Color.Blue)) {
+                    append("Already have an account? ")
+                    withStyle(SpanStyle(color = Color(0xFF0B8FAC), fontWeight = FontWeight.Bold)) {
                         append("LOGIN")
                     }
                 },
-                modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp)
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp, vertical = 10.dp)
+                    .clickable {
+                        val intent = Intent(context, LoginActivity::class.java)
+                        context.startActivity(intent)
+                    }
             )
 
-            Spacer(modifier = Modifier.height(210.dp))
-
-
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
 
-@Composable
-fun CharacterNew(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(label) },
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 15.dp),
-        shape = RoundedCornerShape(15.dp),
-
-        colors = TextFieldDefaults.colors(
-
-            focusedContainerColor = MintGreen,
-            unfocusedContainerColor = PurpleGrey80,
-            unfocusedIndicatorColor = Color.Transparent,
-
-
-
-            )
-    )
-}
-
 @Preview
 @Composable
-fun RegistrationBodyPreview() {
+fun PreviewRegistration() {
     RegistrationBody()
 }
