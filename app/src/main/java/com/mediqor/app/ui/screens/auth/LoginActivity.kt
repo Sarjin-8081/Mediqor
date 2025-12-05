@@ -145,7 +145,7 @@ fun LoginBody() {
                     .padding(horizontal = 15.dp),
                 shape = RoundedCornerShape(15.dp),
                 placeholder = {
-                    Text("abc@gmail.com")
+                    Text("Email")
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email
@@ -185,7 +185,7 @@ fun LoginBody() {
                     .padding(horizontal = 15.dp),
                 shape = RoundedCornerShape(15.dp),
                 placeholder = {
-                    Text("*********")
+                    Text("Password")
                 },
 
                 colors = TextFieldDefaults.colors(
@@ -246,12 +246,13 @@ fun LoginBody() {
                 Text("LOGIN")
             }
 
-            Text(buildAnnotatedString {
-                append("Don't have an account? ")
-                withStyle(SpanStyle(color = Color(0xFF40E0D0))) {
-                    append("Sign up")
-                }
-            },
+            Text(
+                buildAnnotatedString {
+                    append("Don't have an account? ")
+                    withStyle(SpanStyle(color = Color(0xFF0B8FAC))) {
+                        append("Sign up")
+                    }
+                },
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
