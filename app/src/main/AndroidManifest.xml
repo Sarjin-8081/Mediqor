@@ -89,7 +89,7 @@
             android:label="@string/title_activity_home"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.auth.RegisterActivity"
+            android:name=".ui.screens.auth.RegistrationActivity"
             android:exported="true"
             android:label="@string/title_activity_register"
             android:theme="@style/Theme.MediQor" />
