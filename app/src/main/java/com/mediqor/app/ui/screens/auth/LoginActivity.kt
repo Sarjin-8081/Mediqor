@@ -89,25 +89,20 @@ fun LoginBody() {
     var visibility by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = try {
-        context as Activity
-    } catch (e: Exception) {
-        null   // Preview mode
-    }
-
+    val activity = try { context as Activity } catch (e: Exception) { null }
 
     val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-
-    val localEmail :String? = sharedPreferences.getString("email","")
-    val localPassword :String? = sharedPreferences.getString("password","")
+    val localEmail: String? = sharedPreferences.getString("email","")
+    val localPassword: String? = sharedPreferences.getString("password","")
 
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .background(White)
+                .background(Color.White)
         ) {
+            // Top-right logo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,16 +112,17 @@ fun LoginBody() {
                 Image(
                     painter = painterResource(id = R.drawable.mediqor),
                     contentDescription = "Logo",
-                    modifier = Modifier.size(80.dp) // Adjust size here
+                    modifier = Modifier.size(80.dp)
                 )
             }
+
             Spacer(modifier = Modifier.height(50.dp))
 
             Text(
                 "LOGIN",
                 style = TextStyle(
                     textAlign = TextAlign.Center,
-                    color = Black,
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 ),
@@ -135,41 +131,32 @@ fun LoginBody() {
 
             Spacer(modifier = Modifier.height(40.dp))
 
+            // Email Field
             OutlinedTextField(
                 value = email,
-                onValueChange = { data ->
-                    email = data
-                },
+                onValueChange = { email = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp),
                 shape = RoundedCornerShape(15.dp),
-                placeholder = {
-                    Text("abc@gmail.com")
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email
-                ),
+                placeholder = { Text("Email") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = White,
-                    unfocusedContainerColor = White,
-                    focusedIndicatorColor = Color(0xFFC49A6C),
-                    unfocusedIndicatorColor = Color(0xFFE5C9A8)
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color(0xFF0B8FAC),
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 )
-
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Password Field
             OutlinedTextField(
                 value = password,
-                onValueChange = { data ->
-                    password = data
-                },
+                onValueChange = { password = it },
                 trailingIcon = {
-                    IconButton(onClick = {
-                        visibility = !visibility
-                    }) {
+                    IconButton(onClick = { visibility = !visibility }) {
                         Icon(
                             painter = if (visibility)
                                 painterResource(R.drawable.baseline_visibility_off_24)
@@ -184,23 +171,21 @@ fun LoginBody() {
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp),
                 shape = RoundedCornerShape(15.dp),
-                placeholder = {
-                    Text("*********")
-                },
-
+                placeholder = { Text("Password") },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = White,
-                    unfocusedContainerColor = White,
-                    focusedIndicatorColor = Color(0xFFC49A6C),
-                    unfocusedIndicatorColor = Color(0xFFE5C9A8)
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color(0xFF0B8FAC),
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 )
-
             )
+
+            Spacer(modifier = Modifier.height(15.dp))
 
             Text(
                 "Forget Password",
                 style = TextStyle(
-                    color = Black,
+                    color = Color(0xFF0B8FAC),
                     textAlign = TextAlign.End
                 ),
                 modifier = Modifier
@@ -208,86 +193,51 @@ fun LoginBody() {
                     .padding(horizontal = 15.dp, vertical = 15.dp)
             )
 
-
+            // Login Button
             Button(
                 onClick = {
                     if (localEmail == email && localPassword == password) {
-                        val intent = Intent(
-                            context,
-                            DashboardActivity::class.java
-                        )
-
+                        val intent = Intent(context, OnboardingActivity::class.java)
                         context.startActivity(intent)
                         activity?.finish()
-
-
                     } else {
-                        Toast.makeText(
-                            context,
-                            "invalid details",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, "Invalid details", Toast.LENGTH_SHORT).show()
                     }
-
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF40E0D0),
+                    containerColor = Color(0xFF0B8FAC),
                     contentColor = Color.White
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp)
                     .height(60.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 15.dp
-                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 15.dp),
                 shape = RoundedCornerShape(32.dp)
             ) {
                 Text("LOGIN")
             }
 
-            Text(buildAnnotatedString {
-                append("Don't have an account? ")
-                withStyle(SpanStyle(color = Color(0xFF40E0D0))) {
-                    append("Sign up")
-                }
-            },
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Sign up redirect
+            Text(
+                buildAnnotatedString {
+                    append("Don't have an account? ")
+                    withStyle(SpanStyle(color = Color(0xFF0B8FAC), fontWeight = FontWeight.Bold)) {
+                        append("Sign up")
+                    }
+                },
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 10.dp)
                     .clickable{
-                        val intent = Intent(
-                            context,
-                            RegistrationActivity::class.java
-                        )
+                        val intent = Intent(context, RegistrationActivity::class.java)
                         context.startActivity(intent)
-                    })
-
-        }
-    }
-}
-
-@Composable
-fun SocialMediaCard(modifier: Modifier, image: Int, label: String) {
-    Card(
-        modifier = modifier
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(image),
-                contentDescription = null,
-                modifier = Modifier.size(25.dp)
+                    }
             )
-            Spacer(modifier = Modifier.width(15.dp))
-            Text(label)
-
         }
-
     }
 }
 
@@ -296,6 +246,3 @@ fun SocialMediaCard(modifier: Modifier, image: Int, label: String) {
 fun PreviewLogin() {
     LoginBody()
 }
-
-// Paste this at the very bottom of your file
-class DashboardActivity : ComponentActivity()
