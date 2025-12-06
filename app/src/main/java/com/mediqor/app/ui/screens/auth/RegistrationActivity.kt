@@ -71,8 +71,11 @@ class RegistrationActivity : ComponentActivity() {
 @Composable
 fun RegistrationBody() {
 
+    var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var mobile by remember { mutableStateOf("") }
+    var country by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
     var terms by remember { mutableStateOf(false) }
 
@@ -81,6 +84,9 @@ fun RegistrationBody() {
 
     val sharedPreference = context.getSharedPreferences("User", Context.MODE_PRIVATE)
     val editor = sharedPreference.edit()
+
+    // Dummy list of countries
+    val countries = listOf("Nepal", "India", "USA", "UK", "Australia")
 
     Scaffold { padding ->
         Column(
@@ -103,7 +109,7 @@ fun RegistrationBody() {
                 )
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             Text(
                 "SIGN UP",
@@ -116,9 +122,28 @@ fun RegistrationBody() {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
-            // Email field
+            // Full Name
+            OutlinedTextField(
+                value = fullName,
+                onValueChange = { fullName = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp),
+                shape = RoundedCornerShape(15.dp),
+                placeholder = { Text("Full Name") },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color(0xFF0B8FAC),
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            // Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -135,10 +160,29 @@ fun RegistrationBody() {
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 )
             )
+            Spacer(modifier = Modifier.height(15.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
+            // Mobile Number
+            OutlinedTextField(
+                value = mobile,
+                onValueChange = { mobile = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp),
+                shape = RoundedCornerShape(15.dp),
+                placeholder = { Text("Mobile Number") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color(0xFF0B8FAC),
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
+                )
+            )
 
-            // Password field
+            Spacer(modifier = Modifier.height(15.dp))
+
+            // Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -167,7 +211,45 @@ fun RegistrationBody() {
                 )
             )
 
+
+
+
             Spacer(modifier = Modifier.height(15.dp))
+
+            // Country dropdown
+            var expanded by remember { mutableStateOf(false) }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp)
+                    .background(Color.White, RoundedCornerShape(15.dp))
+                    .clickable { expanded = !expanded }
+                    .height(60.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    if (country.isEmpty()) "Select Country" else country,
+                    modifier = Modifier.padding(start = 15.dp),
+                    color = if (country.isEmpty()) Color.Gray else Color.Black
+                )
+                androidx.compose.material3.DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    countries.forEach { c ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(c) },
+                            onClick = {
+                                country = c
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Terms & conditions
             Row(
@@ -190,7 +272,7 @@ fun RegistrationBody() {
             // Sign Up Button
             Button(
                 onClick = {
-                    if (email.isEmpty() || password.isEmpty()) {
+                    if (fullName.isEmpty() || email.isEmpty() || password.isEmpty() || mobile.isEmpty() || country.isEmpty()) {
                         Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -198,8 +280,11 @@ fun RegistrationBody() {
                         Toast.makeText(context, "Please agree to terms & conditions", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
+                    editor.putString("fullName", fullName)
                     editor.putString("email", email)
                     editor.putString("password", password)
+                    editor.putString("mobile", mobile)
+                    editor.putString("country", country)
                     editor.apply()
                     Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
                     activity?.finish()
@@ -241,10 +326,4 @@ fun RegistrationBody() {
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
-}
-
-@Preview
-@Composable
-fun PreviewRegistration() {
-    RegistrationBody()
 }
