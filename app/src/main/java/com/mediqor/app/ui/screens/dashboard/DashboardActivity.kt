@@ -24,13 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-
 import com.mediqor.app.R
-
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,19 +49,18 @@ fun DashboardBody() {
     val email = activity.intent.getStringExtra("email")
     val password = activity.intent.getStringExtra("password")
 
-    data class NavItem(val label: String, val icon: Int)
+    // Updated NavItem with background color
+    data class NavItem(val label: String, val icon: Int, val backgroundColor: Color)
 
     var selectedItem by remember { mutableStateOf(0) }
 
-    var navList = listOf(
-        NavItem("Home", R.drawable.baseline_home_24),
-        NavItem("Cart", R.drawable.baseline_shopping_cart_24),
-        NavItem("Notification", R.drawable.baseline_notifications_24),
-        NavItem("Profile", R.drawable.baseline_person_24),
-
+    // Added colors for each nav item
+    val navList = listOf(
+        NavItem("Home", R.drawable.baseline_home_24, Color(0xFF0B8FAC)),
+        NavItem("Cart", R.drawable.baseline_shopping_cart_24, Color(0xFF0B8FAC)),
+        NavItem("Notification", R.drawable.baseline_notifications_24, Color(0xFF0B8FAC)),
+        NavItem("Profile", R.drawable.baseline_person_24, Color(0xFF0B8FAC)),
     )
-
-
 
     Scaffold(
         topBar = {
@@ -77,20 +73,15 @@ fun DashboardBody() {
                 ),
                 title = { Text("Ecommerce") },
                 navigationIcon = {
-                    IconButton(onClick = {
-
-                        activity.finish()
-                    }) {
+                    IconButton(onClick = { activity.finish() }) {
                         Icon(
                             painter = painterResource(R.drawable.baseline_arrow_back_ios_new_24),
                             contentDescription = null
                         )
-
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                    }) {
+                    IconButton(onClick = {}) {
                         Icon(
                             painter = painterResource(R.drawable.baseline_search_24),
                             contentDescription = null
@@ -100,18 +91,27 @@ fun DashboardBody() {
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = navList[selectedItem].backgroundColor, // dynamic background
+                contentColor = Color.White
+            ) {
                 navList.forEachIndexed { index, item ->
                     NavigationBarItem(
                         icon = {
-                            Icon(painter = painterResource(item.icon),
-                                contentDescription = null)
+                            Icon(
+                                painter = painterResource(item.icon),
+                                contentDescription = null
+                            )
                         },
-                        label = {Text(item.label)},
-                        onClick = {
-                            selectedItem = index
-                        },
-                        selected = selectedItem == index
+                        label = { Text(item.label) },
+                        selected = selectedItem == index,
+                        onClick = { selectedItem = index },
+                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color.White,
+                            unselectedIconColor = Color.White.copy(alpha = 0.7f),
+                            selectedTextColor = Color.White,
+                            unselectedTextColor = Color.White.copy(alpha = 0.7f)
+                        )
                     )
                 }
             }
@@ -122,7 +122,7 @@ fun DashboardBody() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when(selectedItem){
+            when (selectedItem) {
                 0 -> HomeScreen()
                 1 -> CartScreen()
                 2 -> NotificationScreen()
@@ -132,4 +132,3 @@ fun DashboardBody() {
         }
     }
 }
-
