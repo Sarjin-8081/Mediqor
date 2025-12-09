@@ -1,4 +1,4 @@
-package com.mediqor.app.ui.screens.auth.ui.theme
+package com.mediqor.app.ui.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

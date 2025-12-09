@@ -20,7 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.*
 import com.mediqor.app.R
-import com.mediqor.app.ui.screens.auth.LoginActivity
+import com.mediqor.app.ui.MainActivity
 import kotlinx.coroutines.delay
 
 class SplashActivity : ComponentActivity() {
@@ -38,8 +38,8 @@ fun SplashBody() {
     val activity = context as? Activity
 
     LaunchedEffect(Unit) {
-        delay(3000) // 3 seconds splash
-        context.startActivity(Intent(context, LoginActivity::class.java))
+        delay(2500)
+        context.startActivity(Intent(context, MainActivity::class.java))
         activity?.finish()
     }
 
@@ -50,7 +50,7 @@ fun SplashBody() {
     )
 
     Scaffold(
-        containerColor = Color.White  // white background
+        containerColor = Color.White
     ) { padding ->
         Column(
             modifier = Modifier
@@ -59,7 +59,7 @@ fun SplashBody() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Mediqor Logo
+
             Image(
                 painter = painterResource(R.drawable.mediqor),
                 contentDescription = "App Logo",
@@ -68,18 +68,14 @@ fun SplashBody() {
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Lottie Animation
             LottieAnimation(
                 composition = composition,
                 progress = progress,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f), // keeps animation square and prevents clipping
+                    .aspectRatio(1f),
                 contentScale = ContentScale.Fit
             )
         }
-
     }
-    }
-
-
+}

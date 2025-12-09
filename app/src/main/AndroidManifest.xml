@@ -10,8 +10,54 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MediQor">
+        android:theme="@style/Theme.MediQor"
+        tools:targetApi="31">
+        <activity
+            android:name=".ui.navigation.BottomNav"
+            android:exported="false"
+            android:label="@string/title_activity_bottom_nav"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.navigation.NavGraph"
+            android:exported="false"
+            android:label="@string/title_activity_nav_graph"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="false"
+            android:label="@string/title_activity_main"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.SplashActivity"
+            android:exported="true"
+            android:label="@string/title_activity_splash"
+            android:theme="@style/Theme.MediQor">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> <!-- LOGIN / REGISTRATION -->
+        <activity
+            android:name=".ui.screens.auth.LoginActivity"
+            android:exported="true"
+            android:label="@string/title_activity_login1"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.auth.RegistrationActivity"
+            android:exported="true"
+            android:label="@string/title_activity_register"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.auth.OnboardingActivity"
+            android:exported="false"
+            android:label="@string/title_activity_onboarding"
+            android:theme="@style/Theme.MediQor" /> <!-- ADMIN -->
+        <activity
+            android:name=".ui.screens.admin.AdminLoginActivity"
+            android:exported="false"
+            android:label="@string/title_activity_admin_login"
+            android:theme="@style/Theme.MediQor" />
         <activity
             android:name=".ui.screens.admin.AddPharmacyActivity"
             android:exported="false"
@@ -26,23 +72,12 @@
             android:name=".ui.screens.admin.ManageOrdersActivity"
             android:exported="false"
             android:label="@string/title_activity_manage_orders"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.admin.AdminLoginActivity"
-            android:exported="false"
-            android:label="@string/title_activity_admin_login"
-            android:theme="@style/Theme.MediQor" />
+            android:theme="@style/Theme.MediQor" /> <!-- OTHER SCREENS (old, non-compose) -->
         <activity
             android:name=".ui.screens.profile.ProfileActivity"
             android:exported="true"
             android:label="@string/title_activity_profile"
-            android:theme="@style/Theme.MediQor" >
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-
-        </activity>
+            android:theme="@style/Theme.MediQor" />
         <activity
             android:name=".ui.screens.chatbot.ChatbotActivity"
             android:exported="false"
@@ -88,44 +123,6 @@
             android:exported="false"
             android:label="@string/title_activity_home"
             android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.auth.RegistrationActivity"
-            android:exported="true"
-            android:label="@string/title_activity_register"
-            android:theme="@style/Theme.MediQor" />
-
-
-        <activity
-            android:name=".ui.screens.auth.LoginActivity"
-            android:exported="true"
-            android:label="@string/title_activity_login1"
-            android:theme="@style/Theme.MediQor" />
-
-        <activity
-            android:name=".ui.screens.SplashActivity"
-            android:exported="true"
-            android:label="@string/title_activity_splash"
-            android:theme="@style/Theme.MediQor">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".ui.screens.auth.RegistrationActivity"
-            android:exported="true"
-            android:label="@string/title_activity_register"
-            android:theme="@style/Theme.MediQor" />
-
-        <activity
-            android:name=".ui.screens.auth.OnboardingActivity"
-            android:exported="false"
-            android:label="@string/title_activity_onboarding"
-            android:theme="@style/Theme.MediQor" />
-
-
     </application>
 
 </manifest>
