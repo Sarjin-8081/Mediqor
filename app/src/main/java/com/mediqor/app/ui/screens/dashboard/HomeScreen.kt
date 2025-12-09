@@ -1,20 +1,108 @@
 package com.mediqor.app.ui.screens.dashboard
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.mediqor.app.R
+
 
 @Composable
 fun HomeScreen() {
-    Column(
+    data class Products(val image: Int, val name: String)
+    val listData = listOf(
+        Products(R.drawable.mediqor,"Facebook"),
+        Products(R.drawable.mediqor,"gmail"),
+        Products(R.drawable.mediqor,"betafish"),
+        Products(R.drawable.mediqor,"Car"),
+    )
+    val images = listOf(
+        R.drawable.mediqor,
+        R.drawable.mediqor,
+        R.drawable.mediqor,
+        R.drawable.mediqor,
+        R.drawable.mediqor,
+        R.drawable.mediqor,
+        R.drawable.mediqor,
+        R.drawable.mediqor,
+    )
+    val names = listOf(
+        "Facebook",
+        "Gmail",
+        "Bettafish",
+        "Cat",
+        "Dog",
+        "Fish",
+        "Goldfish",
+        "Guineapig",
+    )
+    LazyColumn (
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        Text("Home Screen")
+
+        item {
+            Text("Recommended for you")
+
+
+            LazyRow {
+                items(listData.size){index->
+                    Column {
+                        Image(
+                            painter = painterResource(listData[index].image),
+                            contentDescription = null,
+                            modifier = Modifier.size(70.dp).padding(end = 10.dp)
+                        )
+                        Text(listData[index].name)
+                    }
+                }
+            }
+
+            Image(
+                painter = painterResource(R.drawable.mediqor),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.Crop
+            )
+
+        }
+
+        item {
+            Text("Trending products")
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.height(500.dp)
+            ) {
+                items(images.size){index->
+                    Image(
+                        painter = painterResource(images[index]),
+                        contentDescription = null,
+                        modifier = Modifier.size(70.dp).padding(end = 10.dp)
+                    )
+                }
+
+            }
+        }
+
+
+
+
     }
 }
