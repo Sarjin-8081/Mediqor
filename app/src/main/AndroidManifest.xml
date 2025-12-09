@@ -13,16 +13,6 @@
         android:theme="@style/Theme.MediQor"
         tools:targetApi="31">
         <activity
-            android:name=".ui.navigation.BottomNav"
-            android:exported="false"
-            android:label="@string/title_activity_bottom_nav"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.navigation.NavGraph"
-            android:exported="false"
-            android:label="@string/title_activity_nav_graph"
-            android:theme="@style/Theme.MediQor" />
-        <activity
             android:name=".ui.MainActivity"
             android:exported="false"
             android:label="@string/title_activity_main"
