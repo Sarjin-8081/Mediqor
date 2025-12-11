@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.mediqor.app.R
 
+
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,12 +124,13 @@ fun DashboardBody() {
                 .padding(padding)
         ) {
             when (selectedItem) {
-                0 -> HomeScreen()
+                0 -> DashboardHomeScreen()
                 1 -> CartScreen()
                 2 -> NotificationScreen()
                 3 -> ProfileScreen()
-                else -> HomeScreen()
+                else -> DashboardHomeScreen()
             }
         }
     }
 }
+
