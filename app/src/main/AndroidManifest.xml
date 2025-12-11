@@ -109,7 +109,7 @@
             android:label="@string/title_activity_pharmacy_list"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.Home.HomeActivity"
+            android:name=".ui.screens.home.HomeActivity"
             android:exported="false"
             android:label="@string/title_activity_home"
             android:theme="@style/Theme.MediQor" />
