@@ -191,6 +191,10 @@ fun LoginBody() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 15.dp)
+                    .clickable {
+                        val intent = Intent(context, ForgotPasswordActivity::class.java)
+                        context.startActivity(intent)
+                    }
             )
 
             // Login Button
