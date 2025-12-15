@@ -1,7 +1,5 @@
 package com.mediqor.app.ui.screens.dashboard
 
-
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,13 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,10 +18,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.mediqor.app.R
 
 @Composable
-fun DashboardHomeScreen() {
+fun DashboardHomeScreen(navController: NavController) {
 
     val categories = listOf(
         CategoryItem("Pharmacy", R.drawable.mediqor),
@@ -48,7 +41,6 @@ fun DashboardHomeScreen() {
     )
 
     Scaffold(
-        bottomBar = { BottomNavBar() },
         modifier = Modifier.fillMaxSize()
     ) { padding ->
 
@@ -59,44 +51,22 @@ fun DashboardHomeScreen() {
                 .padding(16.dp)
         ) {
 
-            // === TOP BAR ===
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mediqor),
-                    contentDescription = "Logo",
-                    modifier = Modifier.size(50.dp)
-                )
+            Spacer(modifier = Modifier.height(10.dp))
 
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_search_24),
-                    contentDescription = "Search",
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clickable { },
-                    tint = Color.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // === CATEGORIES GRID ===
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 modifier = Modifier.height(260.dp),
                 userScrollEnabled = false
             ) {
                 items(categories) { category ->
-                    CategoryCard(category)
+                    CategoryCard(category) {
+                        navigateCategory(navController, it)
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // === SHOP BUTTON ===
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -109,25 +79,24 @@ fun DashboardHomeScreen() {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // === PRODUCT GRID ===
-            LazyVerticalGrid(columns = GridCells.Fixed(2), content = {
+            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                 items(products) { product ->
                     ProductCard(product)
                 }
-            })
+            }
         }
     }
 }
 
 @Composable
-fun CategoryCard(item: CategoryItem) {
+fun CategoryCard(item: CategoryItem, onClick: (String) -> Unit) {
     Column(
         modifier = Modifier
             .padding(6.dp)
             .background(Color(0xFFF6EDDF), RoundedCornerShape(20.dp))
             .fillMaxWidth()
             .height(110.dp)
-            .clickable {},
+            .clickable { onClick(item.title) },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -165,34 +134,16 @@ fun ProductCard(item: ProductItem) {
     }
 }
 
-@Composable
-fun BottomNavBar() {
-    NavigationBar(
-        containerColor = Color.White
-    ) {
-        NavigationBarItem(
-            selected = true,
-            onClick = {},
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") }
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Cart") }
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Location") }
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") }
-        )
+fun navigateCategory(navController: NavController, category: String) {
+    when (category) {
+        "Pharmacy" -> navController.navigate("pharmacy")
+        "Family Care" -> navController.navigate("familycare")
+        "Personal Care" -> navController.navigate("personalcare")
+        "Supplements" -> navController.navigate("supplements")
+        "Surgical" -> navController.navigate("surgical")
+        "Devices" -> navController.navigate("devices")
     }
 }
 
-// === MODELS ===
 data class CategoryItem(val title: String, val icon: Int)
 data class ProductItem(val title: String, val image: Int)
