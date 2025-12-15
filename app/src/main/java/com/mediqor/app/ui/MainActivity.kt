@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.mediqor.app.ui.navigation.NavGraph
-import com.mediqor.app.ui.screens.theme.ThemeMediqor
+import com.mediqor.app.ui.screens.theme.ThemeMediqor // replace with your theme
 import com.mediqor.app.data.UserRepository
 
 class MainActivity : ComponentActivity() {

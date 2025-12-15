@@ -63,11 +63,7 @@
             android:exported="false"
             android:label="@string/title_activity_manage_orders"
             android:theme="@style/Theme.MediQor" /> <!-- OTHER SCREENS (old, non-compose) -->
-        <activity
-            android:name=".ui.screens.profile.ProfileActivity"
-            android:exported="true"
-            android:label="@string/title_activity_profile"
-            android:theme="@style/Theme.MediQor" />
+
         <activity
             android:name=".ui.screens.chatbot.ChatbotActivity"
             android:exported="false"
@@ -88,11 +84,7 @@
             android:exported="false"
             android:label="@string/title_activity_checkout"
             android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.cart.CartActivity"
-            android:exported="false"
-            android:label="@string/title_activity_cart"
-            android:theme="@style/Theme.MediQor" />
+
         <activity
             android:name=".ui.screens.medicine.MedicineDetailsActivity"
             android:exported="false"
@@ -107,11 +99,6 @@
             android:name=".ui.screens.pharmacy.PharmacyListActivity"
             android:exported="false"
             android:label="@string/title_activity_pharmacy_list"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.home.HomeActivity"
-            android:exported="false"
-            android:label="@string/title_activity_home"
             android:theme="@style/Theme.MediQor" />
     </application>
 
