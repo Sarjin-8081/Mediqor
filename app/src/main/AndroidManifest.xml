@@ -11,17 +11,25 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
+
+        <activity
+            android:name=".ui.screens.dashboard.PharmacyActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MediQor" />
+
+
+
+        <activity
+            android:name=".ui.screens.dashboard.HomeActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MediQor" />
+
+
         <activity
             android:name=".ui.screens.dashboard.DashboardActivity"
             android:exported="true"
-            android:label="@string/title_activity_dashboard"
-            android:theme="@style/Theme.MediQor">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:theme="@style/Theme.MediQor" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".ui.screens.admin.AddPharmacyActivity"
             android:exported="false"
