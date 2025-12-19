@@ -3,20 +3,45 @@ package com.mediqor.app.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.mediqor.app.ui.navigation.NavGraph
-import com.mediqor.app.ui.screens.theme.ThemeMediqor // replace with your theme
-import com.mediqor.app.data.UserRepository
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.mediqor.app.ui.ui.theme.MediQorTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // create repository here (simple)
-        val userRepository = UserRepository()
-
+        enableEdgeToEdge()
         setContent {
-            ThemeMediqor { // or your app theme composable
-                NavGraph(userRepository = userRepository)
+            MediQorTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Greeting(
+                        name = "Android",
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+fun Greeting(name: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "Hello $name!",
+        modifier = modifier
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    MediQorTheme {
+        Greeting("Android")
     }
 }
