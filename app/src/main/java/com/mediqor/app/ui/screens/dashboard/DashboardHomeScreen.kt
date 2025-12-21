@@ -35,7 +35,7 @@ class HomeActivity : ComponentActivity() {
 }
 
 @Composable
-fun HomeUI(viewModel: HomeViewModel) {
+fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
 
     val context = LocalContext.current
 
@@ -45,7 +45,7 @@ fun HomeUI(viewModel: HomeViewModel) {
             .padding(16.dp)
     ) {
 
-        // Categories
+        // ---------------- Categories ----------------
         item {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -54,10 +54,37 @@ fun HomeUI(viewModel: HomeViewModel) {
             ) {
                 items(viewModel.categories) { category ->
                     CategoryCard(category) {
-                        if (category.title == "Pharmacy") {
-                            context.startActivity(
-                                Intent(context, PharmacyActivity::class.java)
-                            )
+
+                        when (category.title) {
+                            "Pharmacy" ->
+                                context.startActivity(
+                                    Intent(context, PharmacyActivity::class.java)
+                                )
+
+                            "Family Care" ->
+                                context.startActivity(
+                                    Intent(context, FamilyCareActivity::class.java)
+                                )
+
+                            "Personal Care" ->
+                                context.startActivity(
+                                    Intent(context, PersonalCareActivity::class.java)
+                                )
+
+                            "Supplements" ->
+                                context.startActivity(
+                                    Intent(context, SupplementsActivity::class.java)
+                                )
+
+                            "Surgical" ->
+                                context.startActivity(
+                                    Intent(context, SurgicalActivity::class.java)
+                                )
+
+                            "Devices" ->
+                                context.startActivity(
+                                    Intent(context, DevicesActivity::class.java)
+                                )
                         }
                     }
                 }
@@ -66,7 +93,7 @@ fun HomeUI(viewModel: HomeViewModel) {
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
 
-        // SHOP button
+        // ---------------- SHOP ----------------
         item {
             Box(
                 modifier = Modifier
@@ -75,17 +102,13 @@ fun HomeUI(viewModel: HomeViewModel) {
                     .background(Color(0xFFAAD9D1), RoundedCornerShape(24.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "SHOP",
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
+                Text("SHOP", fontSize = 20.sp, color = Color.White)
             }
         }
 
         item { Spacer(modifier = Modifier.height(20.dp)) }
 
-        // Products
+        // ---------------- Products ----------------
         item {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),

@@ -11,25 +11,43 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
-
+        <activity
+            android:name=".ui.screens.dashboard.DevicesActivity"
+            android:exported="false"
+            android:label="@string/title_activity_devices"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.dashboard.SurgicalActivity"
+            android:exported="false"
+            android:label="@string/title_activity_surgical"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.dashboard.SupplementActivity"
+            android:exported="false"
+            android:label="@string/title_activity_supplement"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.dashboard.PersonalCareActivity"
+            android:exported="false"
+            android:label="@string/title_activity_personal_care"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.screens.dashboard.FamilyCareActivity"
+            android:exported="false"
+            android:label="@string/title_activity_family_care"
+            android:theme="@style/Theme.MediQor" />
         <activity
             android:name=".ui.screens.dashboard.PharmacyActivity"
             android:exported="true"
             android:theme="@style/Theme.MediQor" />
-
-
-
         <activity
             android:name=".ui.screens.dashboard.HomeActivity"
             android:exported="true"
             android:theme="@style/Theme.MediQor" />
-
-
         <activity
             android:name=".ui.screens.dashboard.DashboardActivity"
             android:exported="true"
             android:theme="@style/Theme.MediQor" />
-
         <activity
             android:name=".ui.screens.admin.AddPharmacyActivity"
             android:exported="false"

@@ -22,4 +22,9 @@
     <string name="title_activity_dashboard">DashboardActivity</string>
     <string name="title_activity_pharmacy">PharmacyActivity</string>
     <string name="title_activity_product_detail">ProductDetailActivity</string>
+    <string name="title_activity_family_care">FamilyCareActivity</string>
+    <string name="title_activity_personal_care">PersonalCareActivity</string>
+    <string name="title_activity_supplement">SupplementActivity</string>
+    <string name="title_activity_surgical">SurgicalActivity</string>
+    <string name="title_activity_devices">DevicesActivity</string>
 </resources>
