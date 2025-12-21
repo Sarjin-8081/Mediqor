@@ -22,20 +22,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mediqor.app.viewmodel.HomeViewModel
 
-class HomeActivity : ComponentActivity() {
+class DashboardHomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val viewModel: HomeViewModel = viewModel()
-            HomeUI(viewModel)
+            // Initialize ViewModel here once
+            val homeViewModel: HomeViewModel = viewModel()
+            HomeScreen(viewModel = homeViewModel)
         }
     }
 }
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(viewModel: HomeViewModel) {
 
     val context = LocalContext.current
 

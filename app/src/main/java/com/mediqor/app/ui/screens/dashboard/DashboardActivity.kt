@@ -7,10 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,9 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
-import com.mediqor.app.viewmodel.HomeViewModel
 import com.mediqor.app.ui.screens.cart.CartScreen
 import com.mediqor.app.ui.screens.profile.ProfileScreen
+import com.mediqor.app.ui.screens.dashboard.NotificationScreen // <-- import your NotificationScreen
+import com.mediqor.app.viewmodel.HomeViewModel
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,12 +101,17 @@ fun DashboardBody() {
             startDestination = "home",
             modifier = Modifier.padding(padding)
         ) {
-
-            composable("home") { HomeScreen() }
+            composable("home") { DashboardHomeScreen() }
             composable("cart") { CartScreen() }
-            composable("notification") { NotificationScreen() }
+            composable("notification") { NotificationScreen() } // <-- uses your separate screen
             composable("profile") { ProfileScreen() }
         }
     }
 }
 
+// Wrapper for HomeScreen with ViewModel
+@Composable
+fun DashboardHomeScreen() {
+    val homeViewModel: HomeViewModel = viewModel()
+    HomeScreen(viewModel = homeViewModel)
+}

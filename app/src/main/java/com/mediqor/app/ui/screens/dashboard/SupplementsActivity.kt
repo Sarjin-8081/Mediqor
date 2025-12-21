@@ -35,9 +35,9 @@ class SupplementsActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupplementsUI() {
+
     val context = LocalContext.current
     val activity = context as ComponentActivity
-
 
     Scaffold(
         topBar = {
