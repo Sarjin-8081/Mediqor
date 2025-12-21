@@ -1,7 +1,6 @@
-package com.mediqor.app.ui.screens.auth
+package com.mediqor.app.ui
 
 import android.app.Activity
-import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity

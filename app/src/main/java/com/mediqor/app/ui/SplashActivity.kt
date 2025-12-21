@@ -1,4 +1,4 @@
-package com.mediqor.app.ui.screens
+package com.mediqor.app.ui
 
 import android.app.Activity
 import android.content.Intent
@@ -20,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.*
 import com.mediqor.app.R
-import com.mediqor.app.ui.screens.auth.LoginActivity
 import kotlinx.coroutines.delay
 
 class SplashActivity : ComponentActivity() {

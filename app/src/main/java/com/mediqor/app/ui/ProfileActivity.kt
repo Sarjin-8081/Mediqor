@@ -1,4 +1,4 @@
-package com.mediqor.app.ui.screens.profile
+package com.mediqor.app.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
