@@ -11,14 +11,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
-
         <activity
-            android:name=".ui.screens.admin.AddPharmacyActivity"
+            android:name=".ui.screens.auth.ForgotPassActivity"
+            android:exported="false"
+            android:label="@string/title_activity_forgot_pass"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name="mediqor.app.AddPharmacyActivity"
             android:exported="false"
             android:label="@string/title_activity_add_pharmacy"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.admin.AddProductActivity"
+            android:name="mediqor.app.AddProductActivity"
             android:exported="false"
             android:label="@string/title_activity_add_product"
             android:theme="@style/Theme.MediQor" />
@@ -28,19 +32,20 @@
             android:label="@string/title_activity_manage_orders"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.admin.AdminLoginActivity"
+            android:name="mediqor.app.AdminLoginActivity"
             android:exported="false"
             android:label="@string/title_activity_admin_login"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.profile.ProfileActivity"
+            android:name=".ui.ProfileActivity"
             android:exported="true"
             android:label="@string/title_activity_profile"
-            android:theme="@style/Theme.MediQor" >
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
+            android:theme="@style/Theme.MediQor">
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
 
         </activity>
         <activity
@@ -64,7 +69,7 @@
             android:label="@string/title_activity_checkout"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.cart.CartActivity"
+            android:name=".ui.CartActivity"
             android:exported="false"
             android:label="@string/title_activity_cart"
             android:theme="@style/Theme.MediQor" />
@@ -96,36 +101,26 @@
 
 
         <activity
-            android:name=".ui.screens.auth.LoginActivity"
+            android:name=".ui.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login1"
             android:theme="@style/Theme.MediQor" />
-
         <activity
-            android:name=".ui.screens.SplashActivity"
+            android:name=".ui.SplashActivity"
             android:exported="true"
             android:label="@string/title_activity_splash"
             android:theme="@style/Theme.MediQor">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name=".ui.screens.auth.RegistrationActivity"
-            android:exported="true"
-            android:label="@string/title_activity_register"
-            android:theme="@style/Theme.MediQor" />
-
-        <activity
-            android:name=".ui.screens.auth.OnboardingActivity"
+            android:name=".ui.OnboardingActivity"
             android:exported="false"
             android:label="@string/title_activity_onboarding"
             android:theme="@style/Theme.MediQor" />
-
-
     </application>
 
 </manifest>

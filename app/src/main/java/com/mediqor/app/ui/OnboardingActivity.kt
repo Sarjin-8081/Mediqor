@@ -1,4 +1,4 @@
-package com.mediqor.app.ui.screens.auth
+package com.mediqor.app.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
