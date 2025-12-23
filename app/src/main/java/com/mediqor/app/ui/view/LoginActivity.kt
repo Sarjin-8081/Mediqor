@@ -53,12 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mediqor.app.R
 
-
-private val Unit.drawable: Any
-    get() {
-        TODO()
-    }
-
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,6 +81,7 @@ fun LoginBody() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .padding(horizontal = 24.dp)
                 .background(Color.White)
         ) {
