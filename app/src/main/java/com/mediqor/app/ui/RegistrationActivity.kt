@@ -240,9 +240,3 @@ fun RegistrationBody() {
         }
     }
 }
-
-@Preview
-@Composable
-fun PreviewRegistration() {
-    RegistrationBody()
-}
