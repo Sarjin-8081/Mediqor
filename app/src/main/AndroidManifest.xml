@@ -11,116 +11,40 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
-        <activity
-            android:name=".ui.screens.auth.ForgotPassActivity"
-            android:exported="false"
-            android:label="@string/title_activity_forgot_pass"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name="mediqor.app.AddPharmacyActivity"
-            android:exported="false"
-            android:label="@string/title_activity_add_pharmacy"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name="mediqor.app.AddProductActivity"
-            android:exported="false"
-            android:label="@string/title_activity_add_product"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.admin.ManageOrdersActivity"
-            android:exported="false"
-            android:label="@string/title_activity_manage_orders"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name="mediqor.app.AdminLoginActivity"
-            android:exported="false"
-            android:label="@string/title_activity_admin_login"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.ProfileActivity"
-            android:exported="true"
-            android:label="@string/title_activity_profile"
-            android:theme="@style/Theme.MediQor">
 
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
+        <activity
+            android:name=".ui.ForgotPasswordActivity"
+            android:exported="false" />
 
-        </activity>
-        <activity
-            android:name=".ui.screens.chatbot.ChatbotActivity"
-            android:exported="false"
-            android:label="@string/title_activity_chatbot"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.hospital.HospitalClinicActivity"
-            android:exported="false"
-            android:label="@string/title_activity_hospital_clinic"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.orders.OrdersActivity"
-            android:exported="false"
-            android:label="@string/title_activity_orders"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.checkout.CheckoutActivity"
-            android:exported="false"
-            android:label="@string/title_activity_checkout"
-            android:theme="@style/Theme.MediQor" />
         <activity
             android:name=".ui.CartActivity"
-            android:exported="false"
-            android:label="@string/title_activity_cart"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.medicine.MedicineDetailsActivity"
-            android:exported="false"
-            android:label="@string/title_activity_medicine_details"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.pharmacy.PharmacyDetailsActivity"
-            android:exported="false"
-            android:label="@string/title_activity_pharmacy_details"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.pharmacy.PharmacyListActivity"
-            android:exported="false"
-            android:label="@string/title_activity_pharmacy_list"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.Home.HomeActivity"
-            android:exported="false"
-            android:label="@string/title_activity_home"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.auth.RegistrationActivity"
-            android:exported="true"
-            android:label="@string/title_activity_register"
-            android:theme="@style/Theme.MediQor" />
-
+            android:exported="false" />
 
         <activity
             android:name=".ui.LoginActivity"
-            android:exported="true"
-            android:label="@string/title_activity_login1"
-            android:theme="@style/Theme.MediQor" />
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.RegistrationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.OnboardingActivity"
+            android:exported="false" />
+
         <activity
             android:name=".ui.SplashActivity"
-            android:exported="true"
-            android:label="@string/title_activity_splash"
-            android:theme="@style/Theme.MediQor">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.OnboardingActivity"
-            android:exported="false"
-            android:label="@string/title_activity_onboarding"
-            android:theme="@style/Theme.MediQor" />
+
     </application>
 
 </manifest>
