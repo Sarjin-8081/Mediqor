@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.mediqor.app.ui.navigation.AppNavGraph
 import com.mediqor.app.ui.ui.theme.MediQorTheme
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,5 +20,7 @@ class MainActivity : ComponentActivity() {
                 AppNavGraph(navController = navController)
             }
         }
+
+
     }
 }
