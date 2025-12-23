@@ -1,60 +1,60 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.view.category
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-class PersonalCareActivity : ComponentActivity() {
+class FamilyCareActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { PersonalCareUI() }
+        setContent {
+            FamilyCareUI()
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonalCareUI() {
+fun FamilyCareUI() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Personal Care") },
+                title = { Text("Family Care") },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFF0B8FAC),
                     titleContentColor = Color.White
                 ),
                 navigationIcon = {
                     IconButton(onClick = { activity.finish() }) {
-                        Icon(Icons.Filled.ArrowBack, null, tint = Color.White)
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
                     }
                 }
             )
         }
-    ) { padding ->
+    ) { innerPadding ->
         Box(
-            Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            Text("Personal Care Screen")
+            Text("Family Care Screen", color = Color.Black)
         }
     }
 }
