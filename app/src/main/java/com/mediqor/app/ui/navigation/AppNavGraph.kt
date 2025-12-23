@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.mediqor.app.ui.dashboard.DashboardScreen
 import com.mediqor.app.ui.screens.*
 
 @Composable
@@ -30,8 +31,9 @@ fun AppNavGraph(
         }
 
         composable(Routes.HOME) {
-            HomeScreen()
+            DashboardScreen(navController)
         }
+
 
         composable(Routes.SEARCH) {
             SearchScreen()
