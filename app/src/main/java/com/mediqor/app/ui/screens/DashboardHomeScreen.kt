@@ -22,12 +22,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mediqor.app.ui.CategoryCard
 import com.mediqor.app.ui.ProductCard
-import com.mediqor.app.ui.view.DevicesActivity
-import com.mediqor.app.ui.view.FamilyCareActivity
-import com.mediqor.app.ui.view.PersonalCareActivity
-import com.mediqor.app.ui.view.PharmacyActivity
-import com.mediqor.app.ui.view.SupplementsActivity
-import com.mediqor.app.ui.view.SurgicalActivity
+import com.mediqor.app.ui.view.category.DevicesActivity
+import com.mediqor.app.ui.view.category.FamilyCareActivity
+import com.mediqor.app.ui.view.category.PersonalCareActivity
+import com.mediqor.app.ui.view.category.PharmacyActivity
+import com.mediqor.app.ui.view.category.SupplementsActivity
+import com.mediqor.app.ui.view.category.SurgicalActivity
 import com.mediqor.app.viewmodel.HomeViewModel
 
 class DashboardHomeActivity : ComponentActivity() {

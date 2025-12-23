@@ -1,4 +1,4 @@
-package com.mediqor.app.ui.view
+package com.mediqor.app.ui.view.category
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

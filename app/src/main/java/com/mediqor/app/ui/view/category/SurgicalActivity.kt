@@ -1,4 +1,4 @@
-package com.mediqor.app.ui.view
+package com.mediqor.app.ui.view.category
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,23 +21,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-class DevicesActivity : ComponentActivity() {
+class SurgicalActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { DevicesUI() }
+        setContent { SurgicalUI() }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DevicesUI() {
+fun SurgicalUI() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
+
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Devices") },
+                title = { Text("Surgical") },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFF0B8FAC),
                     titleContentColor = Color.White
@@ -54,7 +55,7 @@ fun DevicesUI() {
             Modifier.fillMaxSize().padding(padding),
             contentAlignment = Alignment.Center
         ) {
-            Text("Devices Screen")
+            Text("Surgical Screen")
         }
     }
 }
