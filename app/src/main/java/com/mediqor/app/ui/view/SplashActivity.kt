@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.view
 
 import android.app.Activity
 import android.content.Intent

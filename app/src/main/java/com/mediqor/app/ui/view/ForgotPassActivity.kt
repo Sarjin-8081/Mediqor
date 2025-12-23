@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.view
 
 import android.app.Activity
 import android.os.Bundle
@@ -49,21 +49,26 @@ fun ForgotPasswordBody() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding) // Apply scaffold padding
                 .padding(horizontal = 24.dp)
                 .background(Color.White)
         ) {
 
-            // Logo top-right
+            // Back arrow top-left
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 40.dp),
-                contentAlignment = Alignment.TopEnd
+                contentAlignment = Alignment.TopStart // Changed to TopStart for back arrow
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.baseline_arrow_back_ios_new_24),
-                    contentDescription = "Logo",
-                    modifier = Modifier.size(80.dp)
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .size(40.dp) // More appropriate size for back arrow
+                        .clickable {
+                            activity?.finish()
+                        }
                 )
             }
 
@@ -123,6 +128,8 @@ fun ForgotPasswordBody() {
                         Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Reset link sent (demo)", Toast.LENGTH_SHORT).show()
+                        // Optionally finish activity after sending reset link
+                        // activity?.finish()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -159,11 +166,8 @@ fun ForgotPasswordBody() {
     }
 }
 
-
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ForgotPasswordPreview() {
     ForgotPasswordBody()
 }
-

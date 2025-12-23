@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.screens
 
 import android.content.Intent
 import android.os.Bundle
@@ -20,6 +20,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mediqor.app.ui.CategoryCard
+import com.mediqor.app.ui.ProductCard
+import com.mediqor.app.ui.view.category.DevicesActivity
+import com.mediqor.app.ui.view.category.FamilyCareActivity
+import com.mediqor.app.ui.view.category.PersonalCareActivity
+import com.mediqor.app.ui.view.category.PharmacyActivity
+import com.mediqor.app.ui.view.category.SupplementsActivity
+import com.mediqor.app.ui.view.category.SurgicalActivity
 import com.mediqor.app.viewmodel.HomeViewModel
 
 class DashboardHomeActivity : ComponentActivity() {

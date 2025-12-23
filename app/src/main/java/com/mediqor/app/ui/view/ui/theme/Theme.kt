@@ -1,4 +1,4 @@
-package com.mediqor.app.ui.ui.theme
+package com.mediqor.app.ui.view.ui.theme
 
 import android.app.Activity
 import android.os.Build
