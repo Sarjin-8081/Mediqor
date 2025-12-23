@@ -189,7 +189,7 @@ fun LoginBody() {
             Button(
                 onClick = {
                     if (localEmail == email && localPassword == password) {
-                        val intent = Intent(context, OnboardingActivity::class.java)
+                        val intent = Intent(context, DashboardActivity::class.java)
                         context.startActivity(intent)
                         activity?.finish()
                     } else {
