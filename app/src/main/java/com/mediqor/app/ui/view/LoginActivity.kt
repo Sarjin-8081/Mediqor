@@ -11,29 +11,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,27 +47,25 @@ class LoginActivity : ComponentActivity() {
 
 @Composable
 fun LoginBody() {
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = try { context as Activity } catch (e: Exception) { null }
+    val activity = context as? Activity
 
     val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-    val localEmail: String? = sharedPreferences.getString("email","")
-    val localPassword: String? = sharedPreferences.getString("password","")
+    val localEmail = sharedPreferences.getString("email", "") ?: ""
+    val localPassword = sharedPreferences.getString("password", "") ?: ""
 
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp)
                 .background(Color.White)
+                .padding(horizontal = 24.dp)
         ) {
-            // Top-right logo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,7 +82,7 @@ fun LoginBody() {
             Spacer(modifier = Modifier.height(50.dp))
 
             Text(
-                "LOGIN",
+                text = "LOGIN",
                 style = TextStyle(
                     textAlign = TextAlign.Center,
                     color = Color.Black,
@@ -114,7 +94,6 @@ fun LoginBody() {
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Email Field
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -134,22 +113,26 @@ fun LoginBody() {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Password Field
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 trailingIcon = {
                     IconButton(onClick = { visibility = !visibility }) {
                         Icon(
-                            painter = if (visibility)
+                            painter = if (visibility) {
                                 painterResource(R.drawable.baseline_visibility_off_24)
-                            else
-                                painterResource(R.drawable.baseline_visibility_24),
-                            contentDescription = null
+                            } else {
+                                painterResource(R.drawable.baseline_visibility_24)
+                            },
+                            contentDescription = if (visibility) "Hide password" else "Show password"
                         )
                     }
                 },
-                visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (visibility) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp),
@@ -166,7 +149,7 @@ fun LoginBody() {
             Spacer(modifier = Modifier.height(15.dp))
 
             Text(
-                "Forget Password",
+                text = "Forget Password",
                 style = TextStyle(
                     color = Color(0xFF0B8FAC),
                     textAlign = TextAlign.End
@@ -180,7 +163,6 @@ fun LoginBody() {
                     }
             )
 
-            // Login Button
             Button(
                 onClick = {
                     if (localEmail == email && localPassword == password) {
@@ -207,9 +189,8 @@ fun LoginBody() {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Sign up redirect
             Text(
-                buildAnnotatedString {
+                text = buildAnnotatedString {
                     append("Don't have an account? ")
                     withStyle(SpanStyle(color = Color(0xFF0B8FAC), fontWeight = FontWeight.Bold)) {
                         append("Sign up")
@@ -219,7 +200,7 @@ fun LoginBody() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 10.dp)
-                    .clickable{
+                    .clickable {
                         val intent = Intent(context, RegistrationActivity::class.java)
                         context.startActivity(intent)
                     }
@@ -228,7 +209,7 @@ fun LoginBody() {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PreviewLogin() {
     LoginBody()
