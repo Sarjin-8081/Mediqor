@@ -1,32 +1,25 @@
 package com.mediqor.app.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.mediqor.app.ui.dashboard.DashboardScreen
-import com.mediqor.app.ui.screens.LoginScreen
-import com.mediqor.app.ui.screens.SplashScreen
+import androidx.navigation.compose.rememberNavController
+import com.mediqor.app.ui.screens.CartScreen
+import com.mediqor.app.ui.screens.HomeScreen
+import com.mediqor.app.ui.screens.SearchScreen
+import com.mediqor.app.ui.screens.profile.ProfileScreen
 
 @Composable
-fun AppNavGraph(
-    navController: NavHostController
-) {
+fun AppNavGraph() {
+    val navController = rememberNavController()
+
     NavHost(
         navController = navController,
-        startDestination = Routes.SPLASH
+        startDestination = Screen.Home.route
     ) {
-
-        composable(Routes.SPLASH) {
-            SplashScreen(navController)
-        }
-
-        composable(Routes.LOGIN) {
-            LoginScreen(navController)
-        }
-
-        composable(Routes.DASHBOARD) {
-            DashboardScreen(navController)
-        }
+        composable(Screen.Home.route) { HomeScreen() }
+        composable(Screen.Search.route) { SearchScreen() }
+        composable(Screen.Cart.route) { CartScreen() }
+        composable(Screen.Profile.route) { ProfileScreen() }
     }
 }

@@ -1,20 +1,18 @@
-package com.mediqor.app.ui.screens
+package com.mediqor.app.ui.screens.profile
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+
+
 
 @Composable
 fun ProfileScreen() {
@@ -25,73 +23,69 @@ fun ProfileScreen() {
     ) {
 
         // 🔹 User Info
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Surface(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {}
 
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape),
-                    tint = MaterialTheme.colorScheme.primary
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = "User Name",
+                    style = MaterialTheme.typography.titleMedium
                 )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column {
-                    Text("User Name", fontWeight = FontWeight.Bold)
-                    Text("user@email.com", color = Color.Gray)
-                }
+                Text(
+                    text = "user@email.com",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 🔹 Options
-        ProfileOption("My Orders")
-        ProfileOption("Prescriptions")
-        ProfileOption("Saved Addresses")
-        ProfileOption("Payment Methods")
+        Divider()
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 🔹 Menu Items
+        ProfileItem(Icons.Outlined.ShoppingBag, "My Orders")
+        ProfileItem(Icons.Outlined.LocationOn, "Saved Addresses")
+        ProfileItem(Icons.Outlined.ReceiptLong, "Prescriptions")
+        ProfileItem(Icons.Outlined.Settings, "Settings")
+        ProfileItem(Icons.Outlined.HelpOutline, "Help & Support")
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         // 🔹 Logout
         Button(
-            onClick = {
-                // Firebase logout later
-            },
+            onClick = { /* later */ },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.error
             )
         ) {
-            Icon(Icons.Default.ExitToApp, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
             Text("Logout")
         }
     }
 }
 
 @Composable
-fun ProfileOption(title: String) {
-    Card(
+private fun ProfileItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(16.dp),
-            fontWeight = FontWeight.Medium
-        )
+        Icon(icon, contentDescription = title)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(title, style = MaterialTheme.typography.bodyLarge)
     }
 }
