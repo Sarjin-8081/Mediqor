@@ -9,12 +9,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
         <activity
-            android:name=".ui.LoginActivity"
+            android:name=".ui.view.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login1"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.SplashActivity"
+            android:name=".ui.view.SplashActivity"
             android:exported="true"
             android:label="@string/title_activity_splash"
             android:theme="@style/Theme.MediQor">
