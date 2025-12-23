@@ -14,9 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
-import com.mediqor.app.ui.HomeScreen
-import com.mediqor.app.ui.NotificationScreen
-import com.mediqor.app.ui.cart.CartActivity
+import com.mediqor.app.ui.screens.HomeScreen
+import com.mediqor.app.ui.screens.NotificationScreen
+import com.mediqor.app.ui.screens.CartScreen
+import com.mediqor.app.ui.screens.profile.ProfileScreen
 import com.mediqor.app.viewmodel.HomeViewModel
 
 class DashboardActivity : ComponentActivity() {
@@ -96,7 +97,7 @@ fun DashboardBody() {
             modifier = Modifier.padding(padding)
         ) {
             composable("home") { DashboardHomeScreen() }
-            composable("cart") { CartActivity() }
+            composable("cart") { CartScreen() }
             composable("notification") { NotificationScreen() } // <-- uses your separate screen
             composable("profile") { ProfileScreen() }
         }

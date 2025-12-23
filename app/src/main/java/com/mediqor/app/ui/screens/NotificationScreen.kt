@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
