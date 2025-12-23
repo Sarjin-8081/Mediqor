@@ -27,6 +27,30 @@
         <activity
             android:name=".ui.view.ForgotPasswordActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.view.DashboardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.RegistrationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.DevicesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.FamilyCareActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.PersonalCareActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.PharmacyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.SupplementsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.SurgicalActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
