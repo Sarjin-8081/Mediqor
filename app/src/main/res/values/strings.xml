@@ -19,5 +19,9 @@
     <string name="title_activity_add_product">AddProductActivity</string>
     <string name="title_activity_add_pharmacy">AddPharmacyActivity</string>
     <string name="title_activity_login1">LoginActivity1</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_nav_graph">NavGraph</string>
+    <string name="title_activity_bottom_nav">BottomNav</string>
+    <string name="title_activity_dashboard_screen">DashboardScreen</string>
     <string name="title_activity_forgot_pass">ForgotPassActivity</string>
 </resources>
