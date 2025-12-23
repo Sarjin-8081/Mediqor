@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mediqor.app.ui.navigation.Routes
 import com.mediqor.app.ui.screens.*
+import com.mediqor.app.ui.screens.profile.ProfileScreen
 
 @Composable
 fun DashboardScreen(
