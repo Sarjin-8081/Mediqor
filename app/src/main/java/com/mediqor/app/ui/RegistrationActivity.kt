@@ -95,7 +95,7 @@ fun RegistrationBody() {
                 contentAlignment = Alignment.TopEnd
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.mediqor),
+                    painter = painterResource(id = R.drawable.baseline_person_24),
                     contentDescription = "Logo",
                     modifier = Modifier.size(80.dp)
                 )
