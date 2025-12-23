@@ -98,7 +98,7 @@ fun LoginBody() {
                 contentAlignment = Alignment.TopEnd
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.mediqor),
+                    painter = painterResource(id = R.drawable.baseline_home_24),
                     contentDescription = "Logo",
                     modifier = Modifier.size(80.dp)
                 )
