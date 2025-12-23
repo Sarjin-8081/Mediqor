@@ -33,6 +33,11 @@
         <activity
             android:name=".ui.view.RegistrationActivity"
             android:exported="false" />
+
+        <!-- =============================================== -->
+        <!-- CATEGORY ACTIVITIES -->
+        <!-- =============================================== -->
+
         <activity
             android:name=".ui.view.category.DevicesActivity"
             android:exported="false" />
