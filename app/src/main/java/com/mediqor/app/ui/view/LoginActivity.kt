@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.view
 
 import android.app.Activity
 import android.content.Context
@@ -98,7 +98,7 @@ fun LoginBody() {
                 contentAlignment = Alignment.TopEnd
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.mediqor),
+                    painter = painterResource(id = R.drawable.baseline_home_24),
                     contentDescription = "Logo",
                     modifier = Modifier.size(80.dp)
                 )
@@ -189,7 +189,7 @@ fun LoginBody() {
             Button(
                 onClick = {
                     if (localEmail == email && localPassword == password) {
-                        val intent = Intent(context, OnboardingActivity::class.java)
+                        val intent = Intent(context, DashboardActivity::class.java)
                         context.startActivity(intent)
                         activity?.finish()
                     } else {

@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.view
 
 import android.app.Activity
 import android.content.Intent
@@ -60,7 +60,7 @@ fun SplashBody() {
         ) {
             // Mediqor Logo
             Image(
-                painter = painterResource(R.drawable.mediqor),
+                painter = painterResource(R.drawable.baseline_shopping_cart_24),
                 contentDescription = "App Logo",
                 modifier = Modifier.size(100.dp)
             )

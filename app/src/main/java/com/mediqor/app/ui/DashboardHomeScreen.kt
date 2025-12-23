@@ -20,6 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mediqor.app.ui.view.DevicesActivity
+import com.mediqor.app.ui.view.FamilyCareActivity
+import com.mediqor.app.ui.view.PersonalCareActivity
+import com.mediqor.app.ui.view.PharmacyActivity
+import com.mediqor.app.ui.view.SupplementsActivity
+import com.mediqor.app.ui.view.SurgicalActivity
 import com.mediqor.app.viewmodel.HomeViewModel
 
 class DashboardHomeActivity : ComponentActivity() {

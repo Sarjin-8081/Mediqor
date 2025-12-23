@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
+import com.mediqor.app.ui.HomeScreen
+import com.mediqor.app.ui.NotificationScreen
 import com.mediqor.app.ui.cart.CartActivity
 import com.mediqor.app.viewmodel.HomeViewModel
 
