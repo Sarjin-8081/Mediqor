@@ -4,8 +4,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
 @Composable
-fun LoginScreen(
-    onLoginSuccess: () -> Unit
-) {
-    Text(text = "Login Screen (Click to Login)")
+fun ProfileScreen() {
+    Text(text = "Profile Screen")
 }
