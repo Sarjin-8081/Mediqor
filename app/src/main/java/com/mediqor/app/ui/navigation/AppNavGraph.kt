@@ -5,7 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.mediqor.app.ui.dashboard.DashboardScreen
-import com.mediqor.app.ui.screens.*
+import com.mediqor.app.ui.screens.LoginScreen
+import com.mediqor.app.ui.screens.SplashScreen
 
 @Composable
 fun AppNavGraph(
@@ -17,30 +18,15 @@ fun AppNavGraph(
     ) {
 
         composable(Routes.SPLASH) {
-            SplashScreen()
+            SplashScreen(navController)
         }
 
         composable(Routes.LOGIN) {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                }
-            )
+            LoginScreen(navController)
         }
 
-        composable(Routes.HOME) {
+        composable(Routes.DASHBOARD) {
             DashboardScreen(navController)
-        }
-
-
-        composable(Routes.SEARCH) {
-            SearchScreen()
-        }
-
-        composable(Routes.PROFILE) {
-            ProfileScreen()
         }
     }
 }
