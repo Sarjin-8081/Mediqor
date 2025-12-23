@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "375020823644",
+    "firebase_url": "https://mediqor-default-rtdb.firebaseio.com",
+    "project_id": "mediqor",
+    "storage_bucket": "mediqor.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375020823644:android:2fd18030e9c37a8bf5b299",
+        "android_client_info": {
+          "package_name": "com.example.example"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8aLcQgseLbFSqpUG6iJErzeds3IJS0SU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375020823644:android:c0aa1c73a25a41d2f5b299",
+        "android_client_info": {
+          "package_name": "com.mediqor.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8aLcQgseLbFSqpUG6iJErzeds3IJS0SU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

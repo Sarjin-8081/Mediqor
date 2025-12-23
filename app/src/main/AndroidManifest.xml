@@ -12,49 +12,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
         <activity
-            android:name=".ui.DevicesActivity"
+            android:name=".ui.screens.auth.ForgotPassActivity"
             android:exported="false"
-            android:label="@string/title_activity_devices"
+            android:label="@string/title_activity_forgot_pass"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.SurgicalActivity"
-            android:exported="false"
-            android:label="@string/title_activity_surgical"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.dashboard.SupplementActivity"
-            android:exported="false"
-            android:label="@string/title_activity_supplement"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.PersonalCareActivity"
-            android:exported="false"
-            android:label="@string/title_activity_personal_care"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.FamilyCareActivity"
-            android:exported="false"
-            android:label="@string/title_activity_family_care"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.PharmacyActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.dashboard.HomeActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.DashboardActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MediQor" />
-        <activity
-            android:name=".ui.screens.admin.AddPharmacyActivity"
+            android:name="mediqor.app.AddPharmacyActivity"
             android:exported="false"
             android:label="@string/title_activity_add_pharmacy"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.admin.AddProductActivity"
+            android:name="mediqor.app.AddProductActivity"
             android:exported="false"
             android:label="@string/title_activity_add_product"
             android:theme="@style/Theme.MediQor" />
@@ -64,7 +32,7 @@
             android:label="@string/title_activity_manage_orders"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.screens.admin.AdminLoginActivity"
+            android:name="mediqor.app.AdminLoginActivity"
             android:exported="false"
             android:label="@string/title_activity_admin_login"
             android:theme="@style/Theme.MediQor" />
@@ -101,7 +69,7 @@
             android:label="@string/title_activity_checkout"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.cart.CartActivity"
+            android:name=".ui.CartActivity"
             android:exported="false"
             android:label="@string/title_activity_cart"
             android:theme="@style/Theme.MediQor" />
@@ -126,6 +94,13 @@
             android:label="@string/title_activity_home"
             android:theme="@style/Theme.MediQor" />
         <activity
+            android:name=".ui.screens.auth.RegistrationActivity"
+            android:exported="true"
+            android:label="@string/title_activity_register"
+            android:theme="@style/Theme.MediQor" />
+
+
+        <activity
             android:name=".ui.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login1"
@@ -141,11 +116,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.RegistrationActivity"
-            android:exported="true"
-            android:label="@string/title_activity_register"
-            android:theme="@style/Theme.MediQor" />
         <activity
             android:name=".ui.OnboardingActivity"
             android:exported="false"

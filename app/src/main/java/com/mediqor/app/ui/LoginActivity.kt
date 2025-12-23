@@ -37,8 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Black
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -90,7 +88,7 @@ fun LoginBody() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .background(White)
+                .background(Color.White)
         ) {
             // Top-right logo
             Box(
@@ -112,7 +110,7 @@ fun LoginBody() {
                 "LOGIN",
                 style = TextStyle(
                     textAlign = TextAlign.Center,
-                    color = Black,
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 ),
@@ -132,8 +130,8 @@ fun LoginBody() {
                 placeholder = { Text("Email") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = White,
-                    unfocusedContainerColor = White,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 )
@@ -163,8 +161,8 @@ fun LoginBody() {
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("Password") },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = White,
-                    unfocusedContainerColor = White,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 )
@@ -181,6 +179,10 @@ fun LoginBody() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 15.dp)
+                    .clickable {
+                        val intent = Intent(context, ForgotPasswordActivity::class.java)
+                        context.startActivity(intent)
+                    }
             )
 
             // Login Button
@@ -196,7 +198,7 @@ fun LoginBody() {
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF0B8FAC),
-                    contentColor = White
+                    contentColor = Color.White
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
