@@ -24,11 +24,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.mediqor.app.R
 import com.mediqor.app.model.ProductModel
-import com.mediqor.app.repository.CommonRepoImpl
-import com.mediqor.app.repository.ProductRepoImpl
-import com.mediqor.app.utils.ImageUtils
-import com.mediqor.app.viewmodel.CommonViewModel
-import com.mediqor.app.viewmodel.ProductViewModel
+import com.mediqor.app.ui.repository.ProductRepoImpl
 
 class AddProductActivity : ComponentActivity() {
 
