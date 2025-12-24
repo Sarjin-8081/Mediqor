@@ -9,6 +9,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
         <activity
+            android:name=".ui.view.AddProductActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_product"
+            android:theme="@style/Theme.MediQor" />
+        <activity
             android:name=".ui.view.LoginActivity"
             android:exported="false"
             android:label="@string/title_activity_login"
@@ -32,12 +37,9 @@
             android:exported="false" />
         <activity
             android:name=".ui.view.RegistrationActivity"
-            android:exported="false" />
-
-        <!-- =============================================== -->
+            android:exported="false" /> <!-- =============================================== -->
         <!-- CATEGORY ACTIVITIES -->
         <!-- =============================================== -->
-
         <activity
             android:name=".ui.view.category.DevicesActivity"
             android:exported="false" />
