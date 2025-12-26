@@ -1,4 +1,4 @@
-package com.mediqor.app.ui
+package com.mediqor.app.ui.view.category
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,24 +21,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-class SupplementsActivity : ComponentActivity() {
+class PersonalCareActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { SupplementsUI() }
+        setContent { PersonalCareUI() }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SupplementsUI() {
-
+fun PersonalCareUI() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Supplements") },
+                title = { Text("Personal Care") },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFF0B8FAC),
                     titleContentColor = Color.White
@@ -55,7 +54,7 @@ fun SupplementsUI() {
             Modifier.fillMaxSize().padding(padding),
             contentAlignment = Alignment.Center
         ) {
-            Text("Supplements Screen")
+            Text("Personal Care Screen")
         }
     }
 }

@@ -45,7 +45,8 @@ android {
 dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.6")
     implementation("androidx.compose.material:material-icons-extended")
-
+    implementation (platform("com.google.firebase:firebase-bom:33.3.0"))
+    implementation("com.google.firebase:firebase-firestore-ktx")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -71,3 +72,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+apply plugin: 'com.google.gms.google-services'
