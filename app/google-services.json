@@ -1,46 +1,45 @@
 {
   "project_info": {
-    "project_number": "375020823644",
-    "firebase_url": "https://mediqor-default-rtdb.firebaseio.com",
-    "project_id": "mediqor",
-    "storage_bucket": "mediqor.firebasestorage.app"
+    "project_number": "299214504624",
+    "firebase_url": "https://mediqor-7c594-default-rtdb.firebaseio.com",
+    "project_id": "mediqor-7c594",
+    "storage_bucket": "mediqor-7c594.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:375020823644:android:2fd18030e9c37a8bf5b299",
-        "android_client_info": {
-          "package_name": "com.example.example"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD8aLcQgseLbFSqpUG6iJErzeds3IJS0SU"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:375020823644:android:c0aa1c73a25a41d2f5b299",
+        "mobilesdk_app_id": "1:299214504624:android:b4070131778884c6a57175",
         "android_client_info": {
           "package_name": "com.mediqor.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "299214504624-v0s7ti8e7mf9as6j7pjmoajenr2f2rkg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mediqor.app",
+            "certificate_hash": "314f9d0a275e968cdd0620dfca95e2d87fa0ffda"
+          }
+        },
+        {
+          "client_id": "299214504624-043m6mael0rsqdvjcvukns2dj0ufmr2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyD8aLcQgseLbFSqpUG6iJErzeds3IJS0SU"
+          "current_key": "AIzaSyAXW2qmc8UQHa9GoFMOfP_DGEsdNdwqrtA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "299214504624-043m6mael0rsqdvjcvukns2dj0ufmr2k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

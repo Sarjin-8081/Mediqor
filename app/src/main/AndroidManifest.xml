@@ -8,13 +8,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
+<!--        <activity-->
+<!--            android:name=".ui.view.AddProductActivity"-->
+<!--            android:exported="false"-->
+<!--            android:label="@string/title_activity_add_product"-->
+<!--            android:theme="@style/Theme.MediQor" />-->
         <activity
-            android:name=".ui.LoginActivity"
-            android:exported="true"
-            android:label="@string/title_activity_login1"
+            android:name=".ui.view.LoginActivity"
+            android:exported="false"
+            android:label="@string/title_activity_login"
             android:theme="@style/Theme.MediQor" />
         <activity
-            android:name=".ui.SplashActivity"
+            android:name=".ui.view.SplashActivity"
             android:exported="true"
             android:label="@string/title_activity_splash"
             android:theme="@style/Theme.MediQor">
@@ -24,7 +29,41 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.view.ForgotPasswordActivity"
+            android:exported="true" />
+        <activity
+            android:name=".ui.view.DashboardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.RegistrationActivity"
+            android:exported="false" />
 
+
+
+        <!-- =============================================== -->
+        <!-- CATEGORY ACTIVITIES -->
+        <!-- =============================================== -->
+
+
+        <activity
+            android:name=".ui.view.category.DevicesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.FamilyCareActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.PersonalCareActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.PharmacyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.SupplementsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.view.category.SurgicalActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

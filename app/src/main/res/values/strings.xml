@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">MediQor</string>
+
+    <!-- Web Client ID for Google Sign-In -->
+    <string name="default_web_client_id">299214504624-043m6mael0rsqdvjcvukns2dj0ufmr2k.apps.googleusercontent.com</string>
+
+    <!-- Activity Titles -->
     <string name="title_activity_onboarding">OnboardingActivity</string>
     <string name="title_activity_splash">Splash</string>
     <string name="title_activity_login">LoginActivity</string>
