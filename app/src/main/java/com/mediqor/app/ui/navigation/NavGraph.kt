@@ -7,6 +7,9 @@ import androidx.navigation.compose.composable
 import com.mediqor.app.ui.screens.HomeScreen
 import com.mediqor.app.ui.screens.LoginScreen
 import com.mediqor.app.ui.screens.SplashScreen
+import com.mediqor.app.ui.screens.ForgotPasswordScreen
+
+
 
 @Composable
 fun AppNavGraph(
@@ -29,5 +32,10 @@ fun AppNavGraph(
         composable(Routes.HOME) {
             HomeScreen()
         }
+
+        composable(Routes.FORGOTPASSWORD) {
+            ForgotPasswordScreen(navController)
+        }
+
     }
 }

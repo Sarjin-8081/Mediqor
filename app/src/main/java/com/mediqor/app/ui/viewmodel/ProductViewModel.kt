@@ -1,10 +1,15 @@
 package com.mediqor.app.ui.viewmodel
 
+import androidx.lifecycle.ViewModel
 import com.mediqor.app.model.ProductModel
+import com.mediqor.app.ui.repository.ProductRepoImpl
 
-fun addProduct(
-    product: ProductModel,
-    callback: (Boolean, String) -> Unit
-) {
-    repo.addProduct(product, callback)
+class ProductViewModel(private val repo: ProductRepoImpl) : ViewModel() {
+
+    fun addProduct(
+        product: ProductModel,
+        callback: (Boolean, String) -> Unit
+    ) {
+        repo.addProduct(product, callback)
+    }
 }

@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,23 +35,64 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.mediqor.app.R
+import com.mediqor.app.ui.repository.UserRepoImpl
+import com.mediqor.app.ui.viewmodel.UserViewModel
 
 class LoginActivity : ComponentActivity() {
+
+    private lateinit var viewModel: UserViewModel
+
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(Exception::class.java)
+                viewModel.signInWithGoogle(account) { success, message ->
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                    if (success) {
+                        val intent = Intent(this, DashboardActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val repo = UserRepoImpl()
+        viewModel = UserViewModel(repo)
+
         setContent {
-            LoginBody()
+            LoginBody(
+                viewModel = viewModel,
+                onGoogleSignInClick = {
+                    val signInIntent = viewModel.getGoogleSignInClient(this).signInIntent
+                    googleSignInLauncher.launch(signInIntent)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun LoginBody() {
+fun LoginBody(
+    viewModel: UserViewModel? = null,
+    onGoogleSignInClick: () -> Unit = {}
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val activity = context as? Activity
@@ -108,7 +151,8 @@ fun LoginBody() {
                     unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
-                )
+                ),
+                enabled = !loading
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -143,7 +187,8 @@ fun LoginBody() {
                     unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
-                )
+                ),
+                enabled = !loading
             )
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -158,19 +203,39 @@ fun LoginBody() {
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 15.dp)
                     .clickable {
-                        val intent = Intent(context, ForgotPasswordActivity::class.java)
-                        context.startActivity(intent)
+                        if (!loading) {
+                            val intent = Intent(context, ForgotPasswordActivity::class.java)
+                            context.startActivity(intent)
+                        }
                     }
             )
 
             Button(
                 onClick = {
-                    if (localEmail == email && localPassword == password) {
-                        val intent = Intent(context, DashboardActivity::class.java)
-                        context.startActivity(intent)
-                        activity?.finish()
+                    if (email.isBlank() || password.isBlank()) {
+                        Toast.makeText(context, "Fill all fields", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    if (viewModel != null) {
+                        loading = true
+                        viewModel.signIn(email, password) { success, message ->
+                            loading = false
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            if (success) {
+                                val intent = Intent(context, DashboardActivity::class.java)
+                                context.startActivity(intent)
+                                activity?.finish()
+                            }
+                        }
                     } else {
-                        Toast.makeText(context, "Invalid details", Toast.LENGTH_SHORT).show()
+                        if (localEmail == email && localPassword == password) {
+                            val intent = Intent(context, DashboardActivity::class.java)
+                            context.startActivity(intent)
+                            activity?.finish()
+                        } else {
+                            Toast.makeText(context, "Invalid details", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -182,9 +247,61 @@ fun LoginBody() {
                     .padding(horizontal = 15.dp)
                     .height(60.dp),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 15.dp),
-                shape = RoundedCornerShape(32.dp)
+                shape = RoundedCornerShape(32.dp),
+                enabled = !loading
             ) {
-                Text("LOGIN")
+                Text(if (loading) "Loading..." else "LOGIN")
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+                Text(
+                    text = "  OR  ",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            OutlinedButton(
+                onClick = {
+                    if (!loading) {
+                        onGoogleSignInClick()
+                    }
+                },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp)
+                    .height(60.dp),
+                shape = RoundedCornerShape(32.dp),
+                border = BorderStroke(1.dp, Color.LightGray),
+                enabled = !loading
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.googlelogo),
+                        contentDescription = "Google",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Continue with Google", fontSize = 16.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -201,8 +318,10 @@ fun LoginBody() {
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 10.dp)
                     .clickable {
-                        val intent = Intent(context, RegistrationActivity::class.java)
-                        context.startActivity(intent)
+                        if (!loading) {
+                            val intent = Intent(context, RegistrationActivity::class.java)
+                            context.startActivity(intent)
+                        }
                     }
             )
         }
