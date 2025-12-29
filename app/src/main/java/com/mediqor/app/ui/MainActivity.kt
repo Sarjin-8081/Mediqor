@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
 import com.mediqor.app.ui.navigation.AppNavGraph
-import com.mediqor.app.ui.view.theme.MediQorTheme
+import com.mediqor.app.ui.view.ui.theme.MediQorTheme
 
 
 class MainActivity : ComponentActivity() {

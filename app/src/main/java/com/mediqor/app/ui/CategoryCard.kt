@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mediqor.app.model.Category
+import com.mediqor.app.viewmodel.Category
 
 @Composable
 fun CategoryCard(category: Category, onClick: () -> Unit) {
@@ -30,7 +30,7 @@ fun CategoryCard(category: Category, onClick: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(category.icon),
+                painter = painterResource(category.imageRes),
                 contentDescription = category.title,
                 modifier = Modifier.size(45.dp)
             )
