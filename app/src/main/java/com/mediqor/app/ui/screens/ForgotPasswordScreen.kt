@@ -23,3 +23,4 @@ fun ForgotPasswordScreen(navController: NavHostController) {
         }
     }
 }
+
