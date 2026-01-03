@@ -59,7 +59,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.runtime)
-<<<<<<< Updated upstream
+
 
     // Material Design
     implementation("androidx.compose.material3:material3:1.2.0")
@@ -85,11 +85,12 @@ dependencies {
     implementation("com.cloudinary:cloudinary-android:2.1.0")
 
     // Testing
-=======
+
     implementation(libs.firebase.auth)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.firebase.database)
->>>>>>> Stashed changes
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
