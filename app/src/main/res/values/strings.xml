@@ -29,4 +29,9 @@
     <string name="title_activity_bottom_nav">BottomNav</string>
     <string name="title_activity_dashboard_screen">DashboardScreen</string>
     <string name="title_activity_forgot_pass">ForgotPassActivity</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_help_support">HelpSupportActivity</string>
+    <string name="title_activity_prescriptions">PrescriptionsActivity</string>
+    <string name="title_activity_my_orders">MyOrdersActivity</string>
+    <string name="title_activity_saved_addresses">SavedAddressesActivity</string>
 </resources>
