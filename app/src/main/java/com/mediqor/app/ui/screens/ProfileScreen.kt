@@ -16,6 +16,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.mediqor.app.ui.view.LoginActivity
+import com.mediqor.app.ui.view.MyOrdersActivity
+import com.mediqor.app.ui.view.SavedAddressesActivity
+import com.mediqor.app.ui.view.PrescriptionsActivity
+import com.mediqor.app.ui.view.SettingsActivity
+import com.mediqor.app.ui.view.HelpSupportActivity
 
 @Composable
 fun ProfileScreen() {
@@ -76,8 +81,8 @@ fun ProfileScreen() {
             icon = Icons.Outlined.ShoppingCart,
             title = "My Orders",
             onClick = {
-                // TODO: Navigate to Orders screen
-                // For now, show a toast or do nothing
+                val intent = Intent(context, MyOrdersActivity::class.java)
+                context.startActivity(intent)
             }
         )
 
@@ -85,7 +90,8 @@ fun ProfileScreen() {
             icon = Icons.Outlined.LocationOn,
             title = "Saved Addresses",
             onClick = {
-                // TODO: Navigate to Addresses screen
+                val intent = Intent(context, SavedAddressesActivity::class.java)
+                context.startActivity(intent)
             }
         )
 
@@ -93,7 +99,8 @@ fun ProfileScreen() {
             icon = Icons.Outlined.Notifications,
             title = "Prescriptions",
             onClick = {
-                // TODO: Navigate to Prescriptions screen
+                val intent = Intent(context, PrescriptionsActivity::class.java)
+                context.startActivity(intent)
             }
         )
 
@@ -101,7 +108,8 @@ fun ProfileScreen() {
             icon = Icons.Outlined.Settings,
             title = "Settings",
             onClick = {
-                // TODO: Navigate to Settings screen
+                val intent = Intent(context, SettingsActivity::class.java)
+                context.startActivity(intent)
             }
         )
 
@@ -109,7 +117,8 @@ fun ProfileScreen() {
             icon = Icons.Outlined.Info,
             title = "Help & Support",
             onClick = {
-                // TODO: Navigate to Help screen
+                val intent = Intent(context, HelpSupportActivity::class.java)
+                context.startActivity(intent)
             }
         )
 

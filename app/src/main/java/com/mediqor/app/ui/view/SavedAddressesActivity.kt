@@ -513,7 +513,7 @@ fun DeliveryAddressCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(verticalAlignment = Alignment.Start) {
+            Row(verticalAlignment = Alignment.Top) {
                 Icon(
                     Icons.Outlined.LocationOn,
                     contentDescription = null,
