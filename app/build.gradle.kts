@@ -28,48 +28,47 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
-    // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+
+    // 🔥 Firebase BoM (correct & stable)
+    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.0.0")
 
-    // Compose BOM
+    // 🎨 Compose BoM
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.runtime)
-
-    // Material Design
-    implementation("androidx.compose.material3:material3:1.2.0")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.runtime:runtime-livedata:1.10.0")
+    implementation("androidx.compose.runtime:runtime-livedata")
 
     // AndroidX Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation("androidx.activity:activity-compose:1.8.2")
 
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
@@ -77,7 +76,7 @@ dependencies {
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    // Lottie Animations
+    // Lottie
     implementation("com.airbnb.android:lottie-compose:6.1.0")
 
     // Cloudinary

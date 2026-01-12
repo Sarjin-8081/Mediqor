@@ -1,41 +1,22 @@
 package com.mediqor.app.ui.view
+
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,32 +33,70 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.mediqor.app.R
-
+import com.mediqor.app.ui.repository.UserRepoImpl
+import com.mediqor.app.ui.viewmodel.UserViewModel
 
 class RegistrationActivity : ComponentActivity() {
+
+    private lateinit var viewModel: UserViewModel
+
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(Exception::class.java)
+                viewModel.signInWithGoogle(account) { success, message ->
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                    if (success) {
+                        val intent = Intent(this, DashboardActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val repo = UserRepoImpl()
+        viewModel = UserViewModel(repo)
+
         setContent {
-            RegistrationBody()
+            RegistrationBody(
+                viewModel = viewModel,
+                onGoogleSignInClick = {
+                    val signInIntent = viewModel.getGoogleSignInClient(this).signInIntent
+                    googleSignInLauncher.launch(signInIntent)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun RegistrationBody() {
+fun RegistrationBody(
+    viewModel: UserViewModel? = null,
+    onGoogleSignInClick: () -> Unit = {}
+) {
 
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
     var terms by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = try { context as Activity } catch (e: Exception) { null }
-
-    val sharedPreference = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-    val editor = sharedPreference.edit()
+    val activity = context as? Activity
 
     Scaffold { padding ->
         Column(
@@ -94,7 +113,7 @@ fun RegistrationBody() {
                 contentAlignment = Alignment.TopEnd
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.baseline_person_24),
+                    painter = painterResource(id = R.drawable.mediqor),
                     contentDescription = "Logo",
                     modifier = Modifier.size(80.dp)
                 )
@@ -115,6 +134,26 @@ fun RegistrationBody() {
 
             Spacer(modifier = Modifier.height(40.dp))
 
+            // Name field
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp),
+                shape = RoundedCornerShape(15.dp),
+                placeholder = { Text("Full Name") },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color(0xFF0B8FAC),
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
+                ),
+                enabled = !loading
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             // Email field
             OutlinedTextField(
                 value = email,
@@ -130,7 +169,8 @@ fun RegistrationBody() {
                     unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
-                )
+                ),
+                enabled = !loading
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -161,7 +201,8 @@ fun RegistrationBody() {
                     unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
-                )
+                ),
+                enabled = !loading
             )
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -177,7 +218,8 @@ fun RegistrationBody() {
                     colors = CheckboxDefaults.colors(
                         checkedColor = Color(0xFF0B8FAC),
                         checkmarkColor = Color.White
-                    )
+                    ),
+                    enabled = !loading
                 )
                 Text("I agree to the terms & conditions")
             }
@@ -187,7 +229,7 @@ fun RegistrationBody() {
             // Sign Up Button
             Button(
                 onClick = {
-                    if (email.isEmpty() || password.isEmpty()) {
+                    if (name.isBlank() || email.isBlank() || password.isBlank()) {
                         Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -195,11 +237,19 @@ fun RegistrationBody() {
                         Toast.makeText(context, "Please agree to terms & conditions", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-                    editor.putString("email", email)
-                    editor.putString("password", password)
-                    editor.apply()
-                    Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
-                    activity?.finish()
+
+                    if (viewModel != null) {
+                        loading = true
+                        viewModel.signUp(email, password, name) { success, message ->
+                            loading = false
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            if (success) {
+                                val intent = Intent(context, DashboardActivity::class.java)
+                                context.startActivity(intent)
+                                activity?.finish()
+                            }
+                        }
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF0B8FAC),
@@ -210,9 +260,63 @@ fun RegistrationBody() {
                     .padding(horizontal = 15.dp)
                     .height(60.dp),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 15.dp),
-                shape = RoundedCornerShape(32.dp)
+                shape = RoundedCornerShape(32.dp),
+                enabled = !loading
             ) {
-                Text("SIGN UP")
+                Text(if (loading) "Loading..." else "SIGN UP")
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // OR Divider
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+                Text(
+                    text = "  OR  ",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Google Sign-In Button
+            OutlinedButton(
+                onClick = {
+                    if (!loading) {
+                        onGoogleSignInClick()
+                    }
+                },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp)
+                    .height(60.dp),
+                shape = RoundedCornerShape(32.dp),
+                border = BorderStroke(1.dp, Color.LightGray),
+                enabled = !loading
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.googlelogo),
+                        contentDescription = "Google",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Continue with Google", fontSize = 16.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -230,8 +334,11 @@ fun RegistrationBody() {
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 10.dp)
                     .clickable {
-                        val intent = Intent(context, LoginActivity::class.java)
-                        context.startActivity(intent)
+                        if (!loading) {
+                            val intent = Intent(context, LoginActivity::class.java)
+                            context.startActivity(intent)
+                            activity?.finish()
+                        }
                     }
             )
 

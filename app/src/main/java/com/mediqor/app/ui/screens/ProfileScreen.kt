@@ -12,8 +12,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-
-
 @Composable
 fun ProfileScreen() {
     Column(
@@ -50,16 +48,16 @@ fun ProfileScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Divider()
+        HorizontalDivider()
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔹 Menu Items
-        ProfileItem(Icons.Outlined.ShoppingBag, "My Orders")
+        // 🔹 Menu Items (FIXED ICONS)
+        ProfileItem(Icons.Outlined.ShoppingCart, "My Orders")
         ProfileItem(Icons.Outlined.LocationOn, "Saved Addresses")
-        ProfileItem(Icons.Outlined.ReceiptLong, "Prescriptions")
+        ProfileItem(Icons.Outlined.Notifications, "Prescriptions")
         ProfileItem(Icons.Outlined.Settings, "Settings")
-        ProfileItem(Icons.Outlined.HelpOutline, "Help & Support")
+        ProfileItem(Icons.Outlined.Info, "Help & Support")
 
         Spacer(modifier = Modifier.height(32.dp))
 
