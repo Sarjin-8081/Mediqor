@@ -55,4 +55,8 @@ class UserViewModel(private val repo: UserRepo) {
     ) {
         repo.signInWithGoogle(account, callback)
     }
+
+    fun resetPassword(email: String, callback: (Boolean, String) -> Unit) {
+        repo.resetPassword(email, callback)
+    }
 }

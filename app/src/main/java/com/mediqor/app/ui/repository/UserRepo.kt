@@ -41,4 +41,9 @@ interface UserRepo {
         account: GoogleSignInAccount,
         callback: (Boolean, String) -> Unit
     )
+
+    fun resetPassword(
+        email: String,
+        callback: (Boolean, String) -> Unit
+    )
 }

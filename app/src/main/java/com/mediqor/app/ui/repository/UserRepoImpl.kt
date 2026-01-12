@@ -147,4 +147,43 @@ class UserRepoImpl : UserRepo {
                 callback(false, e.message ?: "Google sign-in failed")
             }
     }
+
+    override fun resetPassword(email: String, callback: (Boolean, String) -> Unit) {
+        android.util.Log.d("UserRepoImpl", "Attempting to send reset email to: $email")
+
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    android.util.Log.d("UserRepoImpl", "✅ Reset email sent successfully to: $email")
+                    callback(true, "Password reset email sent! Check your inbox and spam folder.")
+                } else {
+                    val exception = task.exception
+                    android.util.Log.e("UserRepoImpl", "❌ Failed to send reset email to: $email")
+                    android.util.Log.e("UserRepoImpl", "Exception: ${exception?.message}")
+                    android.util.Log.e(
+                        "UserRepoImpl",
+                        "Exception type: ${exception?.javaClass?.simpleName}"
+                    )
+
+                    val errorMessage = when {
+                        exception?.message?.contains("badly formatted") == true ->
+                            "Invalid email format"
+
+                        exception?.message?.contains("no user record") == true ||
+                                exception?.message?.contains("USER_NOT_FOUND") == true ->
+                            "No account found with this email address"
+
+                        exception?.message?.contains("network") == true ->
+                            "Network error. Check your connection."
+
+                        exception?.message?.contains("TOO_MANY_ATTEMPTS") == true ->
+                            "Too many attempts. Please try again later."
+
+                        else ->
+                            "Failed to send reset email: ${exception?.message ?: "Unknown error"}"
+                    }
+                    callback(false, errorMessage)
+                }
+            }
+    }
 }

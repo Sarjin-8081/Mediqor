@@ -1,6 +1,5 @@
 package com.mediqor.app.ui.repository
 
-
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mediqor.app.model.ProductModel
 
@@ -20,8 +19,8 @@ class ProductRepoImpl : ProductRepo {
             .addOnSuccessListener {
                 callback(true, "Product added successfully")
             }
-            .addOnFailureListener {
-                callback(false, it.message ?: "Failed to add product")
+            .addOnFailureListener { exception ->
+                callback(false, exception.message ?: "Failed to add product")
             }
     }
 
@@ -30,8 +29,17 @@ class ProductRepoImpl : ProductRepo {
     ) {
         productRef.get()
             .addOnSuccessListener { snapshot ->
-                val products = snapshot.toObjects(ProductModel::class.java)
-                callback(products)
+                try {
+                    val products = snapshot.toObjects(ProductModel::class.java)
+                    callback(products)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    callback(emptyList())
+                }
+            }
+            .addOnFailureListener { exception ->
+                exception.printStackTrace()
+                callback(emptyList())
             }
     }
 
@@ -44,8 +52,8 @@ class ProductRepoImpl : ProductRepo {
             .addOnSuccessListener {
                 callback(true, "Product deleted")
             }
-            .addOnFailureListener {
-                callback(false, it.message ?: "Delete failed")
+            .addOnFailureListener { exception ->
+                callback(false, exception.message ?: "Delete failed")
             }
     }
 }

@@ -55,6 +55,7 @@ class LoginActivity : ComponentActivity() {
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     if (success) {
                         val intent = Intent(this, DashboardActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK  // ✅ Added
                         startActivity(intent)
                         finish()
                     }
@@ -116,7 +117,7 @@ fun LoginBody(
                 contentAlignment = Alignment.TopEnd
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.baseline_home_24),
+                    painter = painterResource(id = R.drawable.mediqor),
                     contentDescription = "Logo",
                     modifier = Modifier.size(80.dp)
                 )
@@ -224,6 +225,7 @@ fun LoginBody(
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             if (success) {
                                 val intent = Intent(context, DashboardActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK  // ✅ Added
                                 context.startActivity(intent)
                                 activity?.finish()
                             }
@@ -231,6 +233,7 @@ fun LoginBody(
                     } else {
                         if (localEmail == email && localPassword == password) {
                             val intent = Intent(context, DashboardActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK  // ✅ Added
                             context.startActivity(intent)
                             activity?.finish()
                         } else {
