@@ -53,6 +53,7 @@ class RegistrationActivity : ComponentActivity() {
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     if (success) {
                         val intent = Intent(this, DashboardActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         startActivity(intent)
                         finish()
                     }
@@ -245,6 +246,7 @@ fun RegistrationBody(
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             if (success) {
                                 val intent = Intent(context, DashboardActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 context.startActivity(intent)
                                 activity?.finish()
                             }

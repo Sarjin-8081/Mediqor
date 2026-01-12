@@ -1,6 +1,7 @@
 package com.mediqor.app.ui.view
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -26,30 +27,41 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mediqor.app.R
-import androidx.compose.ui.tooling.preview.Preview
+import com.mediqor.app.ui.repository.UserRepoImpl
+import com.mediqor.app.ui.viewmodel.UserViewModel
 
 class ForgotPasswordActivity : ComponentActivity() {
+
+    private lateinit var viewModel: UserViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val repo = UserRepoImpl()
+        viewModel = UserViewModel(repo)
+
         setContent {
-            ForgotPasswordBody()
+            ForgotPasswordBody(viewModel = viewModel)
         }
     }
 }
 
 @Composable
-fun ForgotPasswordBody() {
+fun ForgotPasswordBody(viewModel: UserViewModel? = null) {
 
     var email by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+
     val context = LocalContext.current
-    val activity = try { context as Activity } catch (e: Exception) { null }
+    val activity = context as? Activity
 
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding) // Apply scaffold padding
+                .padding(padding)
                 .padding(horizontal = 24.dp)
                 .background(Color.White)
         ) {
@@ -59,17 +71,18 @@ fun ForgotPasswordBody() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 40.dp),
-                contentAlignment = Alignment.TopStart // Changed to TopStart for back arrow
+                contentAlignment = Alignment.TopStart
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_arrow_back_ios_new_24),
-                    contentDescription = "Back",
-                    modifier = Modifier
-                        .size(40.dp) // More appropriate size for back arrow
-                        .clickable {
-                            activity?.finish()
-                        }
-                )
+                IconButton(
+                    onClick = { activity?.finish() },
+                    enabled = !loading
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_arrow_back_ios_new_24),
+                        contentDescription = "Back",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(50.dp))
@@ -104,7 +117,10 @@ fun ForgotPasswordBody() {
             // Email field
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    emailError = null // Clear error when user types
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp),
@@ -115,8 +131,20 @@ fun ForgotPasswordBody() {
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
-                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
-                )
+                    unfocusedIndicatorColor = Color(0xFFE0F0F5),
+                    errorIndicatorColor = Color.Red
+                ),
+                isError = emailError != null,
+                supportingText = {
+                    emailError?.let {
+                        Text(
+                            text = it,
+                            color = Color.Red,
+                            fontSize = 12.sp
+                        )
+                    }
+                },
+                enabled = !loading
             )
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -124,12 +152,33 @@ fun ForgotPasswordBody() {
             // Reset button
             Button(
                 onClick = {
-                    if (email.isEmpty()) {
-                        Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
+                    // Validate email
+                    if (email.isBlank()) {
+                        emailError = "Please enter your email"
+                        return@Button
+                    }
+
+                    if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        emailError = "Please enter a valid email address"
+                        return@Button
+                    }
+
+                    // Send reset email
+                    if (viewModel != null) {
+                        loading = true
+                        viewModel.resetPassword(email) { success, message ->
+                            loading = false
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            if (success) {
+                                // Navigate back to login after successful reset
+                                val intent = Intent(context, LoginActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                context.startActivity(intent)
+                                activity?.finish()
+                            }
+                        }
                     } else {
-                        Toast.makeText(context, "Reset link sent (demo)", Toast.LENGTH_SHORT).show()
-                        // Optionally finish activity after sending reset link
-                        // activity?.finish()
+                        Toast.makeText(context, "Service unavailable", Toast.LENGTH_SHORT).show()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -140,9 +189,18 @@ fun ForgotPasswordBody() {
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp)
                     .height(55.dp),
-                shape = RoundedCornerShape(32.dp)
+                shape = RoundedCornerShape(32.dp),
+                enabled = !loading
             ) {
-                Text("SEND RESET LINK")
+                if (loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("SEND RESET LINK")
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -157,17 +215,14 @@ fun ForgotPasswordBody() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(15.dp)
-                    .clickable {
+                    .clickable(enabled = !loading) {
+                        val intent = Intent(context, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        context.startActivity(intent)
                         activity?.finish()
                     },
                 textAlign = TextAlign.Center
             )
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ForgotPasswordPreview() {
-    ForgotPasswordBody()
 }
