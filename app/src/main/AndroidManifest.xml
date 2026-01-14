@@ -8,11 +8,35 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediQor">
-<!--        <activity-->
-<!--            android:name=".ui.view.AddProductActivity"-->
-<!--            android:exported="false"-->
-<!--            android:label="@string/title_activity_add_product"-->
-<!--            android:theme="@style/Theme.MediQor" />-->
+        <activity
+            android:name=".ui.view.SavedAddressesActivity"
+            android:exported="false"
+            android:label="@string/title_activity_saved_addresses"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.view.MyOrdersActivity"
+            android:exported="false"
+            android:label="@string/title_activity_my_orders"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.view.PrescriptionsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_prescriptions"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.view.HelpSupportActivity"
+            android:exported="false"
+            android:label="@string/title_activity_help_support"
+            android:theme="@style/Theme.MediQor" />
+        <activity
+            android:name=".ui.view.SettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/Theme.MediQor" /> <!-- <activity -->
+        <!-- android:name=".ui.view.AddProductActivity" -->
+        <!-- android:exported="false" -->
+        <!-- android:label="@string/title_activity_add_product" -->
+        <!-- android:theme="@style/Theme.MediQor" /> -->
         <activity
             android:name=".ui.view.LoginActivity"
             android:exported="false"
@@ -48,10 +72,8 @@
             android:exported="false" />
 
 
-
-        <!-- =============================================== -->
         <!-- CATEGORY ACTIVITIES -->
-        <!-- =============================================== -->
+
 
 
         <activity

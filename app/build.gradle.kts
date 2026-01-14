@@ -89,7 +89,6 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.firebase.database)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
