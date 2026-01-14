@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">MediqorOG</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="default_web_client_id">173206687246-lsqpajsu0l1alqh170duba181qd56v5d.apps.googleusercontent.com</string>
+    <string name="title_activity_registration">RegistrationActivity</string>
+    <string name="title_activity_forgot_password">ForgotPasswordActivity</string>
+    <string name="title_activity_dashboard">DashboardActivity</string>
+    <string name="title_activity_pharmacy">PharmacyActivity</string>
+    <string name="title_activity_family_care">FamilyCareActivity</string>
+    <string name="title_activity_personal_care">PersonalCareActivity</string>
+    <string name="title_activity_supplement">SupplementActivity</string>
+    <string name="title_activity_devices">DevicesActivity</string>
+    <string name="title_activity_surgical">SurgicalActivity</string>
+</resources>

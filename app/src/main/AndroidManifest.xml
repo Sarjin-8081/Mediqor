@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MediqorOG">
+        <activity
+            android:name=".view.SurgicalActivity"
+            android:exported="false"
+            android:label="@string/title_activity_surgical"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.DevicesActivity"
+            android:exported="false"
+            android:label="@string/title_activity_devices"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.SupplementActivity"
+            android:exported="false"
+            android:label="@string/title_activity_supplement"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.PersonalCareActivity"
+            android:exported="false"
+            android:label="@string/title_activity_personal_care"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.FamilyCareActivity"
+            android:exported="false"
+            android:label="@string/title_activity_family_care"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.PharmacyActivity"
+            android:exported="false"
+            android:label="@string/title_activity_pharmacy"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.DashboardActivity"
+            android:exported="false"
+            android:label="@string/title_activity_dashboard"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.ForgotPasswordActivity"
+            android:exported="false"
+            android:label="@string/title_activity_forgot_password"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.RegistrationActivity"
+            android:exported="false"
+            android:label="@string/title_activity_registration"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.SplashActivity"
+            android:exported="true"
+            android:label="@string/title_activity_splash"
+            android:theme="@style/Theme.MediqorOG">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".view.LoginActivity"
+            android:exported="false"
+            android:label="@string/title_activity_login"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MediqorOG">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
