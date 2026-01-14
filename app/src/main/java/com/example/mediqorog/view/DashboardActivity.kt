@@ -18,6 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mediqorog.view.screens.ChatbotScreen
+import com.example.mediqorog.viewmodel.ChatbotViewModel
+import com.example.mediqorog.view.screens.*
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,14 +120,14 @@ fun DashboardBody() {
         ) {
             when (selectedTab) {
                 0 -> {
-                    DashboardHomeScreen(
+                    HomeScreen(
                         onChatbotClick = {
                             chatbotViewModel.openChatbot()
                         }
                     )
                 }
                 1 -> CartScreen()
-                2 -> NotificationScreen()
+                2 -> MapScreen()
                 3 -> ProfileScreen()
             }
             if (showChatbot) {
