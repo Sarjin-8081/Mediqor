@@ -31,30 +31,37 @@ class DashboardActivity : ComponentActivity() {
         }
     }
 }
+
 data class NavigationItem(
     val title: String,
     val icon: ImageVector,
     val route: String
 )
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardBody() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
     val chatbotViewModel: ChatbotViewModel = viewModel()
-    val showChatbot = chatbotViewModel.showChatbot.value
+
+    // FIX: Use collectAsState() instead of .value
+    val showChatbot by chatbotViewModel.showChatbot.collectAsState()
+
     val navigationItems = remember {
         listOf(
             NavigationItem("Home", Icons.Filled.Home, "home"),
             NavigationItem("Cart", Icons.Filled.ShoppingCart, "cart"),
-            NavigationItem("Notify", Icons.Filled.Notifications, "notification"),
+            NavigationItem("Map", Icons.Filled.LocationOn, "map"),
             NavigationItem("Profile", Icons.Filled.Person, "profile")
         )
     }
+
     var selectedTab by remember { mutableStateOf(0) }
     val primaryColor = Color(0xFF0B8FAC)
     val lightPrimaryColor = primaryColor.copy(alpha = 0.3f)
     val unselectedColor = Color.Gray
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -118,6 +125,7 @@ fun DashboardBody() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Main content based on selected tab
             when (selectedTab) {
                 0 -> {
                     HomeScreen(
@@ -130,6 +138,8 @@ fun DashboardBody() {
                 2 -> MapScreen()
                 3 -> ProfileScreen()
             }
+
+            // Chatbot overlay - appears on top of all screens
             if (showChatbot) {
                 ChatbotScreen(
                     onBackClick = {

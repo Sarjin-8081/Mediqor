@@ -1,6 +1,7 @@
 package com.example.mediqorog.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mediqorog.R
@@ -57,13 +58,21 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
     fun signInWithGoogle(account: GoogleSignInAccount, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val result = repository.signInWithGoogle(account)
-            result.onSuccess { user ->
-                _currentUser.value = user
-                onResult(true, "Google sign-in successful!")
-            }
-            result.onFailure { exception ->
-                onResult(false, exception.message ?: "Google sign-in failed")
+            try {
+                Log.d("UserViewModel", "Starting Google sign-in with account: ${account.email}")
+                val result = repository.signInWithGoogle(account)
+                result.onSuccess { user ->
+                    Log.d("UserViewModel", "Google sign-in successful: ${user.email}")
+                    _currentUser.value = user
+                    onResult(true, "Google sign-in successful!")
+                }
+                result.onFailure { exception ->
+                    Log.e("UserViewModel", "Google sign-in failed: ${exception.message}")
+                    onResult(false, exception.message ?: "Google sign-in failed")
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Exception in signInWithGoogle: ${e.message}")
+                onResult(false, "Error: ${e.message}")
             }
         }
     }
@@ -94,11 +103,23 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     }
 
     fun getGoogleSignInClient(context: Context): GoogleSignInClient {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
+        return try {
+            // Try with Firebase web client ID first
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
 
-        return GoogleSignIn.getClient(context, gso)
+            Log.d("UserViewModel", "Creating GoogleSignInClient with Firebase config")
+            GoogleSignIn.getClient(context, gso)
+        } catch (e: Exception) {
+            // Fallback: If Firebase not configured, use basic Google Sign-In
+            Log.w("UserViewModel", "Firebase config not found, using basic Google Sign-In")
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+
+            GoogleSignIn.getClient(context, gso)
+        }
     }
 }

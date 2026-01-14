@@ -1,5 +1,6 @@
 package com.example.mediqorog.repository
 
+import com.example.mediqorog.BuildConfig
 import com.example.mediqorog.model.ChatMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,7 +19,8 @@ class ChatbotRepoImpl : ChatbotRepository {
 
     companion object {
         // API Configuration
-        private const val API_KEY = "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"
+        private val API_KEY = BuildConfig.GROQ_API_KEY
+
         private const val API_URL = "https://api.groq.com/openai/v1/chat/completions"
         private const val MODEL = "llama-3.3-70b-versatile"
 

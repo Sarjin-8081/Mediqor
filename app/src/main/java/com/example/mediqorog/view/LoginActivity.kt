@@ -38,8 +38,8 @@ import androidx.compose.ui.unit.sp
 import com.example.mediqorog.repository.UserRepoImpl
 import com.example.mediqorog.viewmodel.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import com.example.mediqorog.R
-
 
 class LoginActivity : ComponentActivity() {
 
@@ -51,18 +51,27 @@ class LoginActivity : ComponentActivity() {
         if (result.resultCode == RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
-                val account = task.getResult(Exception::class.java)
+                val account = task.getResult(ApiException::class.java)
                 viewModel.signInWithGoogle(account) { success, message ->
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                    if (success) {
-                        val intent = Intent(this, DashboardActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK  // ✅ Added
-                        startActivity(intent)
-                        finish()
+                    runOnUiThread {
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                        if (success) {
+                            navigateToDashboard()
+                        }
                     }
                 }
+            } catch (e: ApiException) {
+                Toast.makeText(
+                    this,
+                    "Google sign-in failed: ${e.statusCode}",
+                    Toast.LENGTH_SHORT
+                ).show()
             } catch (e: Exception) {
-                Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Sign-in error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -78,11 +87,26 @@ class LoginActivity : ComponentActivity() {
             LoginBody(
                 viewModel = viewModel,
                 onGoogleSignInClick = {
-                    val signInIntent = viewModel.getGoogleSignInClient(this).signInIntent
-                    googleSignInLauncher.launch(signInIntent)
+                    try {
+                        val signInIntent = viewModel.getGoogleSignInClient(this).signInIntent
+                        googleSignInLauncher.launch(signInIntent)
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            this,
+                            "Failed to start Google Sign-In: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             )
         }
+    }
+
+    private fun navigateToDashboard() {
+        val intent = Intent(this, DashboardActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }
 
@@ -148,11 +172,11 @@ fun LoginBody(
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("Email") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                colors = TextFieldDefaults.colors(
+                colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedIndicatorColor = Color(0xFF0B8FAC),
-                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
+                    focusedBorderColor = Color(0xFF0B8FAC),
+                    unfocusedBorderColor = Color(0xFFE0F0F5)
                 ),
                 enabled = !loading
             )
@@ -184,11 +208,11 @@ fun LoginBody(
                     .padding(horizontal = 15.dp),
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("Password") },
-                colors = TextFieldDefaults.colors(
+                colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedIndicatorColor = Color(0xFF0B8FAC),
-                    unfocusedIndicatorColor = Color(0xFFE0F0F5)
+                    focusedBorderColor = Color(0xFF0B8FAC),
+                    unfocusedBorderColor = Color(0xFFE0F0F5)
                 ),
                 enabled = !loading
             )
@@ -226,7 +250,7 @@ fun LoginBody(
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             if (success) {
                                 val intent = Intent(context, DashboardActivity::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK  // ✅ Added
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 context.startActivity(intent)
                                 activity?.finish()
                             }
@@ -234,7 +258,7 @@ fun LoginBody(
                     } else {
                         if (localEmail == email && localPassword == password) {
                             val intent = Intent(context, DashboardActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK  // ✅ Added
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             context.startActivity(intent)
                             activity?.finish()
                         } else {
