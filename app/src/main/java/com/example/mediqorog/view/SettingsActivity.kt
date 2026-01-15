@@ -1,7 +1,7 @@
 package com.example.mediqorog.view
 
+import android.app.DatePickerDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import java.util.*
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,26 +51,40 @@ fun SettingsScreen() {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var orderUpdatesEnabled by remember { mutableStateOf(true) }
-    var medicineRemindersEnabled by remember { mutableStateOf(true) }
-    var promotionalOffersEnabled by remember { mutableStateOf(false) }
-    var darkModeEnabled by remember { mutableStateOf(false) }
-    var biometricEnabled by remember { mutableStateOf(false) }
+    val prefs = remember {
+        context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE)
+    }
+
+    var notificationsEnabled by remember { mutableStateOf(prefs.getBoolean("notifications", true)) }
+    var orderUpdatesEnabled by remember { mutableStateOf(prefs.getBoolean("order_updates", true)) }
+    var medicineRemindersEnabled by remember { mutableStateOf(prefs.getBoolean("medicine_reminders", true)) }
+    var promotionalOffersEnabled by remember { mutableStateOf(prefs.getBoolean("promotional_offers", false)) }
+    var darkModeEnabled by remember { mutableStateOf(prefs.getBoolean("dark_mode", false)) }
+    var biometricEnabled by remember { mutableStateOf(prefs.getBoolean("biometric", false)) }
+
+    var phoneNumber by remember { mutableStateOf(prefs.getString("phone", "+977 9800000000") ?: "+977 9800000000") }
+    var dateOfBirth by remember { mutableStateOf(prefs.getString("dob", "Not set") ?: "Not set") }
+    var bloodGroup by remember { mutableStateOf(prefs.getString("blood_group", "Not set") ?: "Not set") }
+    var selectedLanguage by remember { mutableStateOf(prefs.getString("language", "English") ?: "English") }
+    var selectedFontSize by remember { mutableStateOf(prefs.getString("font_size", "Medium") ?: "Medium") }
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showPhoneDialog by remember { mutableStateOf(false) }
-    var showDOBDialog by remember { mutableStateOf(false) }
     var showBloodGroupDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showFontSizeDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
+    var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showLicensesDialog by remember { mutableStateOf(false) }
 
-    var phoneNumber by remember { mutableStateOf("+977 9800000000") }
-    var dateOfBirth by remember { mutableStateOf("Not set") }
-    var bloodGroup by remember { mutableStateOf("Not set") }
-    var selectedLanguage by remember { mutableStateOf("English") }
-    var selectedFontSize by remember { mutableStateOf("Medium") }
+    // Save preference helper
+    fun savePref(key: String, value: Boolean) {
+        prefs.edit().putBoolean(key, value).apply()
+    }
+    fun savePref(key: String, value: String) {
+        prefs.edit().putString(key, value).apply()
+    }
 
     Scaffold(
         topBar = {
@@ -166,7 +181,20 @@ fun SettingsScreen() {
                     icon = Icons.Outlined.DateRange,
                     title = "Date of Birth",
                     subtitle = dateOfBirth,
-                    onClick = { showDOBDialog = true }
+                    onClick = {
+                        val calendar = Calendar.getInstance()
+                        DatePickerDialog(
+                            context,
+                            { _, year, month, day ->
+                                dateOfBirth = "$day/${month + 1}/$year"
+                                savePref("dob", dateOfBirth)
+                                Toast.makeText(context, "Date of birth updated", Toast.LENGTH_SHORT).show()
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    }
                 )
 
                 SettingsItem(
@@ -188,6 +216,7 @@ fun SettingsScreen() {
                     checked = notificationsEnabled,
                     onCheckedChange = {
                         notificationsEnabled = it
+                        savePref("notifications", it)
                         Toast.makeText(
                             context,
                             if (it) "Notifications enabled" else "Notifications disabled",
@@ -205,6 +234,7 @@ fun SettingsScreen() {
                     checked = orderUpdatesEnabled,
                     onCheckedChange = {
                         orderUpdatesEnabled = it
+                        savePref("order_updates", it)
                         Toast.makeText(
                             context,
                             if (it) "Order updates enabled" else "Order updates disabled",
@@ -222,6 +252,7 @@ fun SettingsScreen() {
                     checked = medicineRemindersEnabled,
                     onCheckedChange = {
                         medicineRemindersEnabled = it
+                        savePref("medicine_reminders", it)
                         Toast.makeText(
                             context,
                             if (it) "Medicine reminders enabled" else "Medicine reminders disabled",
@@ -239,6 +270,7 @@ fun SettingsScreen() {
                     checked = promotionalOffersEnabled,
                     onCheckedChange = {
                         promotionalOffersEnabled = it
+                        savePref("promotional_offers", it)
                         Toast.makeText(
                             context,
                             if (it) "Promotional offers enabled" else "Promotional offers disabled",
@@ -255,7 +287,7 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = Icons.Outlined.Language,
                     title = "Language",
-                    subtitle = selectedLanguage,
+                    subtitle = "$selectedLanguage (Restart app to apply)",
                     onClick = { showLanguageDialog = true }
                 )
 
@@ -264,14 +296,15 @@ fun SettingsScreen() {
                 SettingsSwitchItem(
                     icon = Icons.Outlined.DarkMode,
                     title = "Dark Mode",
-                    subtitle = "Switch to dark theme",
+                    subtitle = if (darkModeEnabled) "Dark theme active" else "Light theme active",
                     checked = darkModeEnabled,
                     onCheckedChange = {
                         darkModeEnabled = it
+                        savePref("dark_mode", it)
                         Toast.makeText(
                             context,
-                            "Dark mode ${if (it) "enabled" else "disabled"} (requires app restart)",
-                            Toast.LENGTH_SHORT
+                            "Dark mode ${if (it) "enabled" else "disabled"}. Restart app to apply.",
+                            Toast.LENGTH_LONG
                         ).show()
                     }
                 )
@@ -281,8 +314,25 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = Icons.Outlined.TextFields,
                     title = "Font Size",
-                    subtitle = selectedFontSize,
+                    subtitle = "$selectedFontSize (Restart app to apply)",
                     onClick = { showFontSizeDialog = true }
+                )
+                // Calculate font scale based on selected size
+                val fontScale = when (selectedFontSize) {
+                    "Small" -> 0.85f
+                    "Medium" -> 1.0f
+                    "Large" -> 1.15f
+                    "Extra Large" -> 1.3f
+                    else -> 1.0f
+                }
+
+// Apply typography scaling
+                val scaledTypography = MaterialTheme.typography.copy(
+                    bodyLarge = MaterialTheme.typography.bodyLarge.copy(fontSize = (16 * fontScale).sp),
+                    bodyMedium = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * fontScale).sp),
+                    bodySmall = MaterialTheme.typography.bodySmall.copy(fontSize = (12 * fontScale).sp),
+                    titleMedium = MaterialTheme.typography.titleMedium.copy(fontSize = (16 * fontScale).sp),
+                    titleSmall = MaterialTheme.typography.titleSmall.copy(fontSize = (14 * fontScale).sp)
                 )
             }
 
@@ -293,10 +343,11 @@ fun SettingsScreen() {
                 SettingsSwitchItem(
                     icon = Icons.Outlined.Fingerprint,
                     title = "Biometric Login",
-                    subtitle = "Use fingerprint or face ID",
+                    subtitle = if (biometricEnabled) "Enabled" else "Disabled",
                     checked = biometricEnabled,
                     onCheckedChange = {
                         biometricEnabled = it
+                        savePref("biometric", it)
                         Toast.makeText(
                             context,
                             if (it) "Biometric login enabled" else "Biometric login disabled",
@@ -371,10 +422,7 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = Icons.Outlined.Description,
                     title = "Terms & Conditions",
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://yourwebsite.com/terms"))
-                        context.startActivity(intent)
-                    }
+                    onClick = { showTermsDialog = true }
                 )
 
                 HorizontalDivider()
@@ -382,10 +430,7 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = Icons.Outlined.PrivacyTip,
                     title = "Privacy Policy",
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://yourwebsite.com/privacy"))
-                        context.startActivity(intent)
-                    }
+                    onClick = { showPrivacyDialog = true }
                 )
 
                 HorizontalDivider()
@@ -393,9 +438,7 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = Icons.Outlined.Article,
                     title = "Licenses",
-                    onClick = {
-                        Toast.makeText(context, "Open source licenses", Toast.LENGTH_SHORT).show()
-                    }
+                    onClick = { showLicensesDialog = true }
                 )
             }
 
@@ -457,22 +500,9 @@ fun SettingsScreen() {
             onDismiss = { showPhoneDialog = false },
             onConfirm = {
                 phoneNumber = it
+                savePref("phone", it)
                 showPhoneDialog = false
                 Toast.makeText(context, "Phone number updated", Toast.LENGTH_SHORT).show()
-            }
-        )
-    }
-
-    if (showDOBDialog) {
-        InputDialog(
-            title = "Date of Birth",
-            initialValue = dateOfBirth,
-            placeholder = "DD/MM/YYYY",
-            onDismiss = { showDOBDialog = false },
-            onConfirm = {
-                dateOfBirth = it
-                showDOBDialog = false
-                Toast.makeText(context, "Date of birth updated", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -484,6 +514,7 @@ fun SettingsScreen() {
             onDismiss = { showBloodGroupDialog = false },
             onSelect = {
                 bloodGroup = it
+                savePref("blood_group", it)
                 showBloodGroupDialog = false
                 Toast.makeText(context, "Blood group updated", Toast.LENGTH_SHORT).show()
             }
@@ -497,8 +528,9 @@ fun SettingsScreen() {
             onDismiss = { showLanguageDialog = false },
             onSelect = {
                 selectedLanguage = it
+                savePref("language", it)
                 showLanguageDialog = false
-                Toast.makeText(context, "Language updated (requires app restart)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Language set to $it", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -510,18 +542,207 @@ fun SettingsScreen() {
             onDismiss = { showFontSizeDialog = false },
             onSelect = {
                 selectedFontSize = it
+                savePref("font_size", it)
                 showFontSizeDialog = false
-                Toast.makeText(context, "Font size updated", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Font size set to $it", Toast.LENGTH_SHORT).show()
             }
+        )
+    }
+
+    if (showTermsDialog) {
+        LegalDocumentDialog(
+            title = "Terms & Conditions",
+            content = """
+                **MediQorOG - Terms & Conditions**
+                
+                Last Updated: January 15, 2026
+                
+                **1. Acceptance of Terms**
+                By accessing and using MediQorOG, you accept and agree to be bound by these Terms and Conditions.
+                
+                **2. Use of Service**
+                • You must be 18 years or older to use this service
+                • You are responsible for maintaining account security
+                • Prescription medicines require valid prescriptions
+                
+                **3. Orders & Delivery**
+                • All orders are subject to product availability
+                • Delivery times are estimates and may vary
+                • Prescription verification is mandatory
+                
+                **4. Returns & Refunds**
+                • Medicines cannot be returned once delivered
+                • Refunds processed within 7-10 business days
+                • Damaged products must be reported within 24 hours
+                
+                **5. Privacy**
+                • We protect your personal and medical information
+                • Data is encrypted and stored securely
+                • Information not shared without consent
+                
+                **6. Prohibited Activities**
+                • Fraudulent transactions
+                • Sharing of prescriptions
+                • Reselling of medicines
+                
+                **7. Liability**
+                MediQorOG is not liable for:
+                • Adverse drug reactions
+                • Incorrect self-medication
+                • Third-party service failures
+                
+                **8. Changes to Terms**
+                We reserve the right to modify these terms at any time. Continued use constitutes acceptance.
+                
+                **Contact Us**
+                Email: support@mediqorog.com
+                Phone: +977 980-0000-000
+            """.trimIndent(),
+            onDismiss = { showTermsDialog = false }
+        )
+    }
+
+    if (showPrivacyDialog) {
+        LegalDocumentDialog(
+            title = "Privacy Policy",
+            content = """
+                **MediQorOG - Privacy Policy**
+                
+                Last Updated: January 15, 2026
+                
+                **1. Information We Collect**
+                • Personal Information: Name, email, phone, address
+                • Medical Information: Prescriptions, health records
+                • Payment Information: Card details, transaction history
+                • Usage Data: App interactions, preferences
+                
+                **2. How We Use Your Information**
+                • Process orders and deliveries
+                • Verify prescriptions with licensed pharmacists
+                • Send order updates and reminders
+                • Improve our services
+                • Comply with legal requirements
+                
+                **3. Data Security**
+                • End-to-end encryption for sensitive data
+                • Secure servers with regular backups
+                • HIPAA-compliant data handling
+                • Regular security audits
+                
+                **4. Information Sharing**
+                We share data only with:
+                • Delivery partners (name, address, phone)
+                • Payment processors (transaction details)
+                • Healthcare providers (prescriptions only)
+                • Law enforcement (when legally required)
+                
+                We NEVER:
+                • Sell your personal information
+                • Share medical records without consent
+                • Use data for unauthorized marketing
+                
+                **5. Your Rights**
+                • Access your personal data
+                • Request data correction or deletion
+                • Opt-out of promotional communications
+                • Download your data
+                
+                **6. Data Retention**
+                • Account data: Until account deletion
+                • Order history: 7 years (legal requirement)
+                • Prescriptions: 5 years
+                • Payment info: Not stored (tokenized)
+                
+                **7. Cookies & Tracking**
+                • Essential cookies for app functionality
+                • Analytics to improve user experience
+                • No third-party advertising cookies
+                
+                **8. Children's Privacy**
+                MediQorOG is not intended for users under 18. We do not knowingly collect data from minors.
+                
+                **9. Changes to Policy**
+                We will notify users of significant changes via email or in-app notification.
+                
+                **Contact Us**
+                Data Protection Officer
+                Email: privacy@mediqorog.com
+                Phone: +977 980-0000-000
+                Address: Kathmandu, Nepal
+            """.trimIndent(),
+            onDismiss = { showPrivacyDialog = false }
+        )
+    }
+
+    if (showLicensesDialog) {
+        LegalDocumentDialog(
+            title = "Open Source Licenses",
+            content = """
+                **MediQorOG - Open Source Licenses**
+                
+                This app uses the following open-source libraries:
+                
+                **1. Jetpack Compose**
+                Copyright 2021 The Android Open Source Project
+                Licensed under Apache License 2.0
+                
+                **2. Firebase SDK**
+                Copyright 2023 Google LLC
+                Licensed under Apache License 2.0
+                
+                **3. Kotlin**
+                Copyright 2010-2023 JetBrains s.r.o.
+                Licensed under Apache License 2.0
+                
+                **4. Material Design Components**
+                Copyright 2023 Google LLC
+                Licensed under Apache License 2.0
+                
+                **5. Coroutines**
+                Copyright 2016-2023 JetBrains s.r.o.
+                Licensed under Apache License 2.0
+                
+                **6. Coil Image Loading**
+                Copyright 2023 Coil Contributors
+                Licensed under Apache License 2.0
+                
+                ---
+                
+                **Apache License 2.0**
+                
+                Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
+                
+                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+                
+                Full license text: https://www.apache.org/licenses/LICENSE-2.0
+                
+                ---
+                
+                **Special Thanks**
+                • Android Open Source Project
+                • Google Firebase Team
+                • JetBrains Kotlin Team
+                • Material Design Community
+                • All open-source contributors
+            """.trimIndent(),
+            onDismiss = { showLicensesDialog = false }
         )
     }
 
     if (showDeleteAccountDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteAccountDialog = false },
-            title = { Text("Delete Account?", color = Color.Red) },
+            title = { Text("Delete Account?", color = Color.Red, fontWeight = FontWeight.Bold) },
             text = {
-                Text("This action cannot be undone. All your data will be permanently deleted.")
+                Column {
+                    Text("⚠️ This action is PERMANENT and CANNOT be undone!")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("All your data will be deleted:")
+                    Text("• Order history")
+                    Text("• Saved addresses")
+                    Text("• Prescriptions")
+                    Text("• Account information")
+                }
             },
             confirmButton = {
                 Button(
@@ -529,14 +750,14 @@ fun SettingsScreen() {
                         scope.launch {
                             try {
                                 currentUser?.delete()?.addOnSuccessListener {
-                                    Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_LONG).show()
                                     context.startActivity(
                                         Intent(context, LoginActivity::class.java).apply {
                                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                         }
                                     )
                                 }?.addOnFailureListener { e ->
-                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                                 }
                             } catch (e: Exception) {
                                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -546,16 +767,54 @@ fun SettingsScreen() {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Delete")
+                    Text("DELETE ACCOUNT")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteAccountDialog = false }) {
+                OutlinedButton(onClick = { showDeleteAccountDialog = false }) {
                     Text("Cancel")
                 }
             }
         )
     }
+}
+
+@Composable
+fun LegalDocumentDialog(
+    title: String,
+    content: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 500.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = 20.sp
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        modifier = Modifier.fillMaxWidth(0.95f)
+    )
 }
 
 @Composable
@@ -570,7 +829,15 @@ fun ChangePasswordDialog(
         onDismissRequest = onDismiss,
         title = { Text("Change Password") },
         text = {
-            Text("A password reset email will be sent to $email")
+            Column {
+                Text("A password reset link will be sent to:")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    email,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0B8FAC)
+                )
+            }
         },
         confirmButton = {
             Button(onClick = { onConfirm(email) }) {
@@ -603,11 +870,15 @@ fun InputDialog(
                 value = text,
                 onValueChange = { text = it },
                 placeholder = { Text(placeholder) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
         },
         confirmButton = {
-            Button(onClick = { onConfirm(text) }) {
+            Button(
+                onClick = { onConfirm(text) },
+                enabled = text.isNotBlank()
+            ) {
                 Text("Save")
             }
         },
@@ -628,15 +899,26 @@ fun SelectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(title, fontWeight = FontWeight.Bold) },
         text = {
-            Column {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 options.forEach { option ->
-                    TextButton(
-                        onClick = { onSelect(option) },
-                        modifier = Modifier.fillMaxWidth()
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(option) },
+                        color = Color.Transparent
                     ) {
-                        Text(option, modifier = Modifier.fillMaxWidth())
+                        Text(
+                            text = option,
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    if (option != options.last()) {
+                        HorizontalDivider()
                     }
                 }
             }

@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MediqorOG">
         <activity
+            android:name=".view.AddProductActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_product"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
             android:name=".view.HelpSupportActivity"
             android:exported="false"
             android:label="@string/title_activity_help_support"
