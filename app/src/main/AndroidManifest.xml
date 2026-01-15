@@ -12,6 +12,31 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MediqorOG">
         <activity
+            android:name=".view.HelpSupportActivity"
+            android:exported="false"
+            android:label="@string/title_activity_help_support"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.SettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.PrescriptionsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_prescriptions"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.SavedAddressesActivity"
+            android:exported="false"
+            android:label="@string/title_activity_saved_addresses"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.MyOrdersActivity"
+            android:exported="false"
+            android:label="@string/title_activity_my_orders"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
             android:name=".view.SurgicalActivity"
             android:exported="false"
             android:label="@string/title_activity_surgical"
