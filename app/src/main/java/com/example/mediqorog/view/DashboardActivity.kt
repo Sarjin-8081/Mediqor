@@ -6,21 +6,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mediqorog.view.screens.ChatbotScreen
-import com.example.mediqorog.viewmodel.ChatbotViewModel
 import com.example.mediqorog.view.screens.*
+import com.example.mediqorog.viewmodel.ChatbotViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,12 +38,12 @@ data class NavigationItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardBody() {
-    val context = LocalContext.current
-    val activity = context as ComponentActivity
     val chatbotViewModel: ChatbotViewModel = viewModel()
-
-    // FIX: Use collectAsState() instead of .value
     val showChatbot by chatbotViewModel.showChatbot.collectAsState()
+    var showAddProduct by remember { mutableStateOf(false) }
+
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val isAdmin = currentUser?.email?.contains("admin") == true
 
     val navigationItems = remember {
         listOf(
@@ -59,34 +56,8 @@ fun DashboardBody() {
 
     var selectedTab by remember { mutableStateOf(0) }
     val primaryColor = Color(0xFF0B8FAC)
-    val lightPrimaryColor = primaryColor.copy(alpha = 0.3f)
-    val unselectedColor = Color.Gray
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = primaryColor,
-                    titleContentColor = Color.White
-                ),
-                title = {
-                    Text(
-                        text = navigationItems[selectedTab].title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { activity.finish() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                }
-            )
-        },
         bottomBar = {
             NavigationBar(
                 containerColor = Color.White,
@@ -96,24 +67,14 @@ fun DashboardBody() {
                     NavigationBarItem(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.title
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item.title,
-                                fontSize = 11.sp
-                            )
-                        },
+                        icon = { Icon(item.icon, contentDescription = item.title) },
+                        label = { Text(item.title, fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = primaryColor,
                             selectedTextColor = primaryColor,
-                            indicatorColor = lightPrimaryColor,
-                            unselectedIconColor = unselectedColor,
-                            unselectedTextColor = unselectedColor
+                            indicatorColor = primaryColor.copy(alpha = 0.2f),
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray
                         )
                     )
                 }
@@ -125,26 +86,29 @@ fun DashboardBody() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Main content based on selected tab
+            // Main content
             when (selectedTab) {
-                0 -> {
-                    HomeScreen(
-                        onChatbotClick = {
-                            chatbotViewModel.openChatbot()
-                        }
-                    )
-                }
+                0 -> HomeScreen(
+                    onChatbotClick = { chatbotViewModel.openChatbot() },
+                    onAddProductClick = { showAddProduct = true },
+                    isAdmin = isAdmin
+                )
                 1 -> CartScreen()
                 2 -> MapScreen()
                 3 -> ProfileScreen()
             }
 
-            // Chatbot overlay - appears on top of all screens
+            // Chatbot overlay (full screen on top)
             if (showChatbot) {
                 ChatbotScreen(
-                    onBackClick = {
-                        chatbotViewModel.closeChatbot()
-                    }
+                    onBackClick = { chatbotViewModel.closeChatbot() }
+                )
+            }
+
+            // Add Product overlay (full screen on top)
+            if (showAddProduct) {
+                AddProductScreen(
+                    onBackClick = { showAddProduct = false }
                 )
             }
         }

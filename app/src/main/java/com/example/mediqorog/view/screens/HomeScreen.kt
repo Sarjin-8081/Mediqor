@@ -3,6 +3,7 @@ package com.example.mediqorog.view.screens
 import android.content.Intent
 import android.util.Log
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,78 +25,141 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mediqorog.R
 import com.example.mediqorog.ui.components.CategoryCard
 import com.example.mediqorog.ui.components.ProductCard
-import com.example.mediqorog.view.AddProductActivity
-import com.example.mediqorog.view.DevicesActivity
-import com.example.mediqorog.view.FamilyCareActivity
-import com.example.mediqorog.view.PersonalCareActivity
-import com.example.mediqorog.view.PharmacyActivity
-import com.example.mediqorog.view.SurgicalActivity
-//import com.example.mediqorog.view.SupplementsActivity
+import com.example.mediqorog.view.*
 import com.example.mediqorog.viewmodel.HomeViewModel
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
-import kotlin.jvm.java
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(onChatbotClick: () -> Unit) {
+fun HomeScreen(
+    onChatbotClick: () -> Unit,
+    onAddProductClick: () -> Unit,
+    isAdmin: Boolean = true
+) {
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
-    val currentUser = FirebaseAuth.getInstance().currentUser
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            "MediQorOG",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        Text(
-                            "Deliver to: Kathmandu",
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-                },
-                actions = {
-                    // Admin: Add Product Button
-                    if (currentUser?.email?.contains("admin") == true) {
-                        IconButton(
-                            onClick = {
-                                context.startActivity(Intent(context, AddProductActivity::class.java))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF0B8FAC))
+                    .padding(vertical = 16.dp, horizontal = 16.dp)
+            ) {
+                // Logo + Search Bar Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Company Logo (Bigger)
+                    Surface(
+                        modifier = Modifier.size(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White,
+                        shadowElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            // Try to load your logo
+                            val hasLogo = remember {
+                                context.resources.getIdentifier(
+                                    "new_mediqor",
+                                    "drawable",
+                                    context.packageName
+                                ) != 0
                             }
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add Product",
-                                tint = Color.White
-                            )
+
+                            if (hasLogo) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.new_mediqor),
+                                    contentDescription = "MediQor Logo",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp)
+                                )
+                            } else {
+                                Text("🏥", fontSize = 32.sp)
+                            }
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0B8FAC),
-                    titleContentColor = Color.White
-                )
-            )
+
+                    // Search Bar
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = {
+                            Text(
+                                "Search medicines, products...",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = Color.Gray
+                            )
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Clear",
+                                        tint = Color.Gray
+                                    )
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(28.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
+                        ),
+                        singleLine = true
+                    )
+                }
+            }
         },
         floatingActionButton = {
-            FloatingChatbotButton(
-                onClick = {
-                    Log.d("HomeScreen", "Chatbot button clicked!")
-                    onChatbotClick()
+            // Both FABs side by side
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                // Add Product FAB (Left)
+                FloatingActionButton(
+                    onClick = onAddProductClick,
+                    containerColor = Color(0xFFB3E5FC),
+                    contentColor = Color(0xFF01579B)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Product")
                 }
-            )
+
+                // Chat button (Right)
+                FloatingActionButton(
+                    onClick = onChatbotClick,
+                    containerColor = Color(0xFF0B8FAC),
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.Chat, contentDescription = "Chatbot")
+                }
+            }
         }
     ) { paddingValues ->
         LazyColumn(
@@ -105,14 +169,11 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
                 .background(Color(0xFFF5F5F5))
         ) {
 
-            // 🎯 Auto-Sliding Banner
-            item {
-                AutoSlidingBanner()
-            }
-
+            // Auto-Sliding Banner
+            item { AutoSlidingBanner() }
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // 📦 Categories Section
+            // Categories Section
             item {
                 Text(
                     "Shop by Category",
@@ -121,18 +182,17 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
-
             item { Spacer(modifier = Modifier.height(12.dp)) }
 
             item {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier
-                        .height(150.dp)
+                        .height(240.dp)
                         .padding(horizontal = 16.dp),
                     userScrollEnabled = false,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(homeViewModel.categories) { category ->
                         CategoryCard(category) {
@@ -143,8 +203,6 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
                                     context.startActivity(Intent(context, FamilyCareActivity::class.java))
                                 "Personal Care" ->
                                     context.startActivity(Intent(context, PersonalCareActivity::class.java))
-//                                "Supplements" ->
-//                                    context.startActivity(Intent(context, SupplementsActivity::class.java))
                                 "Surgical" ->
                                     context.startActivity(Intent(context, SurgicalActivity::class.java))
                                 "Devices" ->
@@ -157,7 +215,7 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            // 🔥 Flash Sale Section
+            // Flash Sale Section
             item {
                 ProductSection(
                     title = "⚡ Flash Sale",
@@ -166,10 +224,9 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
                     backgroundColor = Color(0xFFFFEBEE)
                 )
             }
-
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // 🏆 Top Selling Section
+            // Top Selling Section
             item {
                 ProductSection(
                     title = "🏆 Top Selling",
@@ -178,10 +235,9 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
                     backgroundColor = Color(0xFFF3E5F5)
                 )
             }
-
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // ☀️ Sunscreens Section
+            // Sunscreens Section
             item {
                 ProductSection(
                     title = "☀️ Sunscreens",
@@ -190,10 +246,9 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
                     backgroundColor = Color(0xFFFFF9C4)
                 )
             }
-
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // 🧴 Body Lotions Section
+            // Body Lotions Section
             item {
                 ProductSection(
                     title = "🧴 Body Lotions",
@@ -203,8 +258,8 @@ fun HomeScreen(onChatbotClick: () -> Unit) {
                 )
             }
 
-            // Extra padding for FAB
-            item { Spacer(modifier = Modifier.height(80.dp)) }
+            // Extra padding for FABs
+            item { Spacer(modifier = Modifier.height(100.dp)) }
         }
     }
 }
@@ -246,7 +301,7 @@ fun AutoSlidingBanner() {
 
     LaunchedEffect(Unit) {
         while (true) {
-            delay(3000) // Auto-slide every 3 seconds
+            delay(3000)
             currentPage = (currentPage + 1) % banners.size
         }
     }
@@ -256,14 +311,13 @@ fun AutoSlidingBanner() {
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Banner
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(140.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(banners[currentPage].gradient)
-                .clickable { /* Handle banner click */ },
+                .clickable { },
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -289,7 +343,6 @@ fun AutoSlidingBanner() {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Indicator Dots
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
@@ -300,7 +353,8 @@ fun AutoSlidingBanner() {
                         .size(if (index == currentPage) 8.dp else 6.dp)
                         .clip(CircleShape)
                         .background(
-                            if (index == currentPage) Color(0xFF0B8FAC) else Color.Gray.copy(alpha = 0.4f)
+                            if (index == currentPage) Color(0xFF0B8FAC)
+                            else Color.Gray.copy(alpha = 0.4f)
                         )
                 )
                 if (index < banners.size - 1) {
@@ -324,7 +378,6 @@ fun ProductSection(
             .background(backgroundColor)
             .padding(vertical = 16.dp)
     ) {
-        // Section Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -346,14 +399,13 @@ fun ProductSection(
                 )
             }
 
-            TextButton(onClick = { /* View All */ }) {
+            TextButton(onClick = { }) {
                 Text("View All →", color = Color(0xFF0B8FAC))
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Horizontal Scrollable Products
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp)
@@ -362,18 +414,6 @@ fun ProductSection(
                 ProductCard(product)
             }
         }
-    }
-}
-
-@Composable
-fun FloatingChatbotButton(onClick: () -> Unit) {
-    FloatingActionButton(
-        onClick = onClick,
-        containerColor = Color(0xFF0B8FAC),
-        contentColor = Color.White,
-        modifier = Modifier.size(64.dp)
-    ) {
-        Text("💬", fontSize = 28.sp)
     }
 }
 

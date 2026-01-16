@@ -1,9 +1,6 @@
-package com.example.mediqorog.view
+package com.example.mediqorog.view.screens
 
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,18 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.firestore.FirebaseFirestore
 
-class AddProductActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            AddProductScreen()
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductScreen() {
+fun AddProductScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
     val firestore = FirebaseFirestore.getInstance()
 
@@ -47,14 +35,13 @@ fun AddProductScreen() {
             TopAppBar(
                 title = { Text("Add New Product", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { (context as ComponentActivity).finish() }) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF0B8FAC),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = Color.White
                 )
             )
         }
@@ -68,7 +55,6 @@ fun AddProductScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Product Name
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
@@ -76,7 +62,6 @@ fun AddProductScreen() {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Description
             OutlinedTextField(
                 value = productDescription,
                 onValueChange = { productDescription = it },
@@ -85,7 +70,6 @@ fun AddProductScreen() {
                 minLines = 3
             )
 
-            // Price
             OutlinedTextField(
                 value = productPrice,
                 onValueChange = { productPrice = it },
@@ -93,7 +77,6 @@ fun AddProductScreen() {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Category Dropdown
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
@@ -127,7 +110,6 @@ fun AddProductScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Add Product Button
             Button(
                 onClick = {
                     if (productName.isNotBlank() && productPrice.isNotBlank()) {
@@ -144,7 +126,7 @@ fun AddProductScreen() {
                             .add(product)
                             .addOnSuccessListener {
                                 Toast.makeText(context, "✅ Product added successfully!", Toast.LENGTH_SHORT).show()
-                                (context as ComponentActivity).finish()
+                                onBackClick()
                             }
                             .addOnFailureListener { e ->
                                 Toast.makeText(context, "❌ Error: ${e.message}", Toast.LENGTH_SHORT).show()

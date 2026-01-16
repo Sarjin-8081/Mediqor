@@ -4,8 +4,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class CategoryModel(
-    val id: String,
     val title: String,
     val icon: ImageVector,
-    val color: Color
+    val color: Color,
+    val drawableRes: Int  // This is for your custom drawable images
 )

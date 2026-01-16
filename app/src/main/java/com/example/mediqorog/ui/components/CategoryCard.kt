@@ -1,5 +1,6 @@
 package com.example.mediqorog.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -21,37 +24,33 @@ import com.example.mediqorog.model.CategoryModel
 fun CategoryCard(categoryModel: CategoryModel, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White)
             .clickable { onClick() }
-            .padding(12.dp),
+            .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Icon with background
+        // Large category image with background
         Box(
             modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(categoryModel.color.copy(alpha = 0.2f)),
+                .size(80.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = categoryModel.icon,
+            Image(
+                painter = painterResource(id = categoryModel.drawableRes),
                 contentDescription = categoryModel.title,
-                tint = categoryModel.color,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(56.dp),
+                contentScale = ContentScale.Fit
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Category name
         Text(
             text = categoryModel.title,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
-            maxLines = 2,
             color = Color.Black
         )
     }

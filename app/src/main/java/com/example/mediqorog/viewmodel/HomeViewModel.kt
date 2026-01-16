@@ -91,19 +91,55 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import com.example.mediqorog.R
 import com.example.mediqorog.model.CategoryModel
 import com.example.mediqorog.model.ProductModel
 
+
 class HomeViewModel : ViewModel() {
 
-    val categories = listOf(
-        CategoryModel("1", "Pharmacy", Icons.Default.MedicalServices, Color(0xFF4CAF50)),
-        CategoryModel("2", "Family Care", Icons.Default.FamilyRestroom, Color(0xFF2196F3)),
-        CategoryModel("3", "Personal Care", Icons.Default.Person, Color(0xFFFF9800)),
-        CategoryModel("4", "Supplements", Icons.Default.FitnessCenter, Color(0xFF9C27B0)),
-        CategoryModel("5", "Surgical", Icons.Default.Build, Color(0xFFF44336)),
-        CategoryModel("6", "Devices", Icons.Default.Devices, Color(0xFF00BCD4))
-    )
+        val categories = listOf(
+            CategoryModel(
+                title = "Pharmacy",
+                icon = Icons.Default.LocalPharmacy,
+                color = Color(0xFF4CAF50),
+                drawableRes = R.drawable.pharmacy
+            ),
+            CategoryModel(
+                title = "Family Care",
+                icon = Icons.Default.FamilyRestroom,
+                color = Color(0xFF2196F3),
+                drawableRes = R.drawable.family_care
+            ),
+            CategoryModel(
+                title = "Personal Care",
+                icon = Icons.Default.Person,
+                color = Color(0xFFFF9800),
+                drawableRes = R.drawable.personal_care
+            ),
+            CategoryModel(
+                title = "Supplements",
+                icon = Icons.Default.Lightbulb,
+                color = Color(0xFF9C27B0),
+                drawableRes = R.drawable.supplements
+            ),
+            CategoryModel(
+                title = "Surgical",
+                icon = Icons.Default.Build,
+                color = Color(0xFFF44336),
+                drawableRes = R.drawable.surgical
+            ),
+            CategoryModel(
+                title = "Devices",
+                icon = Icons.Default.DevicesOther,
+                color = Color(0xFF00BCD4),
+                drawableRes = R.drawable.devices
+            )
+        )
+
+
+
+
 
     // Flash Sale Products
     val flashSaleProducts = listOf(
