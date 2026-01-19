@@ -1,3 +1,6 @@
+// ============================================
+// FILE 2: AddProductScreen.kt - FIXED VERSION
+// ============================================
 package com.example.mediqorog.view.screens
 
 import android.widget.Toast
@@ -27,8 +30,12 @@ fun AddProductScreen(onBackClick: () -> Unit) {
     var productPrice by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Pharmacy") }
     var expanded by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    val categories = listOf("Pharmacy", "Family Care", "Personal Care", "Supplements", "Surgical", "Devices")
+    val categories = listOf(
+        "Pharmacy", "Family Care", "Personal Care",
+        "Supplements", "Surgical", "Devices"
+    )
 
     Scaffold(
         topBar = {
@@ -59,7 +66,8 @@ fun AddProductScreen(onBackClick: () -> Unit) {
                 value = productName,
                 onValueChange = { productName = it },
                 label = { Text("Product Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
             )
 
             OutlinedTextField(
@@ -67,29 +75,36 @@ fun AddProductScreen(onBackClick: () -> Unit) {
                 onValueChange = { productDescription = it },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                enabled = !isLoading
             )
 
             OutlinedTextField(
                 value = productPrice,
                 onValueChange = { productPrice = it },
                 label = { Text("Price (NPR)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
             )
 
             ExposedDropdownMenuBox(
                 expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+                onExpandedChange = {
+                    if (!isLoading) expanded = !expanded
+                }
             ) {
                 OutlinedTextField(
                     value = selectedCategory,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Category") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor()
+                        .menuAnchor(),
+                    enabled = !isLoading
                 )
 
                 ExposedDropdownMenu(
@@ -112,27 +127,66 @@ fun AddProductScreen(onBackClick: () -> Unit) {
 
             Button(
                 onClick = {
-                    if (productName.isNotBlank() && productPrice.isNotBlank()) {
-                        val product = hashMapOf(
-                            "name" to productName,
-                            "description" to productDescription,
-                            "price" to productPrice.toDoubleOrNull(),
-                            "category" to selectedCategory,
-                            "inStock" to true,
-                            "createdAt" to System.currentTimeMillis()
-                        )
+                    when {
+                        productName.isBlank() -> {
+                            Toast.makeText(
+                                context,
+                                "Please enter product name",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        productPrice.isBlank() -> {
+                            Toast.makeText(
+                                context,
+                                "Please enter product price",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        productPrice.toDoubleOrNull() == null -> {
+                            Toast.makeText(
+                                context,
+                                "Please enter a valid price",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        productPrice.toDoubleOrNull()!! <= 0 -> {
+                            Toast.makeText(
+                                context,
+                                "Price must be greater than 0",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        else -> {
+                            isLoading = true
+                            val product = hashMapOf(
+                                "name" to productName,
+                                "description" to productDescription,
+                                "price" to productPrice.toDouble(),
+                                "category" to selectedCategory,
+                                "inStock" to true,
+                                "createdAt" to System.currentTimeMillis()
+                            )
 
-                        firestore.collection("products")
-                            .add(product)
-                            .addOnSuccessListener {
-                                Toast.makeText(context, "✅ Product added successfully!", Toast.LENGTH_SHORT).show()
-                                onBackClick()
-                            }
-                            .addOnFailureListener { e ->
-                                Toast.makeText(context, "❌ Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
-                    } else {
-                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                            firestore.collection("products")
+                                .add(product)
+                                .addOnSuccessListener {
+                                    isLoading = false
+                                    Toast.makeText(
+                                        context,
+                                        "✅ Product added successfully!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    onBackClick()
+                                }
+                                .addOnFailureListener { e ->
+                                    isLoading = false
+                                    Toast.makeText(
+                                        context,
+                                        "❌ Error: ${e.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                        }
                     }
                 },
                 modifier = Modifier
@@ -140,9 +194,18 @@ fun AddProductScreen(onBackClick: () -> Unit) {
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF0B8FAC)
-                )
+                ),
+                enabled = !isLoading
             ) {
-                Text("ADD PRODUCT", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("ADD PRODUCT", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

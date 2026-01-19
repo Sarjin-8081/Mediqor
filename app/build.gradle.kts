@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -61,6 +63,8 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,17 +72,20 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation("com.airbnb.android:lottie-compose:6.1.0")
-    implementation("com.google.android.gms:play-services-auth:21.0.0")
-    implementation("com.google.firebase:firebase-database-ktx")
-    implementation("com.google.firebase:firebase-storage-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.navigation:navigation-compose:2.7.6")
-    implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation("androidx.compose.material:material-icons-extended:1.6.0")
-}
+
+        implementation("com.airbnb.android:lottie-compose:6.1.0")
+        implementation("com.google.android.gms:play-services-auth:21.0.0")
+        implementation("com.google.firebase:firebase-database-ktx")
+        implementation("com.google.firebase:firebase-storage-ktx")
+        implementation("com.google.firebase:firebase-firestore-ktx")  // Only this one
+        implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+        implementation("com.google.firebase:firebase-auth")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+        implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+        implementation("androidx.navigation:navigation-compose:2.7.6")
+        implementation("io.coil-kt:coil-compose:2.5.0")
+        implementation("androidx.compose.material:material-icons-extended:1.6.0")
+        implementation("androidx.cardview:cardview:1.0.0")
+
+
+    }
