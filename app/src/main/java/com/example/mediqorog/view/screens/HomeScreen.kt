@@ -37,6 +37,7 @@ import com.example.mediqorog.ui.components.ProductCard
 import com.example.mediqorog.view.*
 import com.example.mediqorog.viewmodel.HomeViewModel
 import kotlinx.coroutines.delay
+import com.example.mediqorog.model.ProductModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

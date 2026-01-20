@@ -40,10 +40,18 @@ import com.example.mediqorog.viewmodel.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.example.mediqorog.R
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : ComponentActivity() {
 
     private lateinit var viewModel: UserViewModel
+    private lateinit var auth: FirebaseAuth
+
+    // ✅ ADMIN EMAILS LIST - ADD YOUR EMAIL HERE
+    private val ADMIN_EMAILS = listOf(
+        "shahsamarth366@gmail.com",
+        "admin@mediqor.com"
+    )
 
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -82,6 +90,7 @@ class LoginActivity : ComponentActivity() {
 
         val repo = UserRepoImpl()
         viewModel = UserViewModel(repo)
+        auth = FirebaseAuth.getInstance()
 
         setContent {
             LoginBody(
@@ -103,9 +112,22 @@ class LoginActivity : ComponentActivity() {
     }
 
     private fun navigateToDashboard() {
-        val intent = Intent(this, DashboardActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
+        val currentUser = auth.currentUser
+        val userEmail = currentUser?.email ?: ""
+
+        // ✅ CHECK IF USER IS ADMIN
+        if (ADMIN_EMAILS.contains(userEmail)) {
+            // Navigate to Admin Dashboard
+            val intent = Intent(this, AdminDashboardActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            Toast.makeText(this, "Welcome Admin!", Toast.LENGTH_SHORT).show()
+        } else {
+            // Navigate to Customer Dashboard
+            val intent = Intent(this, DashboardActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+        }
         finish()
     }
 }
@@ -126,6 +148,12 @@ fun LoginBody(
     val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
     val localEmail = sharedPreferences.getString("email", "") ?: ""
     val localPassword = sharedPreferences.getString("password", "") ?: ""
+
+    // ✅ ADMIN EMAILS - SAME LIST AS ABOVE
+    val ADMIN_EMAILS = listOf(
+        "mediqor.44@gmail.com",
+        "mediqor@44.366"
+    )
 
     Scaffold { padding ->
         Column(
@@ -236,6 +264,7 @@ fun LoginBody(
                     }
             )
 
+            // ✅ LOGIN BUTTON WITH ADMIN CHECK
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
@@ -249,17 +278,35 @@ fun LoginBody(
                             loading = false
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             if (success) {
-                                val intent = Intent(context, DashboardActivity::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                context.startActivity(intent)
+                                // ✅ CHECK IF ADMIN AFTER SUCCESSFUL LOGIN
+                                if (ADMIN_EMAILS.contains(email)) {
+                                    // Navigate to Admin Dashboard
+                                    val intent = Intent(context, AdminDashboardActivity::class.java)
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    context.startActivity(intent)
+                                    Toast.makeText(context, "Welcome Admin!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    // Navigate to Customer Dashboard
+                                    val intent = Intent(context, DashboardActivity::class.java)
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    context.startActivity(intent)
+                                }
                                 activity?.finish()
                             }
                         }
                     } else {
                         if (localEmail == email && localPassword == password) {
-                            val intent = Intent(context, DashboardActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            context.startActivity(intent)
+                            // ✅ CHECK IF ADMIN FOR LOCAL LOGIN TOO
+                            if (ADMIN_EMAILS.contains(email)) {
+                                val intent = Intent(context, AdminDashboardActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                context.startActivity(intent)
+                                Toast.makeText(context, "Welcome Admin!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val intent = Intent(context, DashboardActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                context.startActivity(intent)
+                            }
                             activity?.finish()
                         } else {
                             Toast.makeText(context, "Invalid details", Toast.LENGTH_SHORT).show()

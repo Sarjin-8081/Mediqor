@@ -81,4 +81,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.6")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    implementation("com.cloudinary:cloudinary-android:2.1.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
 }
