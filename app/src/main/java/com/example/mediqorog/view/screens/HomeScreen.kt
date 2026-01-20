@@ -1,8 +1,7 @@
 package com.example.mediqorog.view.screens
 
 import android.content.Intent
-import android.util.Log
-import androidx.compose.animation.core.*
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,16 +33,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mediqorog.R
 import com.example.mediqorog.ui.components.CategoryCard
 import com.example.mediqorog.ui.components.ProductCard
-import com.example.mediqorog.view.*
+
 import com.example.mediqorog.viewmodel.HomeViewModel
 import kotlinx.coroutines.delay
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onChatbotClick: () -> Unit,
-    onAddProductClick: () -> Unit,
-    isAdmin: Boolean = true
+    onAddProductClick: () -> Unit
 ) {
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
@@ -198,15 +197,17 @@ fun HomeScreen(
                         CategoryCard(category) {
                             when (category.title) {
                                 "Pharmacy" ->
-                                    context.startActivity(Intent(context, PharmacyActivity::class.java))
+                                    context.startActivity(Intent(context, com.example.mediqorog.view.PharmacyActivity::class.java))
                                 "Family Care" ->
-                                    context.startActivity(Intent(context, FamilyCareActivity::class.java))
+                                    context.startActivity(Intent(context, com.example.mediqorog.view.FamilyCareActivity::class.java))
                                 "Personal Care" ->
-                                    context.startActivity(Intent(context, PersonalCareActivity::class.java))
+                                    context.startActivity(Intent(context, com.example.mediqorog.view.PersonalCareActivity::class.java))
+                                "Supplements" ->
+                                    context.startActivity(Intent(context, com.example.mediqorog.view.SupplementsActivity::class.java))
                                 "Surgical" ->
-                                    context.startActivity(Intent(context, SurgicalActivity::class.java))
+                                    context.startActivity(Intent(context, com.example.mediqorog.view.SurgicalActivity::class.java))
                                 "Devices" ->
-                                    context.startActivity(Intent(context, DevicesActivity::class.java))
+                                    context.startActivity(Intent(context, com.example.mediqorog.view.DevicesActivity::class.java))
                             }
                         }
                     }
