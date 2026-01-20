@@ -1,4 +1,4 @@
-package com.example.mediqorog.view.screens
+package com.example.mediqorog.view
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediqorog.R
-import com.example.mediqorog.model.Product
+import com.example.mediqorog.model.ProductModel
 import com.example.mediqorog.viewmodel.CategoryProductsViewModel
 
 class PharmacyActivity : AppCompatActivity() {
@@ -45,11 +45,13 @@ class PharmacyActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.setHasFixedSize(true)
+        recyclerView.adapter = ProductsAdapter(emptyList())
     }
 
     private fun setupObservers() {
         viewModel.products.observe(this) { products ->
-            displayProducts(products)
+            (recyclerView.adapter as ProductsAdapter)
+                .updateProducts(products ?: emptyList())
         }
 
         viewModel.isLoading.observe(this) { isLoading ->
@@ -64,13 +66,15 @@ class PharmacyActivity : AppCompatActivity() {
         }
     }
 
-    private fun displayProducts(products: List<Product>) {
-        val adapter = ProductsAdapter(products)
-        recyclerView.adapter = adapter
-    }
+    // ================= Adapter =================
+    inner class ProductsAdapter(
+        private var products: List<ProductModel>
+    ) : RecyclerView.Adapter<ProductsAdapter.ProductViewHolder>() {
 
-    inner class ProductsAdapter(private val products: List<Product>) :
-        RecyclerView.Adapter<ProductsAdapter.ProductViewHolder>() {
+        fun updateProducts(newProducts: List<ProductModel>) {
+            products = newProducts
+            notifyDataSetChanged()
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
             val view = LayoutInflater.from(parent.context)
@@ -82,27 +86,35 @@ class PharmacyActivity : AppCompatActivity() {
             holder.bind(products[position])
         }
 
-        override fun getItemCount() = products.size
+        override fun getItemCount(): Int = products.size
 
-        inner class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val productImage: TextView = itemView.findViewById(R.id.ivProductImage)
-            private val productName: TextView = itemView.findViewById(R.id.tvProductName)
-            private val productDescription: TextView = itemView.findViewById(R.id.tvProductDescription)
-            private val productPrice: TextView = itemView.findViewById(R.id.tvProductPrice)
-            private val btnAddToCart: TextView = itemView.findViewById(R.id.btnAddToCart)
+        // ================= ViewHolder =================
+        inner class ProductViewHolder(itemView: View) :
+            RecyclerView.ViewHolder(itemView) {
 
-            fun bind(product: Product) {
+            private val productImage: TextView =
+                itemView.findViewById(R.id.ivProductImage)
+            private val productName: TextView =
+                itemView.findViewById(R.id.tvProductName)
+            private val productDescription: TextView =
+                itemView.findViewById(R.id.tvProductDescription)
+            private val productPrice: TextView =
+                itemView.findViewById(R.id.tvProductPrice)
+            private val btnAddToCart: TextView =
+                itemView.findViewById(R.id.btnAddToCart)
+
+            fun bind(product: ProductModel) {
                 productName.text = product.name
                 productDescription.text = product.description
                 productPrice.text = "NPR ${product.price.toInt()}"
                 productImage.text = "📦"
 
                 itemView.setOnClickListener {
-                    // Handle product click
+                    // Product click
                 }
 
                 btnAddToCart.setOnClickListener {
-                    // Handle add to cart
+                    // Add to cart
                 }
             }
         }
