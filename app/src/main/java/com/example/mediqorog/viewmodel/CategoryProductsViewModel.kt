@@ -1,19 +1,18 @@
-// viewmodel/CategoryProductsViewModel.kt
 package com.example.mediqorog.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.mediqorog.model.Product
+import com.example.mediqorog.model.ProductModel
 import com.example.mediqorog.repository.ProductRepository
-import com.example.mediqorog.repository.implement.ProductRepositoryImpl
+import com.example.mediqorog.repository.ProductRepoImpl
 
 class CategoryProductsViewModel : ViewModel() {
 
-    private val repository: ProductRepository = ProductRepositoryImpl()
+    private val repository: ProductRepository = ProductRepoImpl()
 
-    private val _products = MutableLiveData<List<Product>>()
-    val products: LiveData<List<Product>> = _products
+    private val _products = MutableLiveData<List<ProductModel>>()
+    val products: LiveData<List<ProductModel>> = _products
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
