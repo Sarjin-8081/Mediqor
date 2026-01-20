@@ -90,8 +90,7 @@ fun DashboardBody() {
             when (selectedTab) {
                 0 -> HomeScreen(
                     onChatbotClick = { chatbotViewModel.openChatbot() },
-                    onAddProductClick = { showAddProduct = true },
-                    isAdmin = isAdmin
+                    onAddProductClick = { showAddProduct = true }
                 )
                 1 -> CartScreen()
                 2 -> MapScreen()

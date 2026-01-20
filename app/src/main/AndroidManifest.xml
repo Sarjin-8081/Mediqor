@@ -52,7 +52,7 @@
             android:label="@string/title_activity_devices"
             android:theme="@style/Theme.MediqorOG" />
         <activity
-            android:name=".view.SupplementActivity"
+            android:name=".view.SupplementsActivity"
             android:exported="false"
             android:label="@string/title_activity_supplement"
             android:theme="@style/Theme.MediqorOG" />

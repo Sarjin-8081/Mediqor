@@ -1,8 +1,7 @@
-// repository/ProductRepository.kt
 package com.example.mediqorog.repository
 
-import com.example.mediqorog.model.Product
+import com.example.mediqorog.model.ProductModel
 
 interface ProductRepository {
-    fun getProductsByCategory(category: String): List<Product>
+    fun getProductsByCategory(category: String): List<ProductModel>
 }
