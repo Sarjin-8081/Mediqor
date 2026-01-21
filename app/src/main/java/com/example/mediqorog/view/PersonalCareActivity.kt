@@ -1,130 +1,93 @@
 package com.example.mediqorog.view
 
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.mediqorog.R
-import com.example.mediqorog.model.ProductModel
-import com.example.mediqorog.viewmodel.CategoryProductsViewModel
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mediqorog.viewmodel.ProductViewModel
 
-class PersonalCareActivity : AppCompatActivity() {
-
-    private lateinit var viewModel: CategoryProductsViewModel
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var backButton: Button
-    private lateinit var progressBar: ProgressBar
-
+class PersonalCareActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_pharmacy)
-
-        viewModel = ViewModelProvider(this)[CategoryProductsViewModel::class.java]
-
-        initViews()
-        setupRecyclerView()
-        setupObservers()
-        setupClickListeners()
-
-        viewModel.loadProducts("Personal Care")
-    }
-
-    private fun initViews() {
-        recyclerView = findViewById(R.id.recyclerViewProducts)
-        backButton = findViewById(R.id.btnBack)
-        progressBar = findViewById(R.id.progressBar)
-    }
-
-    private fun setupRecyclerView() {
-        recyclerView.layoutManager = GridLayoutManager(this, 2)
-        recyclerView.setHasFixedSize(true)
-        recyclerView.adapter = ProductAdapter(emptyList())
-    }
-
-    private fun setupObservers() {
-        viewModel.products.observe(this) { products ->
-            (recyclerView.adapter as ProductAdapter)
-                .updateProducts(products ?: emptyList())
-        }
-
-        viewModel.isLoading.observe(this) { isLoading ->
-            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            recyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
+        setContent {
+            PersonalCareScreen(onBackClick = { finish() })
         }
     }
+}
 
-    private fun setupClickListeners() {
-        backButton.setOnClickListener {
-            finish()
-        }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PersonalCareScreen(onBackClick: () -> Unit) {
+    val viewModel: ProductViewModel = viewModel()
+    val products by viewModel.products.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProductsByCategory("Personal Care")
     }
 
-    // ==========================
-    // Adapter
-    // ==========================
-    private inner class ProductAdapter(
-        private var products: List<ProductModel>
-    ) : RecyclerView.Adapter<ProductViewHolder>() {
-
-        fun updateProducts(newProducts: List<ProductModel>) {
-            products = newProducts
-            notifyDataSetChanged()
-        }
-
-        override fun onCreateViewHolder(
-            parent: ViewGroup,
-            viewType: Int
-        ): ProductViewHolder {
-            val view = layoutInflater.inflate(
-                R.layout.item_product,
-                parent,
-                false
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Personal Care", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF0B8FAC),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
-            return ProductViewHolder(view)
         }
-
-        override fun onBindViewHolder(
-            holder: ProductViewHolder,
-            position: Int
-        ) {
-            holder.bind(products[position])
-        }
-
-        override fun getItemCount(): Int = products.size
-    }
-
-    // ==========================
-    // ViewHolder
-    // ==========================
-     class ProductViewHolder(itemView: View) :
-        RecyclerView.ViewHolder(itemView) {
-
-        private val productImage: ImageView =
-            itemView.findViewById(R.id.ivProductImage)
-        private val productName: TextView =
-            itemView.findViewById(R.id.tvProductName)
-        private val productDescription: TextView =
-            itemView.findViewById(R.id.tvProductDescription)
-        private val productPrice: TextView =
-            itemView.findViewById(R.id.tvProductPrice)
-        private val btnAddToCart: ImageView =
-            itemView.findViewById(R.id.btnAddToCart)
-
-        fun bind(product: ProductModel) {
-            productName.text = product.name
-            productDescription.text = product.description
-            productPrice.text = "NPR ${product.price.toInt()}"
-            productImage.setImageResource(R.drawable.ic_product_box)
-
-            btnAddToCart.setOnClickListener {
-                // TODO: Add to cart
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues).background(Color(0xFFF5F5F5))) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFF0B8FAC))
+            } else {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxWidth().background(Color.White).padding(16.dp)) {
+                        Column {
+                            Text("🧴 Personal Care Products", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("${products.size} products available", fontSize = 14.sp, color = Color.Gray)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (products.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("No products available", fontSize = 16.sp, color = Color.Gray)
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(products) { product ->
+                                ProductGridItem(product = product, onProductClick = {}, onAddToCartClick = {})
+                            }
+                        }
+                    }
+                }
             }
         }
     }

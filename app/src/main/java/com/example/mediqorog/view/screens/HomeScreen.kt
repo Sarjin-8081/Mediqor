@@ -1,7 +1,8 @@
 package com.example.mediqorog.view.screens
 
 import android.content.Intent
-
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,8 +34,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mediqorog.R
 import com.example.mediqorog.ui.components.CategoryCard
 import com.example.mediqorog.ui.components.ProductCard
-
 import com.example.mediqorog.viewmodel.HomeViewModel
+import com.example.mediqorog.viewmodel.ProductViewModel
 import kotlinx.coroutines.delay
 
 
@@ -46,7 +47,16 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
+    val productViewModel: ProductViewModel = viewModel()
     var searchQuery by remember { mutableStateOf("") }
+
+    // Load featured products from Firestore
+    val featuredProducts by productViewModel.products.collectAsState()
+    val isLoadingFeatured by productViewModel.isLoading.collectAsState()
+
+    LaunchedEffect(Unit) {
+        productViewModel.loadFeaturedProducts()
+    }
 
     Scaffold(
         topBar = {
@@ -62,7 +72,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Company Logo (Bigger)
+                    // Company Logo
                     Surface(
                         modifier = Modifier.size(56.dp),
                         shape = RoundedCornerShape(12.dp),
@@ -70,7 +80,6 @@ fun HomeScreen(
                         shadowElevation = 4.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            // Try to load your logo
                             val hasLogo = remember {
                                 context.resources.getIdentifier(
                                     "new_mediqor",
@@ -136,12 +145,10 @@ fun HomeScreen(
             }
         },
         floatingActionButton = {
-            // Both FABs side by side
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
-                // Add Product FAB (Left)
                 FloatingActionButton(
                     onClick = onAddProductClick,
                     containerColor = Color(0xFFB3E5FC),
@@ -150,7 +157,6 @@ fun HomeScreen(
                     Icon(Icons.Default.Add, contentDescription = "Add Product")
                 }
 
-                // Chat button (Right)
                 FloatingActionButton(
                     onClick = onChatbotClick,
                     containerColor = Color(0xFF0B8FAC),
@@ -195,19 +201,46 @@ fun HomeScreen(
                 ) {
                     items(homeViewModel.categories) { category ->
                         CategoryCard(category) {
-                            when (category.title) {
-                                "Pharmacy" ->
-                                    context.startActivity(Intent(context, com.example.mediqorog.view.PharmacyActivity::class.java))
-                                "Family Care" ->
-                                    context.startActivity(Intent(context, com.example.mediqorog.view.FamilyCareActivity::class.java))
-                                "Personal Care" ->
-                                    context.startActivity(Intent(context, com.example.mediqorog.view.PersonalCareActivity::class.java))
-                                "Supplements" ->
-                                    context.startActivity(Intent(context, com.example.mediqorog.view.SupplementsActivity::class.java))
-                                "Surgical" ->
-                                    context.startActivity(Intent(context, com.example.mediqorog.view.SurgicalActivity::class.java))
-                                "Devices" ->
-                                    context.startActivity(Intent(context, com.example.mediqorog.view.DevicesActivity::class.java))
+                            try {
+                                when (category.title) {
+                                    "Pharmacy" -> {
+                                        context.startActivity(
+                                            Intent(context, com.example.mediqorog.view.PharmacyActivity::class.java)
+                                        )
+                                    }
+                                    "Family Care" -> {
+                                        context.startActivity(
+                                            Intent(context, com.example.mediqorog.view.FamilyCareActivity::class.java)
+                                        )
+                                    }
+                                    "Personal Care" -> {
+                                        context.startActivity(
+                                            Intent(context, com.example.mediqorog.view.PersonalCareActivity::class.java)
+                                        )
+                                    }
+                                    "Supplements" -> {
+                                        context.startActivity(
+                                            Intent(context, com.example.mediqorog.view.SupplementsActivity::class.java)
+                                        )
+                                    }
+                                    "Surgical" -> {
+                                        context.startActivity(
+                                            Intent(context, com.example.mediqorog.view.SurgicalActivity::class.java)
+                                        )
+                                    }
+                                    "Devices" -> {
+                                        context.startActivity(
+                                            Intent(context, com.example.mediqorog.view.DevicesActivity::class.java)
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("HomeScreen", "Error navigating to ${category.title}", e)
+                                Toast.makeText(
+                                    context,
+                                    "Error opening ${category.title}: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
                     }
@@ -216,47 +249,74 @@ fun HomeScreen(
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            // Flash Sale Section
-            item {
-                ProductSection(
-                    title = "⚡ Flash Sale",
-                    subtitle = "Ends in 2 hours!",
-                    products = homeViewModel.flashSaleProducts,
-                    backgroundColor = Color(0xFFFFEBEE)
-                )
+            // Featured Products from Firestore
+            if (isLoadingFeatured) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF0B8FAC))
+                    }
+                }
+            } else if (featuredProducts.isNotEmpty()) {
+                item {
+                    ProductSection(
+                        title = "⚡ Flash Sale",
+                        subtitle = "Ends in 2 hours!",
+                        products = featuredProducts.take(10),
+                        backgroundColor = Color(0xFFFFEBEE)
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // Top Selling Section
-            item {
-                ProductSection(
-                    title = "🏆 Top Selling",
-                    subtitle = "Most popular this week",
-                    products = homeViewModel.topSellingProducts,
-                    backgroundColor = Color(0xFFF3E5F5)
-                )
-            }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            // Fallback to dummy data if no Firestore products
+            if (!isLoadingFeatured && featuredProducts.isEmpty()) {
+                // Flash Sale Section
+                item {
+                    ProductSection(
+                        title = "⚡ Flash Sale",
+                        subtitle = "Ends in 2 hours!",
+                        products = homeViewModel.flashSaleProducts,
+                        backgroundColor = Color(0xFFFFEBEE)
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // Sunscreens Section
-            item {
-                ProductSection(
-                    title = "☀️ Sunscreens",
-                    subtitle = "Protect your skin",
-                    products = homeViewModel.sunscreenProducts,
-                    backgroundColor = Color(0xFFFFF9C4)
-                )
-            }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+                // Top Selling Section
+                item {
+                    ProductSection(
+                        title = "🏆 Top Selling",
+                        subtitle = "Most popular this week",
+                        products = homeViewModel.topSellingProducts,
+                        backgroundColor = Color(0xFFF3E5F5)
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // Body Lotions Section
-            item {
-                ProductSection(
-                    title = "🧴 Body Lotions",
-                    subtitle = "Moisturize & nourish",
-                    products = homeViewModel.bodyLotionProducts,
-                    backgroundColor = Color(0xFFE8F5E9)
-                )
+                // Sunscreens Section
+                item {
+                    ProductSection(
+                        title = "☀️ Sunscreens",
+                        subtitle = "Protect your skin",
+                        products = homeViewModel.sunscreenProducts,
+                        backgroundColor = Color(0xFFFFF9C4)
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+
+                // Body Lotions Section
+                item {
+                    ProductSection(
+                        title = "🧴 Body Lotions",
+                        subtitle = "Moisturize & nourish",
+                        products = homeViewModel.bodyLotionProducts,
+                        backgroundColor = Color(0xFFE8F5E9)
+                    )
+                }
             }
 
             // Extra padding for FABs
