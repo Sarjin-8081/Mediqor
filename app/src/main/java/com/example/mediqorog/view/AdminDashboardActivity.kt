@@ -70,6 +70,7 @@ fun AdminDashboardApp(activity: ComponentActivity) {
 
     val primaryColor = Color(0xFF0B8FAC)
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showAddProduct by remember { mutableStateOf(false) }
 
     // Drawer menu items
     val menuItems = listOf(
@@ -123,52 +124,66 @@ fun AdminDashboardApp(activity: ComponentActivity) {
                 )
             }
         ) { paddingValues ->
-            NavHost(
-                navController = navController,
-                startDestination = AdminRoutes.DASHBOARD,
-                modifier = Modifier.padding(paddingValues)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
             ) {
-                composable(AdminRoutes.DASHBOARD) {
-                    AdminHomeScreen()
-                }
-                composable(AdminRoutes.ORDERS) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Orders Screen - Coming Soon")
+                NavHost(
+                    navController = navController,
+                    startDestination = AdminRoutes.DASHBOARD
+                ) {
+                    composable(AdminRoutes.DASHBOARD) {
+                        AdminHomeScreen(
+                            onAddProductClick = { showAddProduct = true }
+                        )
+                    }
+                    composable(AdminRoutes.ORDERS) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Orders Screen - Coming Soon")
+                        }
+                    }
+                    composable(AdminRoutes.PRODUCTS) {
+                        AdminProductsScreen()
+                    }
+                    composable(AdminRoutes.PRESCRIPTIONS) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Prescriptions Screen - Coming Soon")
+                        }
+                    }
+                    composable(AdminRoutes.USERS) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Users Screen - Coming Soon")
+                        }
+                    }
+                    composable(AdminRoutes.ANALYTICS) {
+                        AdminAnalyticsScreen()
+                    }
+                    composable(AdminRoutes.NOTIFICATIONS) {
+                        AdminNotificationsScreen()
+                    }
+                    composable(AdminRoutes.PROFILE) {
+                        AdminProfileScreen()
+                    }
+                    composable(AdminRoutes.SETTINGS) {
+                        AdminSettingsScreen()
                     }
                 }
-                composable(AdminRoutes.PRODUCTS) {
-                    AdminProductsScreen()
-                }
-                composable(AdminRoutes.PRESCRIPTIONS) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Prescriptions Screen - Coming Soon")
-                    }
-                }
-                composable(AdminRoutes.USERS) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Users Screen - Coming Soon")
-                    }
-                }
-                composable(AdminRoutes.ANALYTICS) {
-                    AdminAnalyticsScreen()
-                }
-                composable(AdminRoutes.NOTIFICATIONS) {
-                    AdminNotificationsScreen()
-                }
-                composable(AdminRoutes.PROFILE) {
-                    AdminProfileScreen()
-                }
-                composable(AdminRoutes.SETTINGS) {
-                    AdminSettingsScreen()
+
+                // Add Product overlay (full screen on top)
+                if (showAddProduct) {
+                    AddProductScreen(
+                        onBackClick = { showAddProduct = false }
+                    )
                 }
             }
         }
