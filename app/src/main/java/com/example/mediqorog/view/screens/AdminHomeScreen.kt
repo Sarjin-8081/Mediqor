@@ -23,7 +23,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun AdminHomeScreen() {
+fun AdminHomeScreen(
+    onAddProductClick: () -> Unit
+) {
     var totalOrders by remember { mutableStateOf(0) }
     var pendingOrders by remember { mutableStateOf(0) }
     var totalRevenue by remember { mutableStateOf(0.0) }
@@ -54,80 +56,96 @@ fun AdminHomeScreen() {
             }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Text(
-                "Admin Home Screen",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF0B8FAC)
-            )
-        }
-
-        // Stats Cards Row 1
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddProductClick,
+                containerColor = Color(0xFF0B8FAC),
+                contentColor = Color.White
             ) {
-                StatCard(
-                    title = "Total Orders",
-                    value = totalOrders.toString(),
-                    icon = Icons.Default.ShoppingCart,
-                    color = Color(0xFF4CAF50),
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    title = "Pending",
-                    value = pendingOrders.toString(),
-                    icon = Icons.Default.HourglassEmpty,
-                    color = Color(0xFFFF9800),
-                    modifier = Modifier.weight(1f)
-                )
+                Icon(Icons.Default.Add, contentDescription = "Add Product")
             }
         }
-
-        // Stats Cards Row 2
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatCard(
-                    title = "Revenue",
-                    value = "₹${String.format("%.0f", totalRevenue)}",
-                    icon = Icons.Default.AttachMoney,
-                    color = Color(0xFF2196F3),
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    title = "Low Stock",
-                    value = lowStockCount.toString(),
-                    icon = Icons.Default.Warning,
-                    color = Color(0xFFF44336),
-                    modifier = Modifier.weight(1f)
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Text(
+                    "Admin Dashboard",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0B8FAC)
                 )
             }
-        }
 
-        // Recent Orders
-        item {
-            Text(
-                "Recent Orders",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
+            // Stats Cards Row 1
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(
+                        title = "Total Orders",
+                        value = totalOrders.toString(),
+                        icon = Icons.Default.ShoppingCart,
+                        color = Color(0xFF4CAF50),
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        title = "Pending",
+                        value = pendingOrders.toString(),
+                        icon = Icons.Default.HourglassEmpty,
+                        color = Color(0xFFFF9800),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
 
-        items(recentOrders) { order ->
-            RecentOrderCard(order)
+            // Stats Cards Row 2
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(
+                        title = "Revenue",
+                        value = "₹${String.format("%.0f", totalRevenue)}",
+                        icon = Icons.Default.AttachMoney,
+                        color = Color(0xFF2196F3),
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        title = "Low Stock",
+                        value = lowStockCount.toString(),
+                        icon = Icons.Default.Warning,
+                        color = Color(0xFFF44336),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // Recent Orders
+            item {
+                Text(
+                    "Recent Orders",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            items(recentOrders) { order ->
+                RecentOrderCard(order)
+            }
+
+            // Extra padding for FAB
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
