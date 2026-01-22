@@ -35,13 +35,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val apiKey = localProperties.getProperty("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", "")
-            buildConfigField("String", "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", "\"$apiKey\"")
+
+            // Proper BuildConfig injection
+            val groqApiKey = localProperties.getProperty("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", "")
+            buildConfigField("String", "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", "\"$groqApiKey\"")
         }
 
         debug {
-            val apiKey = localProperties.getProperty("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", "")
-            buildConfigField("String", "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", "\"$apiKey\"")
+            val groqApiKey = localProperties.getProperty("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", "")
+            buildConfigField("String", "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", "\"$groqApiKey\"")
         }
     }
 
