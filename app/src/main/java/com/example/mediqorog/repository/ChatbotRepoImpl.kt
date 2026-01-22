@@ -18,8 +18,32 @@ import java.net.SocketTimeoutException
 class ChatbotRepoImpl : ChatbotRepository {
 
     companion object {
-        // API Configuration
-        private val API_KEY = BuildConfig.GROQ_API_KEY
+        // Read API key from local.properties
+        private val API_KEY: String by lazy {
+            try {
+                val properties = java.util.Properties()
+                val inputStream = ChatbotRepoImpl::class.java.classLoader
+                    ?.getResourceAsStream("local.properties")
+
+                if (inputStream != null) {
+                    properties.load(inputStream)
+                    properties.getProperty("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", "")
+                } else {
+                    // Fallback - try to read from file system
+                    val file = java.io.File("local.properties")
+                    if (file.exists()) {
+                        properties.load(java.io.FileInputStream(file))
+                        properties.getProperty("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", "")
+                    } else {
+                        ""
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ChatbotRepo", "Failed to load API key", e)
+                ""
+            }
+        }
+
 
         private const val API_URL = "https://api.groq.com/openai/v1/chat/completions"
         private const val MODEL = "llama-3.3-70b-versatile"
@@ -291,6 +315,7 @@ How may I assist you today?
             }
         }
     }
+
 
     // Custom exception classes for better error handling
     private class RateLimitException(message: String) : Exception(message)

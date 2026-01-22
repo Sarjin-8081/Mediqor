@@ -30,15 +30,18 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    fun signIn(email: String, password: String, onResult: (Boolean, String) -> Unit) {
+    fun signIn(email: String, password: String, onResult: (Boolean, String, Boolean) -> Unit) {
         viewModelScope.launch {
             val result = repository.signIn(email, password)
             result.onSuccess { user ->
                 _currentUser.value = user
-                onResult(true, "Login successful!")
+                val isAdmin = user.isAdmin()
+                Log.d("UserViewModel", "Sign in success - User: ${user.email}, Admin: $isAdmin")
+                onResult(true, "Login successful!", isAdmin)
             }
             result.onFailure { exception ->
-                onResult(false, exception.message ?: "Login failed")
+                Log.e("UserViewModel", "Sign in failed: ${exception.message}")
+                onResult(false, exception.message ?: "Login failed", false)
             }
         }
     }
@@ -56,23 +59,24 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    fun signInWithGoogle(account: GoogleSignInAccount, onResult: (Boolean, String) -> Unit) {
+    fun signInWithGoogle(account: GoogleSignInAccount, onResult: (Boolean, String, Boolean) -> Unit) {
         viewModelScope.launch {
             try {
                 Log.d("UserViewModel", "Starting Google sign-in with account: ${account.email}")
                 val result = repository.signInWithGoogle(account)
                 result.onSuccess { user ->
-                    Log.d("UserViewModel", "Google sign-in successful: ${user.email}")
                     _currentUser.value = user
-                    onResult(true, "Google sign-in successful!")
+                    val isAdmin = user.isAdmin()
+                    Log.d("UserViewModel", "Google sign-in success - User: ${user.email}, Admin: $isAdmin")
+                    onResult(true, "Google sign-in successful!", isAdmin)
                 }
                 result.onFailure { exception ->
                     Log.e("UserViewModel", "Google sign-in failed: ${exception.message}")
-                    onResult(false, exception.message ?: "Google sign-in failed")
+                    onResult(false, exception.message ?: "Google sign-in failed", false)
                 }
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Exception in signInWithGoogle: ${e.message}")
-                onResult(false, "Error: ${e.message}")
+                onResult(false, "Error: ${e.message}", false)
             }
         }
     }
@@ -102,9 +106,25 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
+    fun checkIfUserIsAdmin(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val user = _currentUser.value
+            if (user != null) {
+                val result = repository.checkIfAdmin(user.uid)
+                result.onSuccess { isAdmin ->
+                    onResult(isAdmin)
+                }
+                result.onFailure {
+                    onResult(false)
+                }
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
     fun getGoogleSignInClient(context: Context): GoogleSignInClient {
         return try {
-            // Try with Firebase web client ID first
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(context.getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -113,7 +133,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             Log.d("UserViewModel", "Creating GoogleSignInClient with Firebase config")
             GoogleSignIn.getClient(context, gso)
         } catch (e: Exception) {
-            // Fallback: If Firebase not configured, use basic Google Sign-In
             Log.w("UserViewModel", "Firebase config not found, using basic Google Sign-In")
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()

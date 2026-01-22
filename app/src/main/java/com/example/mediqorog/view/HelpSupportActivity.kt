@@ -152,24 +152,13 @@ fun HelpSupportScreen() {
                 QuickContactItem(
                     icon = Icons.Default.Email,
                     title = "Email Us",
-                    subtitle = "support@mediqor.com",
+                    subtitle = "mediqor.44@gmail.com",
                     onClick = {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("mailto:support@mediqor.com")
+                            data = Uri.parse("mailto:mediqor.44@gmail.com")
                             putExtra(Intent.EXTRA_SUBJECT, "Support Request")
                         }
                         context.startActivity(intent)
-                    }
-                )
-
-                HorizontalDivider()
-
-                QuickContactItem(
-                    icon = Icons.Filled.MarkUnreadChatAlt,
-                    title = "Live Chat",
-                    subtitle = "Chat with our support team",
-                    onClick = {
-                        Toast.makeText(context, "Live chat coming soon!", Toast.LENGTH_SHORT).show()
                     }
                 )
 

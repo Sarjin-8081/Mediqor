@@ -1,5 +1,5 @@
 // ============================================================
-// FILE 2: AdminOrdersScreen.kt
+// FILE: AdminOrdersScreen.kt
 // ============================================================
 package com.example.mediqorog.view.screens
 
@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.mediqorog.model.Order
 import com.example.mediqorog.model.OrderStatus
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,7 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun AdminOrdersScreen() {
+fun AdminOrdersScreen(navController: NavHostController) {
     var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
     var selectedFilter by remember { mutableStateOf("All") }
     var showUpdateDialog by remember { mutableStateOf<Order?>(null) }
@@ -74,11 +75,11 @@ fun AdminOrdersScreen() {
                     color = Color(0xFF0B8FAC)
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // Filter chips
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FilterChip(
@@ -101,16 +102,38 @@ fun AdminOrdersScreen() {
         }
 
         // Orders list
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(filteredOrders) { order ->
-                OrderCard(
-                    order = order,
-                    onUpdateClick = { showUpdateDialog = order }
-                )
+        if (filteredOrders.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "No orders found",
+                        fontSize = 18.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(filteredOrders) { order ->
+                    OrderCard(
+                        order = order,
+                        onUpdateClick = { showUpdateDialog = order }
+                    )
+                }
             }
         }
     }
@@ -136,12 +159,14 @@ fun OrderCard(order: Order, onUpdateClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
@@ -155,10 +180,10 @@ fun OrderCard(order: Order, onUpdateClick: () -> Unit) {
                         color = Color.Gray
                     )
                 }
-                StatusBadge(order.status)
+                OrderStatusBadge(order.status)
             }
 
-            Divider(modifier = Modifier.padding(vertical = 12.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -183,10 +208,34 @@ fun OrderCard(order: Order, onUpdateClick: () -> Unit) {
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Update Status")
+                    Text("Update")
                 }
             }
         }
+    }
+}
+
+@Composable
+fun OrderStatusBadge(status: OrderStatus) {
+    val (backgroundColor, textColor) = when (status) {
+        OrderStatus.PENDING -> Color(0xFFFFF3E0) to Color(0xFFFF9800)
+        OrderStatus.PROCESSING -> Color(0xFFE3F2FD) to Color(0xFF2196F3)
+        OrderStatus.SHIPPED -> Color(0xFFF3E5F5) to Color(0xFF9C27B0)
+        OrderStatus.DELIVERED -> Color(0xFFE8F5E9) to Color(0xFF4CAF50)
+        OrderStatus.CANCELLED -> Color(0xFFFFEBEE) to Color(0xFFF44336)
+    }
+
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = backgroundColor
+    ) {
+        Text(
+            text = status.name,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = textColor
+        )
     }
 }
 
@@ -196,37 +245,77 @@ fun UpdateOrderDialog(
     onDismiss: () -> Unit,
     onUpdate: (OrderStatus) -> Unit
 ) {
+    var selectedStatus by remember { mutableStateOf(order.status) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Update Order Status") },
+        title = {
+            Text(
+                "Update Order Status",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        },
         text = {
             Column {
-                Text("Order #${order.orderNumber}", fontWeight = FontWeight.Bold)
+                Text(
+                    "Order #${order.orderNumber}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color(0xFF0B8FAC)
+                )
+                Text(
+                    "Customer: ${order.userId}",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    "Select new status:",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 OrderStatus.values().forEach { status ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
-                            selected = order.status == status,
-                            onClick = { onUpdate(status) }
+                            selected = selectedStatus == status,
+                            onClick = { selectedStatus = status }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(status.toDisplayString())
+                        Text(
+                            text = status.name,
+                            fontSize = 15.sp
+                        )
                     }
                 }
             }
         },
         confirmButton = {
+            Button(
+                onClick = {
+                    onUpdate(selectedStatus)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0B8FAC)
+                )
+            ) {
+                Text("Update")
+            }
+        },
+        dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text("Cancel", color = Color.Gray)
             }
         }
     )
 }
-
-

@@ -1,10 +1,3 @@
-// ============================================================
-// CREATE 3 FILES IN: app/src/main/java/com/example/mediqorog/view/screens/
-// ============================================================
-
-// ============================================================
-// FILE 1: AdminDashboardScreen.kt
-// ============================================================
 package com.example.mediqorog.view.screens
 
 import androidx.compose.foundation.background
@@ -30,7 +23,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun AdminDashboardScreen() {
+fun AdminHomeScreen() {
     var totalOrders by remember { mutableStateOf(0) }
     var pendingOrders by remember { mutableStateOf(0) }
     var totalRevenue by remember { mutableStateOf(0.0) }
@@ -70,7 +63,7 @@ fun AdminDashboardScreen() {
     ) {
         item {
             Text(
-                "Admin Dashboard",
+                "Admin Home Screen",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF0B8FAC)
@@ -249,4 +242,13 @@ fun StatusBadge(status: OrderStatus) {
     }
 }
 
-
+// Extension function for OrderStatus
+fun OrderStatus.toDisplayString(): String {
+    return when (this) {
+        OrderStatus.PENDING -> "Pending"
+        OrderStatus.PROCESSING -> "Processing"
+        OrderStatus.SHIPPED -> "Shipped"
+        OrderStatus.DELIVERED -> "Delivered"
+        OrderStatus.CANCELLED -> "Cancelled"
+    }
+}

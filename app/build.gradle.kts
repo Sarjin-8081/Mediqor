@@ -1,12 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
 }
+
 android {
     namespace = "com.example.mediqorog"
     compileSdk = 36
+
     defaultConfig {
         applicationId = "com.example.mediqorog"
         minSdk = 26
@@ -14,17 +19,13 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField(
-            "String",
-            "GROQ_API_KEY",
-            "\"${project.findProperty("GROQ_API_KEY")}\""
-        )
     }
 
-    buildFeatures {
-        compose = true
-        buildConfig = true
+    // Load local.properties for API keys
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
     }
 
     buildTypes {
@@ -34,19 +35,31 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            val apiKey = localProperties.getProperty("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", "")
+            buildConfigField("String", "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", "\"$apiKey\"")
+        }
+
+        debug {
+            val apiKey = localProperties.getProperty("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", "")
+            buildConfigField("String", "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", "\"$apiKey\"")
         }
     }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        compose = true
-    }
 }
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -61,6 +74,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.ui.graphics)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,6 +82,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
     implementation("com.airbnb.android:lottie-compose:6.1.0")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.firebase:firebase-database-ktx")

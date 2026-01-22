@@ -50,7 +50,7 @@ fun DashboardBody() {
             NavigationItem("Home", Icons.Filled.Home, "home"),
             NavigationItem("Cart", Icons.Filled.ShoppingCart, "cart"),
             NavigationItem("Map", Icons.Filled.LocationOn, "map"),
-            NavigationItem("Profile", Icons.Filled.Person, "profile")
+            NavigationItem("settings", Icons.Filled.Person, "settings")
         )
     }
 
@@ -90,12 +90,11 @@ fun DashboardBody() {
             when (selectedTab) {
                 0 -> HomeScreen(
                     onChatbotClick = { chatbotViewModel.openChatbot() },
-                    onAddProductClick = { showAddProduct = true },
-                    isAdmin = isAdmin
+                    onAddProductClick = { showAddProduct = true }
                 )
                 1 -> CartScreen()
                 2 -> MapScreen()
-                3 -> ProfileScreen()
+                3 -> SettingsScreen()
             }
 
             // Chatbot overlay (full screen on top)
