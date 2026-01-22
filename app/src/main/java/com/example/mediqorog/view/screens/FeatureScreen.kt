@@ -12,13 +12,13 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen() {
+fun FeatureScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Nearby Pharmacies",
+                        "Features",
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -40,16 +40,16 @@ fun MapScreen() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    "🗺️",
+                    "⭐",
                     fontSize = 64.sp
                 )
                 Text(
-                    "Find Nearby Pharmacies",
+                    "Features",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Map feature coming soon",
+                    "Coming soon",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )

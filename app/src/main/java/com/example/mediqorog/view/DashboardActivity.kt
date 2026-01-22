@@ -49,7 +49,7 @@ fun DashboardBody() {
         listOf(
             NavigationItem("Home", Icons.Filled.Home, "home"),
             NavigationItem("Cart", Icons.Filled.ShoppingCart, "cart"),
-            NavigationItem("Map", Icons.Filled.LocationOn, "map"),
+            NavigationItem("Features", Icons.Filled.Stars, "features"),
             NavigationItem("Profile", Icons.Filled.Person, "profile")
         )
     }
@@ -94,7 +94,7 @@ fun DashboardBody() {
                     isAdmin = isAdmin
                 )
                 1 -> CartScreen()
-                2 -> MapScreen()
+                2 -> FeatureScreen()
                 3 -> ProfileScreen()
             }
 
