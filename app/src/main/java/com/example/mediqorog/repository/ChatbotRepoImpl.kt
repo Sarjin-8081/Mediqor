@@ -27,13 +27,13 @@ class ChatbotRepoImpl : ChatbotRepository {
 
                 if (inputStream != null) {
                     properties.load(inputStream)
-                    properties.getProperty("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", "")
+                    properties.getProperty("System.getenv(\"GROQ_API_KEY\")", "")
                 } else {
                     // Fallback - try to read from file system
                     val file = java.io.File("local.properties")
                     if (file.exists()) {
                         properties.load(java.io.FileInputStream(file))
-                        properties.getProperty("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", "")
+                        properties.getProperty("System.getenv(\"GROQ_API_KEY\")", "")
                     } else {
                         ""
                     }
