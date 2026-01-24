@@ -44,8 +44,8 @@ fun DashboardBody() {
         listOf(
             NavigationItem("Home", Icons.Filled.Home, "home"),
             NavigationItem("Cart", Icons.Filled.ShoppingCart, "cart"),
-            NavigationItem("Map", Icons.Filled.LocationOn, "map"),
-            NavigationItem("Settings", Icons.Filled.Person, "settings")
+            NavigationItem("Features", Icons.Filled.Stars, "features"),
+            NavigationItem("Profile", Icons.Filled.Person, "profile")
         )
     }
 
@@ -88,8 +88,8 @@ fun DashboardBody() {
                     onChatbotClick = { chatbotViewModel.openChatbot() }
                 )
                 1 -> CartScreen()
-                2 -> MapScreen()
-                3 -> SettingsScreen()
+                2 -> FeatureScreen()
+                3 -> ProfileScreen()
             }
 
             // Chatbot overlay (full screen on top)
