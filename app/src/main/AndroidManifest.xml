@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -16,14 +15,8 @@
         tools:replace="android:fullBackupContent"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MediqorOG"
-        tools:replace="android:fullBackupContent">
-        <activity
-            android:name=".view.HelpSupportActivity"
-            android:name=".view.TermsOfServiceActivity"
-            android:exported="false"
-            android:label="@string/title_activity_terms_of_service"
-            android:theme="@style/Theme.MediqorOG" />
+        android:theme="@style/Theme.MediqorOG">
+
         <activity
             android:name=".view.PrivacyPolicyActivity"
             android:exported="false"
