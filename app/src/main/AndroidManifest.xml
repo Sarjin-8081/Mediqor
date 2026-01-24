@@ -16,16 +16,43 @@
         tools:replace="android:fullBackupContent"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MediqorOG">
+        android:theme="@style/Theme.MediqorOG"
+        tools:replace="android:fullBackupContent">
         <activity
             android:name=".view.HelpSupportActivity"
+            android:name=".view.TermsOfServiceActivity"
             android:exported="false"
-            android:label="@string/title_activity_help_support"
+            android:label="@string/title_activity_terms_of_service"
             android:theme="@style/Theme.MediqorOG" />
         <activity
-            android:name=".view.SettingsActivity"
+            android:name=".view.PrivacyPolicyActivity"
             android:exported="false"
-            android:label="@string/title_activity_settings"
+            android:label="@string/title_activity_privacy_policy"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.NotificationSettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_notification_settings"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.ChangePasswordActivity"
+            android:exported="false"
+            android:label="@string/title_activity_change_password"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.EditProfileActivity"
+            android:exported="false"
+            android:label="@string/title_activity_edit_profile"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.AdminDashboardActivity"
+            android:exported="false"
+            android:label="@string/title_activity_admin_dashboard"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
+            android:name=".view.HelpCenterActivity"
+            android:exported="false"
+            android:label="@string/title_activity_help_support"
             android:theme="@style/Theme.MediqorOG" />
         <activity
             android:name=".view.PrescriptionsActivity"

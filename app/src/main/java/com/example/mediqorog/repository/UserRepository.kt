@@ -10,4 +10,5 @@ interface UserRepository {
     suspend fun signOut(): Result<Unit>
     suspend fun getCurrentUser(): User?
     suspend fun resetPassword(email: String): Result<Unit>
+    suspend fun checkIfAdmin(userId: String): Result<Boolean>
 }

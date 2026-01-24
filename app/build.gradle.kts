@@ -1,12 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
 }
+
 android {
     namespace = "com.example.mediqorog"
     compileSdk = 36
+
     defaultConfig {
         applicationId = "com.example.mediqorog"
         minSdk = 26
@@ -15,16 +20,16 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField(
-            "String",
-            "GROQ_API_KEY",
-            "\"${project.findProperty("GROQ_API_KEY")}\""
-        )
-    }
+        // Load local.properties for API keys
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(FileInputStream(localPropertiesFile))
+        }
 
-    buildFeatures {
-        compose = true
-        buildConfig = true
+        // Inject API key into BuildConfig
+        val groqApiKey = localProperties.getProperty("GROQ_API_KEY", "")
+        buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
     }
 
     buildTypes {
@@ -35,18 +40,27 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        debug {
+            // Debug configuration (API key already injected in defaultConfig)
+        }
     }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        compose = true
-    }
 }
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -61,6 +75,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.ui.graphics)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,7 +83,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation("com.airbnb.android:lottie-compose:6.5.2")
+
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
@@ -81,4 +97,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.6")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    implementation("com.cloudinary:cloudinary-android:2.1.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
 }

@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mediqorog.view.screens.*
 import com.example.mediqorog.viewmodel.ChatbotViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,10 +39,6 @@ data class NavigationItem(
 fun DashboardBody() {
     val chatbotViewModel: ChatbotViewModel = viewModel()
     val showChatbot by chatbotViewModel.showChatbot.collectAsState()
-    var showAddProduct by remember { mutableStateOf(false) }
-
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val isAdmin = currentUser?.email?.contains("admin") == true
 
     val navigationItems = remember {
         listOf(
@@ -86,12 +81,11 @@ fun DashboardBody() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Main content
+            // Main content - User screens only
+            // Main content - User screens only
             when (selectedTab) {
                 0 -> HomeScreen(
-                    onChatbotClick = { chatbotViewModel.openChatbot() },
-                    onAddProductClick = { showAddProduct = true },
-                    isAdmin = isAdmin
+                    onChatbotClick = { chatbotViewModel.openChatbot() }
                 )
                 1 -> CartScreen()
                 2 -> FeatureScreen()
@@ -102,13 +96,6 @@ fun DashboardBody() {
             if (showChatbot) {
                 ChatbotScreen(
                     onBackClick = { chatbotViewModel.closeChatbot() }
-                )
-            }
-
-            // Add Product overlay (full screen on top)
-            if (showAddProduct) {
-                AddProductScreen(
-                    onBackClick = { showAddProduct = false }
                 )
             }
         }

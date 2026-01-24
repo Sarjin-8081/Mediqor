@@ -1,7 +1,6 @@
 package com.example.mediqorog.view
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -32,7 +31,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mediqorog.repository.UserRepoImpl
@@ -40,10 +38,12 @@ import com.example.mediqorog.viewmodel.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.example.mediqorog.R
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : ComponentActivity() {
 
     private lateinit var viewModel: UserViewModel
+    private lateinit var auth: FirebaseAuth
 
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -52,11 +52,12 @@ class LoginActivity : ComponentActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                viewModel.signInWithGoogle(account) { success, message ->
+                // ✅ Updated callback with isAdmin parameter
+                viewModel.signInWithGoogle(account) { success, message, isAdmin ->
                     runOnUiThread {
                         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                         if (success) {
-                            navigateToDashboard()
+                            navigateToDashboard(isAdmin)
                         }
                     }
                 }
@@ -82,6 +83,7 @@ class LoginActivity : ComponentActivity() {
 
         val repo = UserRepoImpl()
         viewModel = UserViewModel(repo)
+        auth = FirebaseAuth.getInstance()
 
         setContent {
             LoginBody(
@@ -102,10 +104,31 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
-    private fun navigateToDashboard() {
-        val intent = Intent(this, DashboardActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
+    override fun onStart() {
+        super.onStart()
+
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // Check if user is admin from current user state
+            viewModel.checkIfUserIsAdmin { isAdmin ->
+                runOnUiThread {
+                    navigateToDashboard(isAdmin)
+                }
+            }
+        }
+    }
+
+    private fun navigateToDashboard(isAdmin: Boolean) {
+        if (isAdmin) {
+            val intent = Intent(this, AdminDashboardActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            Toast.makeText(this, "Welcome Admin!", Toast.LENGTH_SHORT).show()
+        } else {
+            val intent = Intent(this, DashboardActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+        }
         finish()
     }
 }
@@ -122,10 +145,6 @@ fun LoginBody(
 
     val context = LocalContext.current
     val activity = context as? Activity
-
-    val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-    val localEmail = sharedPreferences.getString("email", "") ?: ""
-    val localPassword = sharedPreferences.getString("password", "") ?: ""
 
     Scaffold { padding ->
         Column(
@@ -236,6 +255,7 @@ fun LoginBody(
                     }
             )
 
+            // ✅ UPDATED LOGIN BUTTON - Uses Firestore role check
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
@@ -243,26 +263,23 @@ fun LoginBody(
                         return@Button
                     }
 
-                    if (viewModel != null) {
-                        loading = true
-                        viewModel.signIn(email, password) { success, message ->
-                            loading = false
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                            if (success) {
+                    loading = true
+                    // ✅ Updated callback signature (success, message, isAdmin)
+                    viewModel?.signIn(email, password) { success, message, isAdmin ->
+                        loading = false
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        if (success) {
+                            if (isAdmin) {
+                                val intent = Intent(context, AdminDashboardActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                context.startActivity(intent)
+                                Toast.makeText(context, "Welcome Admin!", Toast.LENGTH_SHORT).show()
+                            } else {
                                 val intent = Intent(context, DashboardActivity::class.java)
                                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 context.startActivity(intent)
-                                activity?.finish()
                             }
-                        }
-                    } else {
-                        if (localEmail == email && localPassword == password) {
-                            val intent = Intent(context, DashboardActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            context.startActivity(intent)
                             activity?.finish()
-                        } else {
-                            Toast.makeText(context, "Invalid details", Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
@@ -354,10 +371,4 @@ fun LoginBody(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewLogin() {
-    LoginBody()
 }
