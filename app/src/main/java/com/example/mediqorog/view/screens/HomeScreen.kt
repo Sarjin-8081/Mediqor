@@ -37,13 +37,12 @@ import com.example.mediqorog.ui.components.ProductCard
 import com.example.mediqorog.view.*
 import com.example.mediqorog.viewmodel.HomeViewModel
 import kotlinx.coroutines.delay
+import com.example.mediqorog.model.ProductModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onChatbotClick: () -> Unit,
-    onAddProductClick: () -> Unit,
-    isAdmin: Boolean = true
+    onChatbotClick: () -> Unit
 ) {
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
@@ -137,28 +136,13 @@ fun HomeScreen(
             }
         },
         floatingActionButton = {
-            // Both FABs side by side
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.Bottom
+            // Chat button only for users
+            FloatingActionButton(
+                onClick = onChatbotClick,
+                containerColor = Color(0xFF0B8FAC),
+                contentColor = Color.White
             ) {
-                // Add Product FAB (Left)
-                FloatingActionButton(
-                    onClick = onAddProductClick,
-                    containerColor = Color(0xFFB3E5FC),
-                    contentColor = Color(0xFF01579B)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Product")
-                }
-
-                // Chat button (Right)
-                FloatingActionButton(
-                    onClick = onChatbotClick,
-                    containerColor = Color(0xFF0B8FAC),
-                    contentColor = Color.White
-                ) {
-                    Icon(Icons.Default.Chat, contentDescription = "Chatbot")
-                }
+                Icon(Icons.Default.Chat, contentDescription = "Chatbot")
             }
         }
     ) { paddingValues ->
@@ -258,8 +242,8 @@ fun HomeScreen(
                 )
             }
 
-            // Extra padding for FABs
-            item { Spacer(modifier = Modifier.height(100.dp)) }
+            // Extra padding for FAB
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
