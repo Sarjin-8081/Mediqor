@@ -89,7 +89,7 @@ fun DashboardBody() {
                 )
                 1 -> CartScreen()
                 2 -> FeatureScreen()
-                3 -> ProfileScreen()
+                3 -> SettingsScreen()
             }
 
             // Chatbot overlay (full screen on top)
