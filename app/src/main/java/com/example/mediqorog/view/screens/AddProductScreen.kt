@@ -1,41 +1,63 @@
-// ============================================
-// FILE 2: AddProductScreen.kt - FIXED VERSION
-// ============================================
 package com.example.mediqorog.view.screens
 
+import android.app.Activity
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.firestore.FirebaseFirestore
+import coil.compose.AsyncImage
+import com.example.mediqorog.R
+import com.example.mediqorog.model.ProductModel
+import com.example.mediqorog.repository.CommonRepoImpl
+import com.example.mediqorog.repository.ProductRepoImpl
+import com.example.mediqorog.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
-    val firestore = FirebaseFirestore.getInstance()
+    val activity = context as? Activity
 
     var productName by remember { mutableStateOf("") }
     var productDescription by remember { mutableStateOf("") }
     var productPrice by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Pharmacy") }
     var expanded by remember { mutableStateOf(false) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-    val categories = listOf(
-        "Pharmacy", "Family Care", "Personal Care",
-        "Supplements", "Surgical", "Devices"
-    )
+    val categories = listOf("Pharmacy", "Family Care", "Personal Care", "Supplements", "Surgical", "Devices")
+
+    val productRepo = remember { ProductRepoImpl() }
+    val commonRepo = remember { CommonRepoImpl() }
+    val viewModel = remember { ProductViewModel(productRepo, commonRepo) }
+
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     Scaffold(
         topBar = {
@@ -61,6 +83,54 @@ fun AddProductScreen(onBackClick: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Image Picker Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        imagePickerLauncher.launch("image/*")
+                    },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF5F5F5)
+                )
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (selectedImageUri != null) {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = "Selected Product Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.new_mediqor),
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.size(80.dp),
+                                alpha = 0.5f
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Tap to select product image",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = productName,
@@ -89,18 +159,14 @@ fun AddProductScreen(onBackClick: () -> Unit) {
 
             ExposedDropdownMenuBox(
                 expanded = expanded,
-                onExpandedChange = {
-                    if (!isLoading) expanded = !expanded
-                }
+                onExpandedChange = { expanded = !expanded && !isLoading }
             ) {
                 OutlinedTextField(
                     value = selectedCategory,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Category") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
@@ -127,65 +193,40 @@ fun AddProductScreen(onBackClick: () -> Unit) {
 
             Button(
                 onClick = {
-                    when {
-                        productName.isBlank() -> {
-                            Toast.makeText(
-                                context,
-                                "Please enter product name",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        productPrice.isBlank() -> {
-                            Toast.makeText(
-                                context,
-                                "Please enter product price",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        productPrice.toDoubleOrNull() == null -> {
-                            Toast.makeText(
-                                context,
-                                "Please enter a valid price",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        productPrice.toDoubleOrNull()!! <= 0 -> {
-                            Toast.makeText(
-                                context,
-                                "Price must be greater than 0",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        else -> {
-                            isLoading = true
-                            val product = hashMapOf(
-                                "name" to productName,
-                                "description" to productDescription,
-                                "price" to productPrice.toDouble(),
-                                "category" to selectedCategory,
-                                "inStock" to true,
-                                "createdAt" to System.currentTimeMillis()
+                    if (productName.isBlank() || productPrice.isBlank()) {
+                        Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    if (selectedImageUri == null) {
+                        Toast.makeText(context, "Please select a product image", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    isLoading = true
+
+                    // Upload image first, then add product
+                    viewModel.uploadProductImage(context, selectedImageUri!!) { imageUrl ->
+                        if (imageUrl != null) {
+                            val product = ProductModel(
+                                id = "",
+                                name = productName,
+                                price = productPrice.toDoubleOrNull() ?: 0.0,
+                                description = productDescription,
+                                imageUrl = imageUrl,
+                                category = selectedCategory
                             )
 
-                            firestore.collection("products")
-                                .add(product)
-                                .addOnSuccessListener {
-                                    isLoading = false
-                                    Toast.makeText(
-                                        context,
-                                        "✅ Product added successfully!",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    onBackClick()
+                            viewModel.addProduct(product) { success, message ->
+                                isLoading = false
+                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                if (success) {
+                                    activity?.finish() ?: onBackClick()
                                 }
-                                .addOnFailureListener { e ->
-                                    isLoading = false
-                                    Toast.makeText(
-                                        context,
-                                        "❌ Error: ${e.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                            }
+                        } else {
+                            isLoading = false
+                            Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
@@ -200,8 +241,7 @@ fun AddProductScreen(onBackClick: () -> Unit) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
+                        color = Color.White
                     )
                 } else {
                     Text("ADD PRODUCT", fontSize = 16.sp, fontWeight = FontWeight.Bold)

@@ -18,9 +18,8 @@ import java.net.SocketTimeoutException
 class ChatbotRepoImpl : ChatbotRepository {
 
     companion object {
-        // API Configuration
-        private val API_KEY = BuildConfig.GROQ_API_KEY
-
+        // API key is now properly loaded from BuildConfig
+        private const val API_KEY = BuildConfig.GROQ_API_KEY
         private const val API_URL = "https://api.groq.com/openai/v1/chat/completions"
         private const val MODEL = "llama-3.3-70b-versatile"
 

@@ -18,4 +18,10 @@
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="title_activity_help_support">HelpSupportActivity</string>
     <string name="title_activity_add_product">AddProductActivity</string>
+    <string name="title_activity_admin_dashboard">AdminDashboardActivity</string>
+    <string name="title_activity_edit_profile">EditProfileActivity</string>
+    <string name="title_activity_change_password">ChangePasswordActivity</string>
+    <string name="title_activity_notification_settings">NotificationSettingsActivity</string>
+    <string name="title_activity_privacy_policy">PrivacyPolicyActivity</string>
+    <string name="title_activity_terms_of_service">TermsOfServiceActivity</string>
 </resources>

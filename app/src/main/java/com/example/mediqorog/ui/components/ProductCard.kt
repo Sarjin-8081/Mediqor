@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mediqorog.model.ProductModel
+import com.example.mediqorog.model.ProductModel  // ← Use this import
 
 @Composable
 fun ProductCard(product: ProductModel) {

@@ -1,149 +1,110 @@
 package com.example.mediqorog.repository
 
 import com.example.mediqorog.model.ProductModel
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import kotlinx.coroutines.tasks.await
 
-class ProductRepositoryImpl : ProductRepository {
+class ProductRepoImpl : ProductRepo {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val productsCollection = firestore.collection("products")
 
-    override suspend fun getAllProducts(): Result<List<ProductModel>> {
-        return try {
-            val snapshot = productsCollection
-                .whereEqualTo("isActive", true)
-                .get()
-                .await()
+    override fun addProduct(product: ProductModel, callback: (Boolean, String) -> Unit) {
+        val productData = hashMapOf(
+            "name" to product.name,
+            "description" to product.description,
+            "price" to product.price,
+            "category" to product.category,
+            "imageUrl" to product.imageUrl,
+            "inStock" to true,
+            "createdAt" to System.currentTimeMillis()
+        )
 
-            val products = snapshot.toObjects(ProductModel::class.java)
-            Result.success(products)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun getProductsByCategory(category: String): Result<List<ProductModel>> {
-        return try {
-            val snapshot = productsCollection
-                .whereEqualTo("category", category)
-                .whereEqualTo("isActive", true)
-                .get()
-                .await()
-
-            val products = snapshot.toObjects(ProductModel::class.java)
-            Result.success(products)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun getFeaturedProducts(): Result<List<ProductModel>> {
-        return try {
-            val snapshot = productsCollection
-                .whereEqualTo("isFeatured", true)
-                .whereEqualTo("isActive", true)
-                .limit(10)
-                .get()
-                .await()
-
-            val products = snapshot.toObjects(ProductModel::class.java)
-            Result.success(products)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun getProductById(productId: String): Result<ProductModel?> {
-        return try {
-            val snapshot = productsCollection
-                .document(productId)
-                .get()
-                .await()
-
-            val product = snapshot.toObject(ProductModel::class.java)
-            Result.success(product)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun searchProducts(query: String): Result<List<ProductModel>> {
-        return try {
-            val snapshot = productsCollection
-                .whereEqualTo("isActive", true)
-                .get()
-                .await()
-
-            // Firestore doesn't support full-text search, so filter in memory
-            val allProducts = snapshot.toObjects(ProductModel::class.java)
-            val filtered = allProducts.filter { product ->
-                product.name.contains(query, ignoreCase = true) ||
-                        product.description.contains(query, ignoreCase = true) ||
-                        product.tags.any { it.contains(query, ignoreCase = true) }
+        productsCollection
+            .add(productData)
+            .addOnSuccessListener { documentReference ->
+                Log.d("ProductRepo", "Product added with ID: ${documentReference.id}")
+                callback(true, "✅ Product added successfully!")
             }
-
-            Result.success(filtered)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun addProduct(product: ProductModel): Result<String> {
-        return try {
-            val docRef = if (product.id.isEmpty()) {
-                productsCollection.document()
-            } else {
-                productsCollection.document(product.id)
+            .addOnFailureListener { e ->
+                Log.e("ProductRepo", "Error adding product", e)
+                callback(false, "❌ Failed to add product: ${e.message}")
             }
-
-            val productWithId = product.copy(id = docRef.id)
-            docRef.set(productWithId).await()
-
-            Result.success(docRef.id)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
     }
 
-    override suspend fun updateProduct(product: ProductModel): Result<Unit> {
-        return try {
-            productsCollection
-                .document(product.id)
-                .set(product)
-                .await()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    override fun getAllProduct(callback: (List<ProductModel>?, Boolean, String) -> Unit) {
+        productsCollection
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener { documents ->
+                val products = documents.mapNotNull { doc ->
+                    try {
+                        ProductModel(
+                            id = doc.id,
+                            name = doc.getString("name") ?: "",
+                            price = doc.getDouble("price") ?: 0.0,
+                            description = doc.getString("description") ?: "",
+                            imageUrl = doc.getString("imageUrl") ?: "",
+                            category = doc.getString("category") ?: ""
+                        )
+                    } catch (e: Exception) {
+                        Log.e("ProductRepo", "Error parsing product ${doc.id}", e)
+                        null
+                    }
+                }
+                Log.d("ProductRepo", "Loaded ${products.size} products")
+                callback(products, true, "Products loaded successfully")
+            }
+            .addOnFailureListener { e ->
+                Log.e("ProductRepo", "Error getting products", e)
+                callback(null, false, "Failed to load products: ${e.message}")
+            }
     }
 
-    override suspend fun deleteProduct(productId: String): Result<Unit> {
-        return try {
-            // Soft delete - set isActive to false
-            productsCollection
-                .document(productId)
-                .update("isActive", false)
-                .await()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    override fun getProductById(
+        productId: String,
+        callback: (ProductModel?, Boolean, String) -> Unit
+    ) {
+        productsCollection.document(productId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    try {
+                        val product = ProductModel(
+                            id = document.id,
+                            name = document.getString("name") ?: "",
+                            price = document.getDouble("price") ?: 0.0,
+                            description = document.getString("description") ?: "",
+                            imageUrl = document.getString("imageUrl") ?: "",
+                            category = document.getString("category") ?: ""
+                        )
+                        Log.d("ProductRepo", "Product loaded: ${product.name}")
+                        callback(product, true, "Product loaded")
+                    } catch (e: Exception) {
+                        Log.e("ProductRepo", "Error parsing product", e)
+                        callback(null, false, "Error parsing product: ${e.message}")
+                    }
+                } else {
+                    Log.w("ProductRepo", "Product not found: $productId")
+                    callback(null, false, "Product not found")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("ProductRepo", "Error getting product", e)
+                callback(null, false, "Error: ${e.message}")
+            }
     }
 
-    override suspend fun updateStock(productId: String, newStock: Int): Result<Unit> {
-        return try {
-            productsCollection
-                .document(productId)
-                .update("stock", newStock)
-                .await()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    override fun deleteProduct(productId: String, callback: (Boolean, String) -> Unit) {
+        productsCollection.document(productId)
+            .delete()
+            .addOnSuccessListener {
+                Log.d("ProductRepo", "Product deleted: $productId")
+                callback(true, "✅ Product deleted successfully")
+            }
+            .addOnFailureListener { e ->
+                Log.e("ProductRepo", "Error deleting product", e)
+                callback(false, "❌ Failed to delete: ${e.message}")
+            }
     }
 }
