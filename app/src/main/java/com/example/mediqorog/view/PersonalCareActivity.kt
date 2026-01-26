@@ -58,12 +58,25 @@ fun PersonalCareScreen(onBackClick: () -> Unit) {
             )
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues).background(Color(0xFFF5F5F5))) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFFF5F5F5))
+        ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color(0xFF0B8FAC))
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF0B8FAC)
+                )
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxWidth().background(Color.White).padding(16.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .padding(16.dp)
+                    ) {
                         Column {
                             Text("🧴 Personal Care Products", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
@@ -72,7 +85,10 @@ fun PersonalCareScreen(onBackClick: () -> Unit) {
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     if (products.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text("No products available", fontSize = 16.sp, color = Color.Gray)
                         }
                     } else {
@@ -83,7 +99,11 @@ fun PersonalCareScreen(onBackClick: () -> Unit) {
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(products) { product ->
-                                ProductGridItem(product = product, onProductClick = {}, onAddToCartClick = {})
+                                ProductGridItem(
+                                    product = product,
+                                    onProductClick = {},
+                                    onAddToCartClick = {}
+                                )
                             }
                         }
                     }
@@ -92,3 +112,5 @@ fun PersonalCareScreen(onBackClick: () -> Unit) {
         }
     }
 }
+
+// ❌ REMOVE ProductGridItem from here - it's now in ProductGridItem.kt
