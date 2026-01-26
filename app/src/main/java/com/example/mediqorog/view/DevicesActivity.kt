@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.mediqorog.model.ProductModel
 import com.example.mediqorog.viewmodel.ProductViewModel
+import com.example.mediqorog.viewmodel.ProductViewModelFactory
 
 class DevicesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +42,7 @@ class DevicesActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DevicesScreen(onBackClick: () -> Unit) {
-    val viewModel: ProductViewModel = viewModel()
+    val viewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory())
     val products by viewModel.products.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 

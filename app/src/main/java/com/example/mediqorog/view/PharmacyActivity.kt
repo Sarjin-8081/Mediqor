@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mediqorog.utils.ProductGridItem
 import com.example.mediqorog.viewmodel.ProductViewModel
+import com.example.mediqorog.viewmodel.ProductViewModelFactory
 
 class PharmacyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,10 +35,10 @@ class PharmacyActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PharmacyScreen(onBackClick: () -> Unit) {
-    val viewModel: ProductViewModel = viewModel()
+    val viewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory())
     val products by viewModel.products.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState() // ✅ Fixed: errorMessage not error
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadProductsByCategory("Pharmacy")

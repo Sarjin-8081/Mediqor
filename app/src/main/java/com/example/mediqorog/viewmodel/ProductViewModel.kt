@@ -117,7 +117,6 @@ class ProductViewModel(
     fun deleteProduct(productId: String, callback: (Boolean, String) -> Unit) {
         productRepo.deleteProduct(productId, callback)
     }
-
     /**
      * Deletes an image from Cloudinary
      * Useful when deleting a product or updating its image

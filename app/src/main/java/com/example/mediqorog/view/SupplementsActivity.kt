@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mediqorog.utils.ProductGridItem  // ✅ ADD THIS IMPORT
 import com.example.mediqorog.viewmodel.ProductViewModel
+import com.example.mediqorog.viewmodel.ProductViewModelFactory
 
 class SupplementsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +35,7 @@ class SupplementsActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupplementsScreen(onBackClick: () -> Unit) {
-    val viewModel: ProductViewModel = viewModel()
+    val viewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory())
     val products by viewModel.products.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
