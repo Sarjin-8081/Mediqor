@@ -37,14 +37,21 @@ class ProductRepositoryImpl : ProductRepository {
 
     override suspend fun getProductsByCategory(category: String): Result<List<ProductModel>> {
         return try {
+            // Get all active products first
             val snapshot = productsCollection
                 .whereEqualTo("isActive", true)
-                .whereEqualTo("category", category)
                 .get()
                 .await()
 
+            // Filter in memory to support multiple categories (comma-separated)
             val products = snapshot.documents.mapNotNull { it.toProductModel() }
-                .sortedByDescending { it.createdAt } // Sort in memory instead
+                .filter { product ->
+                    // Split categories by comma and check if any match the selected category
+                    product.category.split(",").any { cat ->
+                        cat.trim().equals(category, ignoreCase = true)
+                    }
+                }
+                .sortedByDescending { it.createdAt }
 
             Log.d(TAG, "Loaded ${products.size} products in category: $category")
             Result.success(products)
