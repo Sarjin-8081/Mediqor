@@ -1,5 +1,8 @@
 package com.example.mediqorog.view
 
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,6 +33,21 @@ import com.example.mediqorog.repository.ProductRepositoryImpl
 import com.example.mediqorog.viewmodel.ProductUiState
 import com.example.mediqorog.viewmodel.ProductViewModel
 import com.example.mediqorog.viewmodel.ProductViewModelFactory
+
+class DashboardActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MaterialTheme {
+                HomeScreen(
+                    onChatbotClick = {
+                        // TODO: Handle chatbot click
+                    }
+                )
+            }
+        }
+    }
+}
 
 data class Category(
     val name: String,
