@@ -18,10 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mediqorog.model.ProductModel
+import com.example.mediqorog.repository.CommonRepoImpl
+import com.example.mediqorog.repository.ProductRepositoryImpl
 import com.example.mediqorog.utils.ProductGridItem
+import com.example.mediqorog.viewmodel.ProductUiState
 import com.example.mediqorog.viewmodel.ProductViewModel
-import com.example.mediqorog.viewmodel.ProductViewModelFactory
 
 class PharmacyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,21 +37,14 @@ class PharmacyActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PharmacyScreen(onBackClick: () -> Unit) {
-    val viewModel: ProductViewModel = viewModel(factory = ProductViewModelFactory())
-    val products by viewModel.products.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val productRepo = remember { ProductRepositoryImpl() }
+    val commonRepo = remember { CommonRepoImpl() }
+    val viewModel = remember { ProductViewModel(productRepo, commonRepo) }
+
+    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadProductsByCategory("Pharmacy")
-    }
-
-    // Show error snackbar
-    errorMessage?.let { error ->
-        LaunchedEffect(error) {
-            // You can show a snackbar here if needed
-            viewModel.clearError()
-        }
     }
 
     Scaffold(
@@ -84,69 +79,103 @@ fun PharmacyScreen(onBackClick: () -> Unit) {
                 .padding(paddingValues)
                 .background(Color(0xFFF5F5F5))
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFF0B8FAC)
-                )
-            } else {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Category Header
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(16.dp)
-                    ) {
-                        Column {
-                            Text(
-                                "💊 Pharmacy Products",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                "${products.size} products available",
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
+            when (uiState) {
+                is ProductUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color(0xFF0B8FAC)
+                    )
+                }
+                is ProductUiState.Success -> {
+                    val products = (uiState as ProductUiState.Success).products
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Products Grid
-                    if (products.isEmpty()) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Category Header
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .padding(16.dp)
                         ) {
-                            Text(
-                                "No products available",
-                                fontSize = 16.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    } else {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            contentPadding = PaddingValues(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(products) { product ->
-                                ProductGridItem(
-                                    product = product,
-                                    onProductClick = {
-                                        // Handle product click
-                                    },
-                                    onAddToCartClick = {
-                                        // Handle add to cart
-                                    }
+                            Column {
+                                Text(
+                                    "💊 Pharmacy Products",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    "${products.size} products available",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
                                 )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Products Grid
+                        if (products.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No products available",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                contentPadding = PaddingValues(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(products) { product ->
+                                    ProductGridItem(
+                                        product = product,
+                                        onProductClick = {
+                                            // Handle product click
+                                        },
+                                        onAddToCartClick = {
+                                            // Handle add to cart
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
+                }
+                is ProductUiState.Error -> {
+                    val errorMessage = (uiState as ProductUiState.Error).message
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Error: $errorMessage",
+                            fontSize = 16.sp,
+                            color = Color.Red
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { viewModel.loadProductsByCategory("Pharmacy") },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF0B8FAC)
+                            )
+                        ) {
+                            Text("Retry")
+                        }
+                    }
+                }
+                is ProductUiState.Idle -> {
+                    // Initial state before data loading starts
                 }
             }
         }
