@@ -29,7 +29,7 @@ import coil.compose.AsyncImage
 import com.example.mediqorog.R
 import com.example.mediqorog.model.ProductModel
 import com.example.mediqorog.repository.CommonRepoImpl
-import com.example.mediqorog.repository.ProductRepoImpl
+import com.example.mediqorog.repository.ProductRepositoryImpl
 import com.example.mediqorog.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,6 +41,7 @@ fun AddProductScreen(onBackClick: () -> Unit) {
     var productName by remember { mutableStateOf("") }
     var productDescription by remember { mutableStateOf("") }
     var productPrice by remember { mutableStateOf("") }
+    var productStock by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Pharmacy") }
     var expanded by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -48,7 +49,7 @@ fun AddProductScreen(onBackClick: () -> Unit) {
 
     val categories = listOf("Pharmacy", "Family Care", "Personal Care", "Supplements", "Surgical", "Devices")
 
-    val productRepo = remember { ProductRepoImpl() }
+    val productRepo = remember { ProductRepositoryImpl() }
     val commonRepo = remember { CommonRepoImpl() }
     val viewModel = remember { ProductViewModel(productRepo, commonRepo) }
 
@@ -157,6 +158,14 @@ fun AddProductScreen(onBackClick: () -> Unit) {
                 enabled = !isLoading
             )
 
+            OutlinedTextField(
+                value = productStock,
+                onValueChange = { productStock = it },
+                label = { Text("Stock Quantity") },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
+            )
+
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded && !isLoading }
@@ -203,30 +212,39 @@ fun AddProductScreen(onBackClick: () -> Unit) {
                         return@Button
                     }
 
+                    val priceValue = productPrice.toDoubleOrNull()
+                    if (priceValue == null || priceValue <= 0) {
+                        Toast.makeText(context, "Please enter a valid price", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    val stockValue = productStock.toIntOrNull() ?: 0
+
                     isLoading = true
 
-                    // Upload image first, then add product
-                    viewModel.uploadProductImage(context, selectedImageUri!!) { imageUrl ->
-                        if (imageUrl != null) {
-                            val product = ProductModel(
-                                id = "",
-                                name = productName,
-                                price = productPrice.toDoubleOrNull() ?: 0.0,
-                                description = productDescription,
-                                imageUrl = imageUrl,
-                                category = selectedCategory
-                            )
+                    val product = ProductModel(
+                        id = "",
+                        name = productName,
+                        price = priceValue,
+                        description = productDescription,
+                        imageUrl = "",
+                        imagePublicId = "",
+                        category = selectedCategory,
+                        stock = stockValue,
+                        isFeatured = false,
+                        createdAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis()
+                    )
 
-                            viewModel.addProduct(product) { success, message ->
-                                isLoading = false
-                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                                if (success) {
-                                    activity?.finish() ?: onBackClick()
-                                }
-                            }
-                        } else {
-                            isLoading = false
-                            Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
+                    viewModel.addProduct(
+                        context = context,
+                        imageUri = selectedImageUri,
+                        product = product
+                    ) { success, message ->
+                        isLoading = false
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        if (success) {
+                            activity?.finish() ?: onBackClick()
                         }
                     }
                 },
