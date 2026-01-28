@@ -5,11 +5,11 @@
 //import androidx.lifecycle.ViewModel
 //import com.example.mediqorog.model.ProductModel
 //import com.example.mediqorog.repository.ProductRepository
-//import com.example.mediqorog.repository.ProductRepoImpl
+//import com.example.mediqorog.repository.ProductRepositoryImpl
 //
 //class CategoryProductsViewModel : ViewModel() {
 //
-//    private val repository: ProductRepository = ProductRepoImpl()
+//    private val repository: ProductRepository = ProductRepositoryImpl()
 //
 //    private val _products = MutableLiveData<List<ProductModel>>()
 //    val products: LiveData<List<ProductModel>> = _products
