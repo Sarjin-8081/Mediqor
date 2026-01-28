@@ -41,12 +41,15 @@ fun SplashBody() {
     val activity = context as? Activity
 
     LaunchedEffect(Unit) {
-        delay(3000) // 3 seconds splash
+        delay(3000)
         context.startActivity(Intent(context, LoginActivity::class.java))
         activity?.finish()
     }
 
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_dots))
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.loading_dots)
+    )
+
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = LottieConstants.IterateForever
@@ -65,7 +68,6 @@ fun SplashBody() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Mediqor Logo
                 Image(
                     painter = painterResource(id = R.drawable.new_mediqor),
                     contentDescription = "App Logo",
@@ -74,12 +76,10 @@ fun SplashBody() {
 
                 Spacer(modifier = Modifier.height(50.dp))
 
-                // Lottie Animation - much bigger now
                 LottieAnimation(
                     composition = composition,
                     progress = { progress },
-                    modifier = Modifier
-                        .size(200.dp),  // Fixed size instead of fillMaxWidth
+                    modifier = Modifier.size(200.dp),
                     contentScale = ContentScale.Fit
                 )
             }

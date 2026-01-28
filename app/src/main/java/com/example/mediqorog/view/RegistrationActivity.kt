@@ -58,12 +58,12 @@ class RegistrationActivity : ComponentActivity() {
                         // Navigate based on role
                         if (isAdmin) {
                             val intent = Intent(this, AdminDashboardActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                             startActivity(intent)
                             Toast.makeText(this, "Welcome Admin!", Toast.LENGTH_SHORT).show()
                         } else {
                             val intent = Intent(this, DashboardActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                             startActivity(intent)
                         }
                         finish()
@@ -261,7 +261,7 @@ fun RegistrationBody(
                                 if (success) {
                                     // New signups always go to Customer Dashboard
                                     val intent = Intent(context, DashboardActivity::class.java)
-                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                     context.startActivity(intent)
                                     activity.finish()
                                 }

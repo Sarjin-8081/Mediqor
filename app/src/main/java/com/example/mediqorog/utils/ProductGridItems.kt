@@ -1,14 +1,13 @@
-package com.example.mediqorog.ui.components
+package com.example.mediqorog.utils
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -21,23 +20,23 @@ import coil.compose.AsyncImage
 import com.example.mediqorog.model.ProductModel
 
 @Composable
-fun ProductCard(
+fun ProductGridItem(
     product: ProductModel,
     onProductClick: () -> Unit,
     onAddToCartClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
-            .width(160.dp)
+            .fillMaxWidth()
             .clickable { onProductClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
             // Product Image
             AsyncImage(
@@ -57,7 +56,7 @@ fun ProductCard(
             Text(
                 text = product.name,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 color = Color.Black
@@ -65,43 +64,34 @@ fun ProductCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Product Description
+            // Product Price
             Text(
-                text = product.description,
-                fontSize = 12.sp,
-                color = Color.Gray,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                text = "Rs. ${product.price.toInt()}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF0B8FAC)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Price and Add to Cart
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Add to Cart Button
+            Button(
+                onClick = { onAddToCartClick() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0B8FAC)
+                ),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text(
-                    text = "Rs. ${product.price.toInt()}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0B8FAC)
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add to cart",
+                    modifier = Modifier.size(16.dp)
                 )
-
-                IconButton(
-                    onClick = {
-                        onAddToCartClick()
-                    },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "Add to cart",
-                        tint = Color(0xFF0B8FAC),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Add to Cart", fontSize = 12.sp)
             }
         }
     }

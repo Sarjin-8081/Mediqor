@@ -9,16 +9,21 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
+        android:name=".MediQorogApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        tools:replace="android:fullBackupContent"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MediqorOG">
-
+        android:theme="@style/Theme.MediqorOG"
+        tools:replace="android:fullBackupContent">
+        <activity
+            android:name=".view.ProductDetailActivity"
+            android:exported="false"
+            android:label="@string/title_activity_product_detail"
+            android:theme="@style/Theme.MediqorOG" />
         <activity
             android:name=".view.PrivacyPolicyActivity"
             android:exported="false"
