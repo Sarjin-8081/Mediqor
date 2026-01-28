@@ -2,6 +2,7 @@ package com.example.mediqorog.repository
 
 import android.util.Log
 import com.example.mediqorog.model.User
+import com.example.mediqorog.utils.AdminConfig
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -20,15 +21,28 @@ class UserRepoImpl : UserRepository {
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: return Result.failure(Exception("User not found"))
 
+            // ✅ Determine role based on AdminConfig
+            val role = if (AdminConfig.isAdmin(firebaseUser.email ?: "")) "admin" else "customer"
+
             val userDoc = usersCollection.document(firebaseUser.uid).get().await()
             val user = if (userDoc.exists()) {
-                userDoc.toObject(User::class.java)?.copy(uid = firebaseUser.uid)
+                // ✅ Update role if it's different
+                val existingUser = userDoc.toObject(User::class.java)?.copy(
+                    uid = firebaseUser.uid,
+                    role = role
+                )
+                // Update Firestore if role changed or doesn't exist
+                val currentRole = userDoc.getString("role")
+                if (currentRole != role) {
+                    usersCollection.document(firebaseUser.uid).update("role", role).await()
+                }
+                existingUser?.copy(role = role)
             } else {
                 val newUser = User(
                     uid = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
                     displayName = firebaseUser.displayName ?: "",
-                    role = "customer"
+                    role = role
                 )
                 usersCollection.document(firebaseUser.uid).set(newUser).await()
                 newUser
@@ -54,16 +68,19 @@ class UserRepoImpl : UserRepository {
 
             Log.d("UserRepoImpl", "Firebase user created, UID: ${firebaseUser.uid}")
 
+            // ✅ Determine role based on AdminConfig
+            val role = if (AdminConfig.isAdmin(email)) "admin" else "customer"
+
             val user = User(
                 uid = firebaseUser.uid,
                 email = email,
                 displayName = displayName,
-                role = "customer",
+                role = role,
                 photoUrl = "",
                 createdAt = System.currentTimeMillis()
             )
 
-            Log.d("UserRepoImpl", "Saving user to Firestore...")
+            Log.d("UserRepoImpl", "Saving user to Firestore with role: $role")
             usersCollection.document(firebaseUser.uid).set(user).await()
             Log.d("UserRepoImpl", "User saved to Firestore successfully")
 
@@ -71,7 +88,6 @@ class UserRepoImpl : UserRepository {
             Result.success(user)
         } catch (e: Exception) {
             Log.e("UserRepoImpl", "Sign up failed: ${e.message}", e)
-            // Even if Firestore save fails, Auth user is created, so we should clean up
             try {
                 auth.currentUser?.delete()?.await()
                 Log.d("UserRepoImpl", "Cleaned up auth user after Firestore failure")
@@ -95,16 +111,28 @@ class UserRepoImpl : UserRepository {
             val authResult = auth.signInWithCredential(credential).await()
             val firebaseUser = authResult.user ?: return Result.failure(Exception("User not found"))
 
+            // ✅ Determine role based on AdminConfig
+            val role = if (AdminConfig.isAdmin(firebaseUser.email ?: "")) "admin" else "customer"
+
             val userDoc = usersCollection.document(firebaseUser.uid).get().await()
             val user = if (userDoc.exists()) {
-                userDoc.toObject(User::class.java)?.copy(uid = firebaseUser.uid)
+                val existingUser = userDoc.toObject(User::class.java)?.copy(
+                    uid = firebaseUser.uid,
+                    role = role
+                )
+                // Update Firestore if role changed or doesn't exist
+                val currentRole = userDoc.getString("role")
+                if (currentRole != role) {
+                    usersCollection.document(firebaseUser.uid).update("role", role).await()
+                }
+                existingUser?.copy(role = role)
             } else {
                 val newUser = User(
                     uid = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
                     displayName = firebaseUser.displayName ?: "",
                     photoUrl = firebaseUser.photoUrl?.toString() ?: "",
-                    role = "customer",
+                    role = role,
                     createdAt = System.currentTimeMillis()
                 )
                 usersCollection.document(firebaseUser.uid).set(newUser).await()
@@ -134,17 +162,25 @@ class UserRepoImpl : UserRepository {
         val firebaseUser = auth.currentUser ?: return null
 
         return try {
+            // ✅ Determine role based on AdminConfig
+            val role = if (AdminConfig.isAdmin(firebaseUser.email ?: "")) "admin" else "customer"
+
             val userDoc = usersCollection.document(firebaseUser.uid).get().await()
             if (userDoc.exists()) {
-                userDoc.toObject(User::class.java)
+                val user = userDoc.toObject(User::class.java)?.copy(role = role)
+                // Update Firestore if role changed or doesn't exist
+                val currentRole = userDoc.getString("role")
+                if (currentRole != role) {
+                    usersCollection.document(firebaseUser.uid).update("role", role).await()
+                }
+                user
             } else {
-                // User exists in Auth but not in Firestore, create the document
                 val user = User(
                     uid = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
                     displayName = firebaseUser.displayName ?: "",
                     photoUrl = firebaseUser.photoUrl?.toString() ?: "",
-                    role = "customer",
+                    role = role,
                     createdAt = System.currentTimeMillis()
                 )
                 usersCollection.document(firebaseUser.uid).set(user).await()
@@ -177,6 +213,35 @@ class UserRepoImpl : UserRepository {
             Result.success(isAdmin)
         } catch (e: Exception) {
             Log.e("UserRepoImpl", "Admin check failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    // ✅ NEW METHOD - Updates all existing users with correct role
+    override suspend fun updateAllUsersWithRole(): Result<String> {
+        return try {
+            Log.d("UserRepoImpl", "Starting to update all users with roles...")
+            val allUsers = usersCollection.get().await()
+            var updatedCount = 0
+
+            for (document in allUsers.documents) {
+                val email = document.getString("email") ?: ""
+                val currentRole = document.getString("role")
+                val correctRole = if (AdminConfig.isAdmin(email)) "admin" else "customer"
+
+                // Only update if role is missing or different
+                if (currentRole != correctRole) {
+                    usersCollection.document(document.id).update("role", correctRole).await()
+                    updatedCount++
+                    Log.d("UserRepoImpl", "Updated ${document.id}: $email -> $correctRole")
+                }
+            }
+
+            val message = "Successfully updated $updatedCount users"
+            Log.d("UserRepoImpl", message)
+            Result.success(message)
+        } catch (e: Exception) {
+            Log.e("UserRepoImpl", "Failed to update users: ${e.message}", e)
             Result.failure(e)
         }
     }
