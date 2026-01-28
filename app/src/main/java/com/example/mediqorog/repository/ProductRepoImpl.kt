@@ -3,7 +3,6 @@ package com.example.mediqorog.repository
 import android.util.Log
 import com.example.mediqorog.model.ProductModel
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class ProductRepositoryImpl : ProductRepository {
@@ -16,7 +15,6 @@ class ProductRepositoryImpl : ProductRepository {
         return try {
             val snapshot = productsCollection
                 .whereEqualTo("isActive", true)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
 
@@ -27,7 +25,7 @@ class ProductRepositoryImpl : ProductRepository {
                     Log.e(TAG, "Error parsing product ${doc.id}", e)
                     null
                 }
-            }
+            }.sortedByDescending { it.createdAt } // Sort in memory instead
 
             Log.d(TAG, "Loaded ${products.size} products")
             Result.success(products)
@@ -39,14 +37,22 @@ class ProductRepositoryImpl : ProductRepository {
 
     override suspend fun getProductsByCategory(category: String): Result<List<ProductModel>> {
         return try {
+            // Get all active products first
             val snapshot = productsCollection
                 .whereEqualTo("isActive", true)
-                .whereEqualTo("category", category)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
 
+            // Filter in memory to support multiple categories (comma-separated)
             val products = snapshot.documents.mapNotNull { it.toProductModel() }
+                .filter { product ->
+                    // Split categories by comma and check if any match the selected category
+                    product.category.split(",").any { cat ->
+                        cat.trim().equals(category, ignoreCase = true)
+                    }
+                }
+                .sortedByDescending { it.createdAt }
+
             Log.d(TAG, "Loaded ${products.size} products in category: $category")
             Result.success(products)
         } catch (e: Exception) {
@@ -60,11 +66,12 @@ class ProductRepositoryImpl : ProductRepository {
             val snapshot = productsCollection
                 .whereEqualTo("isActive", true)
                 .whereEqualTo("isFeatured", true)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
 
             val products = snapshot.documents.mapNotNull { it.toProductModel() }
+                .sortedByDescending { it.createdAt } // Sort in memory instead
+
             Log.d(TAG, "Loaded ${products.size} featured products")
             Result.success(products)
         } catch (e: Exception) {

@@ -16,9 +16,9 @@ class CommonRepoImpl : CommonRepo {
 
     private val cloudinary = Cloudinary(
         mapOf(
-            "cloud_name" to "dyf4p475t",
-            "api_key" to "151634777139866",
-            "api_secret" to "x2FXlAtpjKfFZngdE8o6tvcZXxs"
+            "cloud_name" to "dibe5aqdd",
+            "api_key" to "881374621638258",
+            "api_secret" to "9QlAepvQ4Ru9dtRUZEPSL52JqZY"
         )
     )
 

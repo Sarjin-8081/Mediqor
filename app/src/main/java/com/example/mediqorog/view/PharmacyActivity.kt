@@ -1,6 +1,8 @@
 package com.example.mediqorog.view
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -15,15 +17,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mediqorog.model.ProductModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mediqorog.repository.CartRepositoryImpl
 import com.example.mediqorog.repository.CommonRepoImpl
 import com.example.mediqorog.repository.ProductRepositoryImpl
 import com.example.mediqorog.utils.ProductGridItem
+import com.example.mediqorog.viewmodel.CartViewModel
+import com.example.mediqorog.viewmodel.CartViewModelFactory
 import com.example.mediqorog.viewmodel.ProductUiState
 import com.example.mediqorog.viewmodel.ProductViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 class PharmacyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,14 +44,41 @@ class PharmacyActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PharmacyScreen(onBackClick: () -> Unit) {
+    val context = LocalContext.current
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    // Product ViewModel
     val productRepo = remember { ProductRepositoryImpl() }
     val commonRepo = remember { CommonRepoImpl() }
-    val viewModel = remember { ProductViewModel(productRepo, commonRepo) }
+    val productViewModel = remember { ProductViewModel(productRepo, commonRepo) }
 
-    val uiState by viewModel.uiState.collectAsState()
+    // Cart ViewModel
+    val cartRepo = remember { CartRepositoryImpl() }
+    val cartViewModel: CartViewModel = viewModel(
+        factory = CartViewModelFactory(cartRepo)
+    )
 
+    val productUiState by productViewModel.uiState.collectAsState()
+    val cartUiState by cartViewModel.uiState.collectAsState()
+
+    // Load products
     LaunchedEffect(Unit) {
-        viewModel.loadProductsByCategory("Pharmacy")
+        productViewModel.loadProductsByCategory("Pharmacy")
+    }
+
+    // Show cart success/error messages
+    LaunchedEffect(cartUiState.successMessage) {
+        cartUiState.successMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            cartViewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(cartUiState.error) {
+        cartUiState.error?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            cartViewModel.clearMessages()
+        }
     }
 
     Scaffold(
@@ -79,7 +113,7 @@ fun PharmacyScreen(onBackClick: () -> Unit) {
                 .padding(paddingValues)
                 .background(Color(0xFFF5F5F5))
         ) {
-            when (uiState) {
+            when (productUiState) {
                 is ProductUiState.Loading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
@@ -87,7 +121,7 @@ fun PharmacyScreen(onBackClick: () -> Unit) {
                     )
                 }
                 is ProductUiState.Success -> {
-                    val products = (uiState as ProductUiState.Success).products
+                    val products = (productUiState as ProductUiState.Success).products
 
                     Column(modifier = Modifier.fillMaxSize()) {
                         // Category Header
@@ -137,10 +171,38 @@ fun PharmacyScreen(onBackClick: () -> Unit) {
                                     ProductGridItem(
                                         product = product,
                                         onProductClick = {
-                                            // Handle product click
+                                            // Open Product Detail Activity
+                                            val intent = Intent(context, ProductDetailActivity::class.java).apply {
+                                                putExtra("PRODUCT_ID", product.id)
+                                                putExtra("PRODUCT_NAME", product.name)
+                                                putExtra("PRODUCT_PRICE", product.price)
+                                                putExtra("PRODUCT_IMAGE", product.imageUrl)
+                                                putExtra("PRODUCT_DESCRIPTION", product.description)
+                                                putExtra("PRODUCT_CATEGORY", product.category)
+                                                putExtra("PRODUCT_STOCK", product.stock)
+                                            }
+                                            context.startActivity(intent)
                                         },
                                         onAddToCartClick = {
-                                            // Handle add to cart
+                                            // Add to Cart
+                                            if (currentUserId.isNotEmpty()) {
+                                                cartViewModel.addToCart(
+                                                    userId = currentUserId,
+                                                    productId = product.id,
+                                                    productName = product.name,
+                                                    productImage = product.imageUrl,
+                                                    price = product.price,
+                                                    quantity = 1,
+                                                    category = product.category,
+                                                    stock = product.stock
+                                                )
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Please login to add items to cart",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
                                         }
                                     )
                                 }
@@ -149,7 +211,7 @@ fun PharmacyScreen(onBackClick: () -> Unit) {
                     }
                 }
                 is ProductUiState.Error -> {
-                    val errorMessage = (uiState as ProductUiState.Error).message
+                    val errorMessage = (productUiState as ProductUiState.Error).message
 
                     Column(
                         modifier = Modifier
@@ -165,7 +227,7 @@ fun PharmacyScreen(onBackClick: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { viewModel.loadProductsByCategory("Pharmacy") },
+                            onClick = { productViewModel.loadProductsByCategory("Pharmacy") },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF0B8FAC)
                             )

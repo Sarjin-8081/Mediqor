@@ -12,18 +12,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mediqorog.model.ProductModel  // ← Use this import
+import coil.compose.AsyncImage
+import com.example.mediqorog.model.ProductModel
 
 @Composable
-fun ProductCard(product: ProductModel) {
+fun ProductCard(
+    product: ProductModel,
+    onProductClick: () -> Unit,
+    onAddToCartClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .width(160.dp)
-            .clickable { /* Handle product click */ },
+            .clickable { onProductClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -33,20 +39,17 @@ fun ProductCard(product: ProductModel) {
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-            // Product Image Placeholder
-            Box(
+            // Product Image
+            AsyncImage(
+                model = product.imageUrl,
+                contentDescription = product.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xFFF5F5F5)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "📦",
-                    fontSize = 48.sp
-                )
-            }
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -80,14 +83,16 @@ fun ProductCard(product: ProductModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "NPR ${product.price.toInt()}",
+                    text = "Rs. ${product.price.toInt()}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF0B8FAC)
                 )
 
                 IconButton(
-                    onClick = { /* Add to cart */ },
+                    onClick = {
+                        onAddToCartClick()
+                    },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(

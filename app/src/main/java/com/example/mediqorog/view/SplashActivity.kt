@@ -1,6 +1,3 @@
-// ============================================
-// FILE 1: SplashActivity.kt - FIXED VERSION
-// ============================================
 package com.example.mediqorog.view
 
 import android.app.Activity
@@ -89,4 +86,3 @@ fun SplashBody() {
         }
     }
 }
-
