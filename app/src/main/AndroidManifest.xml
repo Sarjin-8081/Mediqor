@@ -2,9 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -57,11 +59,11 @@
             android:exported="false"
             android:label="@string/title_activity_saved_addresses"
             android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.MyOrdersActivity"
-            android:exported="false"
-            android:label="@string/title_activity_my_orders"
-            android:theme="@style/Theme.MediqorOG" />
+<!--        <activity-->
+<!--            android:name=".view.MyOrdersActivity"-->
+<!--            android:exported="false"-->
+<!--            android:label="@string/title_activity_my_orders"-->
+<!--            android:theme="@style/Theme.MediqorOG" />-->
         <activity
             android:name=".view.SurgicalActivity"
             android:exported="false"
@@ -114,7 +116,6 @@
             android:theme="@style/Theme.MediqorOG">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -124,50 +125,18 @@
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.MediqorOG" />
 
-        <activity
-            android:name=".view.CategoriesFiltersActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.OffersActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.PrescriptionUploadActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.RepeatOrdersActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.PaymentMethodsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.OrderTrackingActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.OrderInvoicesActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.TeleConsultationActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.LabTestsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.HealthPackagesActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.MedicineReminderActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.CategoriesFiltersActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.OffersActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.PrescriptionUploadActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.RepeatOrdersActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.PaymentMethodsActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.OrderTrackingActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.OrderInvoicesActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.TeleConsultationActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.LabTestsActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.HealthPackagesActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+        <activity android:name=".view.MedicineReminderActivity" android:exported="false" android:theme="@style/Theme.MediqorOG" />
+
     </application>
 
 </manifest>
