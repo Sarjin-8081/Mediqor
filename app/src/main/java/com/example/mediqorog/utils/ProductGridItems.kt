@@ -66,7 +66,7 @@ fun ProductGridItem(
 
             // Product Price
             Text(
-                text = "Rs. ${product.price}",
+                text = "Rs. ${product.price.toInt()}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF0B8FAC)

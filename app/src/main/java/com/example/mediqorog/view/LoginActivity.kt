@@ -33,12 +33,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mediqorog.R
 import com.example.mediqorog.repository.UserRepoImpl
 import com.example.mediqorog.viewmodel.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
-import com.example.mediqorog.R
 import com.google.firebase.auth.FirebaseAuth
+
+
 
 class LoginActivity : ComponentActivity() {
 
@@ -52,7 +54,6 @@ class LoginActivity : ComponentActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                // ✅ Updated callback with isAdmin parameter
                 viewModel.signInWithGoogle(account) { success, message, isAdmin ->
                     runOnUiThread {
                         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -109,7 +110,6 @@ class LoginActivity : ComponentActivity() {
 
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            // Check if user is admin from current user state
             viewModel.checkIfUserIsAdmin { isAdmin ->
                 runOnUiThread {
                     navigateToDashboard(isAdmin)
@@ -121,12 +121,12 @@ class LoginActivity : ComponentActivity() {
     private fun navigateToDashboard(isAdmin: Boolean) {
         if (isAdmin) {
             val intent = Intent(this, AdminDashboardActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             startActivity(intent)
             Toast.makeText(this, "Welcome Admin!", Toast.LENGTH_SHORT).show()
         } else {
             val intent = Intent(this, DashboardActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             startActivity(intent)
         }
         finish()
@@ -255,7 +255,6 @@ fun LoginBody(
                     }
             )
 
-            // ✅ UPDATED LOGIN BUTTON - Uses Firestore role check
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
@@ -264,19 +263,20 @@ fun LoginBody(
                     }
 
                     loading = true
-                    // ✅ Updated callback signature (success, message, isAdmin)
                     viewModel?.signIn(email, password) { success, message, isAdmin ->
                         loading = false
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                         if (success) {
                             if (isAdmin) {
+                                // ✅ ADMIN USER → AdminDashboardActivity
                                 val intent = Intent(context, AdminDashboardActivity::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                 context.startActivity(intent)
                                 Toast.makeText(context, "Welcome Admin!", Toast.LENGTH_SHORT).show()
                             } else {
+                                // ✅ REGULAR USER → DashboardActivity (FIXED!)
                                 val intent = Intent(context, DashboardActivity::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                 context.startActivity(intent)
                             }
                             activity?.finish()

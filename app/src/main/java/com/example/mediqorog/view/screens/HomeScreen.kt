@@ -1,11 +1,9 @@
 package com.example.mediqorog.view.screens
 
 import android.content.Intent
-import android.util.Log
-import androidx.compose.animation.core.*
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,7 +11,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,32 +18,60 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.mediqorog.R
+import com.example.mediqorog.model.ProductModel
+import com.example.mediqorog.repository.CartRepositoryImpl
 import com.example.mediqorog.ui.components.CategoryCard
 import com.example.mediqorog.ui.components.ProductCard
 import com.example.mediqorog.view.*
+import com.example.mediqorog.viewmodel.CartViewModel
+import com.example.mediqorog.viewmodel.CartViewModelFactory
 import com.example.mediqorog.viewmodel.HomeViewModel
-import kotlinx.coroutines.delay
-import com.example.mediqorog.model.ProductModel
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onChatbotClick: () -> Unit
+    onChatbotClick: () -> Unit,
+    navController: NavController? = null
 ) {
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
     var searchQuery by remember { mutableStateOf("") }
+
+    // Initialize Cart ViewModel
+    val cartRepository = CartRepositoryImpl()
+    val cartViewModel: CartViewModel = viewModel(
+        factory = CartViewModelFactory(cartRepository)
+    )
+
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    // Observe cart state for messages
+    val cartUiState by cartViewModel.uiState.collectAsState()
+
+    // Show toast messages
+    LaunchedEffect(cartUiState.successMessage) {
+        cartUiState.successMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            cartViewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(cartUiState.error) {
+        cartUiState.error?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            cartViewModel.clearMessages()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -62,7 +87,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Company Logo (Bigger)
+                    // Company Logo
                     Surface(
                         modifier = Modifier.size(56.dp),
                         shape = RoundedCornerShape(12.dp),
@@ -70,7 +95,6 @@ fun HomeScreen(
                         shadowElevation = 4.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            // Try to load your logo
                             val hasLogo = remember {
                                 context.resources.getIdentifier(
                                     "new_mediqor",
@@ -136,7 +160,6 @@ fun HomeScreen(
             }
         },
         floatingActionButton = {
-            // Chat button only for users
             FloatingActionButton(
                 onClick = onChatbotClick,
                 containerColor = Color(0xFF0B8FAC),
@@ -152,13 +175,9 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF5F5F5))
         ) {
-
-            // Auto-Sliding Banner
-            item { AutoSlidingBanner() }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
             // Categories Section
             item {
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     "Shop by Category",
                     fontSize = 18.sp,
@@ -191,6 +210,8 @@ fun HomeScreen(
                                     context.startActivity(Intent(context, SurgicalActivity::class.java))
                                 "Devices" ->
                                     context.startActivity(Intent(context, DevicesActivity::class.java))
+                                "Supplements" ->
+                                    context.startActivity(Intent(context, SupplementsActivity::class.java))
                             }
                         }
                     }
@@ -205,7 +226,10 @@ fun HomeScreen(
                     title = "⚡ Flash Sale",
                     subtitle = "Ends in 2 hours!",
                     products = homeViewModel.flashSaleProducts,
-                    backgroundColor = Color(0xFFFFEBEE)
+                    backgroundColor = Color(0xFFFFEBEE),
+                    navController = navController,
+                    cartViewModel = cartViewModel,
+                    currentUserId = currentUserId
                 )
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -216,7 +240,10 @@ fun HomeScreen(
                     title = "🏆 Top Selling",
                     subtitle = "Most popular this week",
                     products = homeViewModel.topSellingProducts,
-                    backgroundColor = Color(0xFFF3E5F5)
+                    backgroundColor = Color(0xFFF3E5F5),
+                    navController = navController,
+                    cartViewModel = cartViewModel,
+                    currentUserId = currentUserId
                 )
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -227,7 +254,10 @@ fun HomeScreen(
                     title = "☀️ Sunscreens",
                     subtitle = "Protect your skin",
                     products = homeViewModel.sunscreenProducts,
-                    backgroundColor = Color(0xFFFFF9C4)
+                    backgroundColor = Color(0xFFFFF9C4),
+                    navController = navController,
+                    cartViewModel = cartViewModel,
+                    currentUserId = currentUserId
                 )
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -238,7 +268,10 @@ fun HomeScreen(
                     title = "🧴 Body Lotions",
                     subtitle = "Moisturize & nourish",
                     products = homeViewModel.bodyLotionProducts,
-                    backgroundColor = Color(0xFFE8F5E9)
+                    backgroundColor = Color(0xFFE8F5E9),
+                    navController = navController,
+                    cartViewModel = cartViewModel,
+                    currentUserId = currentUserId
                 )
             }
 
@@ -249,113 +282,17 @@ fun HomeScreen(
 }
 
 @Composable
-fun AutoSlidingBanner() {
-    val banners = listOf(
-        BannerData(
-            title = "⚡ FLASH SALE",
-            subtitle = "Up to 50% OFF on selected items",
-            gradient = Brush.horizontalGradient(
-                colors = listOf(Color(0xFFE91E63), Color(0xFFF06292))
-            )
-        ),
-        BannerData(
-            title = "🚀 60 MIN DELIVERY",
-            subtitle = "Order now, delivered in 60 minutes",
-            gradient = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF0B8FAC), Color(0xFF4FC3F7))
-            )
-        ),
-        BannerData(
-            title = "📅 BOOK APPOINTMENTS",
-            subtitle = "Consult with doctors online",
-            gradient = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF4CAF50), Color(0xFF81C784))
-            )
-        ),
-        BannerData(
-            title = "💊 FREE DELIVERY",
-            subtitle = "On orders above NPR 1000",
-            gradient = Brush.horizontalGradient(
-                colors = listOf(Color(0xFFFF9800), Color(0xFFFFB74D))
-            )
-        )
-    )
-
-    var currentPage by remember { mutableStateOf(0) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(3000)
-            currentPage = (currentPage + 1) % banners.size
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(banners[currentPage].gradient)
-                .clickable { },
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = banners[currentPage].title,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = banners[currentPage].subtitle,
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.9f),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(banners.size) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(if (index == currentPage) 8.dp else 6.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (index == currentPage) Color(0xFF0B8FAC)
-                            else Color.Gray.copy(alpha = 0.4f)
-                        )
-                )
-                if (index < banners.size - 1) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun ProductSection(
     title: String,
     subtitle: String,
-    products: List<com.example.mediqorog.model.ProductModel>,
-    backgroundColor: Color
+    products: List<ProductModel>,
+    backgroundColor: Color,
+    navController: NavController?,
+    cartViewModel: CartViewModel,
+    currentUserId: String
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -383,7 +320,7 @@ fun ProductSection(
                 )
             }
 
-            TextButton(onClick = { }) {
+            TextButton(onClick = { /* Navigate to category */ }) {
                 Text("View All →", color = Color(0xFF0B8FAC))
             }
         }
@@ -395,14 +332,40 @@ fun ProductSection(
             contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
             items(products) { product ->
-                ProductCard(product)
+                ProductCard(
+                    product = product,
+                    onProductClick = {
+                        // Navigate to product detail screen
+                        navController?.navigate("product_detail/${product.id}")
+                            ?: Toast.makeText(
+                                context,
+                                "Navigation not available",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                    },
+                    onAddToCartClick = {
+                        // Add to cart
+                        if (currentUserId.isNotEmpty()) {
+                            cartViewModel.addToCart(
+                                userId = currentUserId,
+                                productId = product.id,
+                                productName = product.name,
+                                productImage = product.imageUrl,
+                                price = product.price,
+                                quantity = 1,
+                                category = product.category,
+                                stock = product.stock
+                            )
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please login to add items to cart",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                )
             }
         }
     }
 }
-
-data class BannerData(
-    val title: String,
-    val subtitle: String,
-    val gradient: Brush
-)
