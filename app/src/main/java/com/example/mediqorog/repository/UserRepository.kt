@@ -11,4 +11,5 @@ interface UserRepository {
     suspend fun getCurrentUser(): User?
     suspend fun resetPassword(email: String): Result<Unit>
     suspend fun checkIfAdmin(userId: String): Result<Boolean>
+    suspend fun updateAllUsersWithRole(): Result<String>  // ✅ NEW METHOD
 }
