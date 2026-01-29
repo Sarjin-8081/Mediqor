@@ -38,7 +38,9 @@ import androidx.compose.ui.unit.sp
 import com.example.mediqorog.R
 import com.example.mediqorog.repository.UserRepoImpl
 import com.example.mediqorog.viewmodel.UserViewModel
+import com.example.mediqorog.viewmodel.UserViewModelFactory
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class RegistrationActivity : ComponentActivity() {
 
@@ -54,16 +56,7 @@ class RegistrationActivity : ComponentActivity() {
                 viewModel.signInWithGoogle(account) { success, message, isAdmin ->
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     if (success) {
-                        if (isAdmin) {
-                            val intent = Intent(this, AdminDashboardActivity::class.java)
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                            startActivity(intent)
-                        } else {
-                            val intent = Intent(this, DashboardActivity::class.java)
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                            startActivity(intent)
-                        }
-                        finish()
+                        navigateToDashboard(isAdmin)
                     }
                 }
             } catch (e: Exception) {
@@ -76,8 +69,7 @@ class RegistrationActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val repo = UserRepoImpl()
-        viewModel = UserViewModel(repo)
+        viewModel = UserViewModel(UserRepoImpl())
 
         setContent {
             RegistrationBody(
@@ -89,9 +81,20 @@ class RegistrationActivity : ComponentActivity() {
             )
         }
     }
+
+    private fun navigateToDashboard(isAdmin: Boolean) {
+        val intent = if (isAdmin) {
+            Intent(this, AdminDashboardActivity::class.java)
+        } else {
+            Intent(this, DashboardActivity::class.java)
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class) // ✅ Suppress experimental API warnings
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationBody(
     viewModel: UserViewModel? = null,
@@ -100,9 +103,9 @@ fun RegistrationBody(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var visibility by remember { mutableStateOf(false) }
-    var terms by remember { mutableStateOf(false) }
-    var loading by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var termsAccepted by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val activity = context as? Activity
@@ -115,6 +118,7 @@ fun RegistrationBody(
                 .padding(horizontal = 24.dp)
                 .background(Color.White)
         ) {
+            // Logo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,6 +134,7 @@ fun RegistrationBody(
 
             Spacer(modifier = Modifier.height(30.dp))
 
+            // Title
             Text(
                 "CREATE ACCOUNT",
                 style = TextStyle(
@@ -143,7 +148,7 @@ fun RegistrationBody(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Full Name
+            // Full Name Field
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -158,12 +163,12 @@ fun RegistrationBody(
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 ),
-                enabled = !loading
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // Email
+            // Email Field
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -179,55 +184,60 @@ fun RegistrationBody(
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 ),
-                enabled = !loading
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // Password
+            // Password Field
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 trailingIcon = {
-                    IconButton(onClick = { visibility = !visibility }) {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            painter = if (visibility)
+                            painter = if (passwordVisible)
                                 painterResource(R.drawable.baseline_visibility_off_24)
                             else
                                 painterResource(R.drawable.baseline_visibility_24),
-                            contentDescription = null
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
                         )
                     }
                 },
-                visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp),
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("Password") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color(0xFF0B8FAC),
                     unfocusedIndicatorColor = Color(0xFFE0F0F5)
                 ),
-                enabled = !loading
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(15.dp))
 
+            // Terms & Conditions Checkbox
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
-                    checked = terms,
-                    onCheckedChange = { terms = it },
+                    checked = termsAccepted,
+                    onCheckedChange = { termsAccepted = it },
                     colors = CheckboxDefaults.colors(
                         checkedColor = Color(0xFF0B8FAC),
                         checkmarkColor = Color.White
                     ),
-                    enabled = !loading
+                    enabled = !isLoading
                 )
                 Text("I agree to the terms & conditions")
             }
@@ -237,32 +247,35 @@ fun RegistrationBody(
             // Sign Up Button
             Button(
                 onClick = {
-                    if (name.isBlank() || email.isBlank() || password.isBlank()) {
-                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    if (!terms) {
-                        Toast.makeText(context, "Please agree to terms & conditions", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-
-                    if (viewModel != null) {
-                        loading = true
-
-                        // ✅ FIXED: Changed 'name' to 'displayName'
-                        viewModel.signUp(
-                            email = email,
-                            password = password,
-                            displayName = name  // ✅ CORRECT parameter name
-                        ) { success, message ->
-                            loading = false
-                            activity?.runOnUiThread {
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                if (success) {
-                                    val intent = Intent(context, DashboardActivity::class.java)
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                                    context.startActivity(intent)
-                                    activity.finish()
+                    when {
+                        name.isBlank() || email.isBlank() || password.isBlank() -> {
+                            Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                        }
+                        !termsAccepted -> {
+                            Toast.makeText(context, "Please agree to terms & conditions", Toast.LENGTH_SHORT).show()
+                        }
+                        password.length < 6 -> {
+                            Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                        }
+                        viewModel == null -> {
+                            Toast.makeText(context, "Error: ViewModel not initialized", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            isLoading = true
+                            viewModel.signUp(
+                                email = email.trim(),
+                                password = password,
+                                displayName = name.trim()
+                            ) { success, message ->
+                                isLoading = false
+                                activity?.runOnUiThread {
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    if (success) {
+                                        val intent = Intent(context, DashboardActivity::class.java)
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                        context.startActivity(intent)
+                                        activity.finish()
+                                    }
                                 }
                             }
                         }
@@ -278,13 +291,18 @@ fun RegistrationBody(
                     .height(60.dp),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 15.dp),
                 shape = RoundedCornerShape(32.dp),
-                enabled = !loading
+                enabled = !isLoading
             ) {
-                Text(if (loading) "Creating Account..." else "CREATE ACCOUNT")
+                Text(
+                    text = if (isLoading) "Creating Account..." else "CREATE ACCOUNT",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // OR Divider
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -298,9 +316,10 @@ fun RegistrationBody(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Google Sign In Button
             OutlinedButton(
                 onClick = {
-                    if (!loading) {
+                    if (!isLoading) {
                         onGoogleSignInClick()
                     }
                 },
@@ -314,7 +333,7 @@ fun RegistrationBody(
                     .height(60.dp),
                 shape = RoundedCornerShape(32.dp),
                 border = BorderStroke(1.dp, Color.LightGray),
-                enabled = !loading
+                enabled = !isLoading
             ) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -332,6 +351,7 @@ fun RegistrationBody(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Login Link
             Text(
                 buildAnnotatedString {
                     append("Already have an account? ")
@@ -344,7 +364,7 @@ fun RegistrationBody(
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 10.dp)
                     .clickable {
-                        if (!loading) {
+                        if (!isLoading) {
                             val intent = Intent(context, LoginActivity::class.java)
                             context.startActivity(intent)
                             activity?.finish()
