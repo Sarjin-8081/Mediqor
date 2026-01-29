@@ -3,20 +3,16 @@ package com.example.mediqorog.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,173 +20,157 @@ import androidx.compose.ui.unit.sp
 class PrivacyPolicyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
         setContent {
-            PrivacyPolicyScreen(
-                onBackClick = { finish() }
-            )
+            MaterialTheme {
+                PrivacyPolicyScreen(onNavigateBack = { finish() })
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrivacyPolicyScreen(onBackClick: () -> Unit) {
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8FAFB))
-    ) {
-        // Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF0B8FAC))
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
+fun PrivacyPolicyScreen(onNavigateBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Privacy Policy", fontWeight = FontWeight.SemiBold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
-            }
-            Text(
-                text = "Privacy Policy",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
             )
         }
-
-        // Content Card
-        Card(
+    ) { padding ->
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color(0xFFF5F7FA)),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp)
-                    .verticalScroll(scrollState)
-            ) {
-                Text(
-                    text = "Last Updated: January 22, 2026",
-                    style = TextStyle(
-                        color = Color.Gray,
-                        fontSize = 13.sp
-                    )
-                )
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text(
+                            text = "Last Updated: January 30, 2026",
+                            fontSize = 13.sp,
+                            color = Color(0xFF6B7280),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "At Mediqor, we are committed to protecting your privacy and ensuring the security of your personal health information. This Privacy Policy explains how we collect, use, and safeguard your data.",
+                            fontSize = 14.sp,
+                            color = Color(0xFF4B5563),
+                            lineHeight = 22.sp
+                        )
+                    }
+                }
+            }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
+            item {
                 PolicySection(
-                    title = "1. Information We Collect",
-                    content = """We collect information you provide directly to us, including:
-
-• Personal information (name, email, phone number, date of birth)
-• Health information (medical records, prescriptions, blood group)
-• Emergency contact details
-• Location data for emergency services
-• Usage data and app interactions"""
+                    title = "1. Information Collection",
+                    content = "We collect information that you provide directly to us, including:\n\n" +
+                            "• Personal identification information (name, email, phone number, date of birth)\n" +
+                            "• Health information (prescriptions, medical history, allergies)\n" +
+                            "• Payment information (billing address, payment method details)\n" +
+                            "• Location data for delivery purposes\n" +
+                            "• Device information and usage data\n\n" +
+                            "We collect this information when you create an account, place orders, upload prescriptions, or interact with our services."
                 )
+            }
 
+            item {
                 PolicySection(
-                    title = "2. How We Use Your Information",
-                    content = """We use the collected information to:
-
-• Provide and maintain our healthcare services
-• Process appointments and consultations
-• Store and manage your health records securely
-• Send medication reminders and notifications
-• Improve our app features and user experience
-• Comply with legal obligations"""
+                    title = "2. Usage of Data",
+                    content = "We use your information for the following purposes:\n\n" +
+                            "• To process and deliver your medicine orders\n" +
+                            "• To verify prescriptions with licensed pharmacists\n" +
+                            "• To send order confirmations and delivery updates\n" +
+                            "• To provide customer support and respond to inquiries\n" +
+                            "• To send medicine reminders and health-related notifications\n" +
+                            "• To improve our services and user experience\n" +
+                            "• To detect and prevent fraudulent activities\n" +
+                            "• To comply with legal obligations and regulations"
                 )
+            }
 
+            item {
                 PolicySection(
                     title = "3. Data Security",
-                    content = """We take your data security seriously:
-
-• All data is encrypted in transit and at rest
-• We use industry-standard security protocols
-• Regular security audits and updates
-• Secure cloud storage infrastructure (Firebase)
-• Limited access to authorized personnel only"""
+                    content = "We implement industry-standard security measures to protect your information:\n\n" +
+                            "• End-to-end encryption for sensitive data transmission\n" +
+                            "• Secure SSL/TLS protocols for all communications\n" +
+                            "• Regular security audits and vulnerability assessments\n" +
+                            "• Restricted access to personal data on a need-to-know basis\n" +
+                            "• Secure cloud storage with multiple backup systems\n" +
+                            "• Two-factor authentication for account access\n\n" +
+                            "However, no method of transmission over the internet is 100% secure. While we strive to protect your information, we cannot guarantee absolute security."
                 )
+            }
 
+            item {
                 PolicySection(
-                    title = "4. Data Sharing",
-                    content = """We do not sell your personal information. We may share data with:
-
-• Healthcare providers you've authorized
-• Emergency services when necessary
-• Service providers who assist our operations
-• Legal authorities when required by law"""
+                    title = "4. User Rights",
+                    content = "You have the following rights regarding your personal data:\n\n" +
+                            "• Access: Request copies of your personal information\n" +
+                            "• Correction: Request correction of inaccurate data\n" +
+                            "• Deletion: Request deletion of your personal data\n" +
+                            "• Data Portability: Receive your data in a portable format\n" +
+                            "• Opt-out: Unsubscribe from marketing communications\n" +
+                            "• Withdraw Consent: Withdraw consent for data processing\n\n" +
+                            "To exercise these rights, please contact our support team through the Help Center. We will respond to your request within 30 days."
                 )
+            }
 
+            item {
                 PolicySection(
-                    title = "5. Your Rights",
-                    content = """You have the right to:
-
-• Access your personal data
-• Correct inaccurate information
-• Request deletion of your data
-• Opt-out of marketing communications
-• Download your health records
-• Withdraw consent at any time"""
+                    title = "5. Contact Information",
+                    content = "If you have questions or concerns about this Privacy Policy or our data practices, please contact us:\n\n" +
+                            "Email: privacy@mediqor.com\n" +
+                            "Phone: +91-11-4567-8900\n" +
+                            "Address: Mediqor Healthcare Pvt. Ltd.\n" +
+                            "123 Medical Plaza, Connaught Place\n" +
+                            "New Delhi - 110001, India\n\n" +
+                            "Our Data Protection Officer is available Monday to Friday, 9:00 AM to 6:00 PM IST."
                 )
+            }
 
-                PolicySection(
-                    title = "6. Data Retention",
-                    content = """We retain your data for as long as your account is active or as needed to provide services. Medical records are retained according to healthcare regulations and legal requirements in Nepal."""
-                )
-
-                PolicySection(
-                    title = "7. Children's Privacy",
-                    content = """Our service is not intended for users under 18 years of age. We do not knowingly collect information from children. If you believe we have collected information from a child, please contact us immediately."""
-                )
-
-                PolicySection(
-                    title = "8. Third-Party Services",
-                    content = """We use third-party services for:
-
-• Authentication and database (Firebase)
-• Cloud storage and hosting
-• Payment processing
-• Analytics and crash reporting
-
-These services have their own privacy policies."""
-                )
-
-                PolicySection(
-                    title = "9. Contact Us",
-                    content = """If you have questions about this Privacy Policy, contact us at:
-
-Email: mediqor@gmail.com
-Address: Kathmandu, Nepal"""
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "By using Mediqor, you agree to this Privacy Policy. We may update this policy periodically, and changes will be posted in the app.",
-                    style = TextStyle(
-                        color = Color.Gray,
-                        fontSize = 12.sp,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                        lineHeight = 18.sp
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Policy Updates",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF92400E)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "We may update this Privacy Policy from time to time. We will notify you of any significant changes via email or through the app. Your continued use of our services after changes indicates acceptance of the updated policy.",
+                            fontSize = 13.sp,
+                            color = Color(0xFFA16207),
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
             }
         }
     }
@@ -198,25 +178,25 @@ Address: Kathmandu, Nepal"""
 
 @Composable
 fun PolicySection(title: String, content: String) {
-    Column(modifier = Modifier.padding(bottom = 20.dp)) {
-        Text(
-            text = title,
-            style = TextStyle(
-                color = Color(0xFF2D3748),
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = title,
+                fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                color = Color(0xFF1F2937)
             )
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = content,
-            style = TextStyle(
-                color = Color.Gray,
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = content,
                 fontSize = 14.sp,
+                color = Color(0xFF4B5563),
                 lineHeight = 22.sp
             )
-        )
+        }
     }
 }

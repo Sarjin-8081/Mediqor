@@ -1,12 +1,15 @@
-// ========== PaymentMethodsActivity.kt ==========
 package com.example.mediqorog.view
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,23 +19,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class PaymentMethodsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            PaymentMethodsScreen(onBackClick = { finish() })
+            MaterialTheme {
+                PaymentMethodsScreen(onNavigateBack = { finish() })
+            }
         }
     }
 }
@@ -40,167 +38,207 @@ class PaymentMethodsActivity : ComponentActivity() {
 data class PaymentMethod(
     val id: String,
     val name: String,
-    val description: String,
     val icon: ImageVector,
-    val enabled: Boolean = true
+    val description: String,
+    val color: Color
 )
 
-class PaymentMethodsViewModel : ViewModel() {
-    private val _selectedMethod = MutableStateFlow("cod")
-    val selectedMethod: StateFlow<String> = _selectedMethod
-
-    private val _saving = MutableStateFlow(false)
-    val saving: StateFlow<Boolean> = _saving
-
-    private val firestore = FirebaseFirestore.getInstance()
-    private val auth = FirebaseAuth.getInstance()
-
-    val paymentMethods = listOf(
-        PaymentMethod(
-            id = "cod",
-            name = "Cash on Delivery",
-            description = "Pay when your order arrives",
-            icon = Icons.Filled.LocalShipping,
-            enabled = true
-        ),
-        PaymentMethod(
-            id = "upi",
-            name = "UPI Payment",
-            description = "Coming soon - PhonePe, GPay, Paytm",
-            icon = Icons.Filled.QrCode,
-            enabled = false
-        ),
-        PaymentMethod(
-            id = "card",
-            name = "Credit/Debit Card",
-            description = "Coming soon - All major cards accepted",
-            icon = Icons.Filled.CreditCard,
-            enabled = false
-        ),
-        PaymentMethod(
-            id = "wallet",
-            name = "Digital Wallet",
-            description = "Coming soon - Wallet payments",
-            icon = Icons.Filled.Wallet,
-            enabled = false
-        )
-    )
-
-    fun selectMethod(methodId: String) {
-        val method = paymentMethods.find { it.id == methodId }
-        if (method?.enabled == true) {
-            _selectedMethod.value = methodId
-        }
-    }
-
-    suspend fun savePaymentMethod(): Boolean {
-        return try {
-            _saving.value = true
-            val userId = auth.currentUser?.uid ?: throw Exception("Not logged in")
-
-            firestore.collection("users")
-                .document(userId)
-                .update("preferredPaymentMethod", _selectedMethod.value)
-                .await()
-
-            _saving.value = false
-            true
-        } catch (e: Exception) {
-            _saving.value = false
-            false
-        }
-    }
-}
+data class SavedCard(
+    val id: String,
+    val cardNumber: String,
+    val cardHolder: String,
+    val expiryDate: String,
+    val cardType: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentMethodsScreen(onBackClick: () -> Unit) {
-    val viewModel: PaymentMethodsViewModel = viewModel()
-    val selectedMethod by viewModel.selectedMethod.collectAsState()
-    val saving by viewModel.saving.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+fun PaymentMethodsScreen(onNavigateBack: () -> Unit) {
+    val context = LocalContext.current
+    var selectedMethod by remember { mutableStateOf<String?>(null) }
+    var showAddCardDialog by remember { mutableStateOf(false) }
+
+    val paymentMethods = listOf(
+        PaymentMethod(
+            "upi",
+            "UPI",
+            Icons.Default.PhoneAndroid,
+            "Pay via Google Pay, PhonePe, Paytm",
+            Color(0xFF10B981)
+        ),
+        PaymentMethod(
+            "card",
+            "Credit/Debit Card",
+            Icons.Default.CreditCard,
+            "Visa, Mastercard, Rupay",
+            Color(0xFF3B82F6)
+        ),
+        PaymentMethod(
+            "netbanking",
+            "Net Banking",
+            Icons.Default.AccountBalance,
+            "All major banks supported",
+            Color(0xFF8B5CF6)
+        ),
+        PaymentMethod(
+            "wallet",
+            "Wallet",
+            Icons.Default.Wallet,
+            "Paytm, PhonePe, Amazon Pay",
+            Color(0xFFF59E0B)
+        ),
+        PaymentMethod(
+            "cod",
+            "Cash on Delivery",
+            Icons.Default.LocalShipping,
+            "Pay when you receive",
+            Color(0xFFEF4444)
+        )
+    )
+
+    val savedCards = listOf(
+        SavedCard("1", "**** **** **** 4532", "John Doe", "12/25", "Visa"),
+        SavedCard("2", "**** **** **** 8765", "John Doe", "08/26", "Mastercard")
+    )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Payment Methods", fontWeight = FontWeight.Bold) },
+                title = { Text("Payment Methods", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0B8FAC),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
             )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .background(Color(0xFFF5F7FA)),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                "Select Payment Method",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = "Secure",
+                            tint = Color(0xFF3B82F6)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "All transactions are 100% secure and encrypted",
+                            fontSize = 13.sp,
+                            color = Color(0xFF1E40AF)
+                        )
+                    }
+                }
+            }
 
-            Text(
-                "Choose your preferred payment method for orders",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
+            if (savedCards.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Saved Cards",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937)
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                items(savedCards) { card ->
+                    SavedCardItem(
+                        card = card,
+                        isSelected = selectedMethod == card.id,
+                        onSelect = { selectedMethod = card.id }
+                    )
+                }
 
-            // Payment methods list
-            viewModel.paymentMethods.forEach { method ->
+                item {
+                    OutlinedButton(
+                        onClick = { showAddCardDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Add, "Add Card", modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add New Card")
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Other Payment Methods",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937)
+                    )
+                }
+            } else {
+                item {
+                    Text(
+                        text = "Select Payment Method",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937)
+                    )
+                }
+            }
+
+            items(paymentMethods) { method ->
                 PaymentMethodCard(
                     method = method,
                     isSelected = selectedMethod == method.id,
-                    onSelect = { viewModel.selectMethod(method.id) }
+                    onSelect = { selectedMethod = method.id }
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Save button
-            Button(
-                onClick = {
-                    scope.launch {
-                        val success = viewModel.savePaymentMethod()
-                        if (success) {
-                            snackbarHostState.showSnackbar("Payment method saved!")
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        if (selectedMethod != null) {
+                            Toast.makeText(context, "Proceeding to payment", Toast.LENGTH_SHORT).show()
                         } else {
-                            snackbarHostState.showSnackbar("Failed to save")
+                            Toast.makeText(context, "Please select a payment method", Toast.LENGTH_SHORT).show()
                         }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF0B8FAC)
-                ),
-                enabled = !saving
-            ) {
-                if (saving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White
-                    )
-                } else {
-                    Text("Save Payment Method", fontSize = 16.sp)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = selectedMethod != null
+                ) {
+                    Text("Proceed to Pay", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
+    }
+
+    if (showAddCardDialog) {
+        AddCardDialog(
+            onDismiss = { showAddCardDialog = false },
+            onAdd = {
+                showAddCardDialog = false
+                Toast.makeText(context, "Card added successfully", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 }
 
@@ -213,68 +251,172 @@ fun PaymentMethodCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Color(0xFF0B8FAC) else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .clickable(enabled = method.enabled, onClick = onSelect),
+            .clickable(onClick = onSelect),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (method.enabled) Color.White else Color(0xFFF5F5F5)
-        )
+            containerColor = if (isSelected) method.color.copy(alpha = 0.1f) else Color.White
+        ),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, method.color) else null
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .background(method.color.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
             ) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (method.enabled) Color(0xFF0B8FAC).copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f)
-                ) {
-                    Icon(
-                        imageVector = method.icon,
-                        contentDescription = method.name,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .padding(12.dp),
-                        tint = if (method.enabled) Color(0xFF0B8FAC) else Color.Gray
-                    )
-                }
-
-                Column {
-                    Text(
-                        method.name,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (method.enabled) Color.Black else Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        method.description,
-                        fontSize = 13.sp,
-                        color = Color.Gray
-                    )
-                }
+                Icon(
+                    imageVector = method.icon,
+                    contentDescription = method.name,
+                    tint = method.color,
+                    modifier = Modifier.size(26.dp)
+                )
             }
-
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = method.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2937)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = method.description,
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B7280)
+                )
+            }
             RadioButton(
                 selected = isSelected,
-                onClick = if (method.enabled) onSelect else null,
-                enabled = method.enabled,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = Color(0xFF0B8FAC)
-                )
+                onClick = onSelect,
+                colors = RadioButtonDefaults.colors(selectedColor = method.color)
             )
         }
     }
+}
+
+@Composable
+fun SavedCardItem(
+    card: SavedCard,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFFEFF6FF) else Color.White
+        ),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF3B82F6)) else null
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .background(Color(0xFF3B82F6).copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CreditCard,
+                    contentDescription = "Card",
+                    tint = Color(0xFF3B82F6),
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = card.cardNumber,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2937)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row {
+                    Text(
+                        text = card.cardType,
+                        fontSize = 12.sp,
+                        color = Color(0xFF6B7280)
+                    )
+                    Text(
+                        text = " • Expires ${card.expiryDate}",
+                        fontSize = 12.sp,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+            }
+            RadioButton(
+                selected = isSelected,
+                onClick = onSelect,
+                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF3B82F6))
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddCardDialog(onDismiss: () -> Unit, onAdd: () -> Unit) {
+    var cardNumber by remember { mutableStateOf("") }
+    var cardHolder by remember { mutableStateOf("") }
+    var expiryDate by remember { mutableStateOf("") }
+    var cvv by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add New Card") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = cardNumber,
+                    onValueChange = { cardNumber = it },
+                    label = { Text("Card Number") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = cardHolder,
+                    onValueChange = { cardHolder = it },
+                    label = { Text("Card Holder Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = expiryDate,
+                        onValueChange = { expiryDate = it },
+                        label = { Text("MM/YY") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = cvv,
+                        onValueChange = { cvv = it },
+                        label = { Text("CVV") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onAdd) {
+                Text("Add Card")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
