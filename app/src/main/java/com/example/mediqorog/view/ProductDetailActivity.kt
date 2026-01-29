@@ -16,9 +16,12 @@ import com.example.mediqorog.ui.screens.ProductDetailScreen
 import com.example.mediqorog.viewmodel.CartViewModel
 import com.example.mediqorog.viewmodel.CartViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
- * Activity to show product details
+ * Activity to show product details with review functionality
  * Opens when user clicks on a product from any category
  */
 class ProductDetailActivity : ComponentActivity() {
@@ -60,7 +63,10 @@ fun ProductDetailActivityContent(
     product: ProductModel,
     onBackClick: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val currentUserName = FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous"
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
 
     // Initialize repositories and viewmodels
     val cartRepo = CartRepositoryImpl()
@@ -74,35 +80,43 @@ fun ProductDetailActivityContent(
     var ratingSummary by remember { mutableStateOf(ProductRatingSummary()) }
     var isLoadingReviews by remember { mutableStateOf(true) }
 
-    // Mock addresses - replace with actual address data
+    // Mock addresses - replace with actual address data from user profile
     val userAddresses = listOf(
         "Bagmati, Kathmandu Metro, 22 - Newroad Area, Newroad",
         "Home: Lalitpur, Patan, Near Patan Durbar Square",
         "Office: Kathmandu, Thamel, Ward 26"
     )
 
-    // Load reviews
+    // Function to load reviews
+    fun loadReviews() {
+        CoroutineScope(Dispatchers.Main).launch {
+            isLoadingReviews = true
+
+            // Get reviews
+            reviewRepo.getProductReviews(product.id).fold(
+                onSuccess = { reviews = it },
+                onFailure = {
+                    Toast.makeText(context, "Failed to load reviews", Toast.LENGTH_SHORT).show()
+                }
+            )
+
+            // Get rating summary
+            reviewRepo.getRatingSummary(product.id).fold(
+                onSuccess = { ratingSummary = it },
+                onFailure = { }
+            )
+
+            isLoadingReviews = false
+        }
+    }
+
+    // Load reviews on first composition
     LaunchedEffect(product.id) {
-        isLoadingReviews = true
-
-        // Get reviews
-        reviewRepo.getProductReviews(product.id).fold(
-            onSuccess = { reviews = it },
-            onFailure = { }
-        )
-
-        // Get rating summary
-        reviewRepo.getRatingSummary(product.id).fold(
-            onSuccess = { ratingSummary = it },
-            onFailure = { }
-        )
-
-        isLoadingReviews = false
+        loadReviews()
     }
 
     // Observe cart messages
     val cartUiState by cartViewModel.uiState.collectAsState()
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(cartUiState.successMessage) {
         cartUiState.successMessage?.let { message ->
@@ -152,13 +166,43 @@ fun ProductDetailActivityContent(
                     category = product.category,
                     stock = product.stock
                 )
-                // Navigate to cart activity
                 Toast.makeText(context, "Added to cart! Opening cart...", Toast.LENGTH_SHORT).show()
                 // You can open CartActivity here if needed
             } else {
                 Toast.makeText(context, "Please login to continue", Toast.LENGTH_SHORT).show()
             }
         },
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        onSubmitReview = { rating, comment ->
+            if (currentUserId.isNotEmpty()) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    val review = ReviewModel(
+                        productId = product.id,
+                        userId = currentUserId,
+                        userName = currentUserName.ifEmpty { currentUserEmail.substringBefore("@") },
+                        rating = rating,
+                        comment = comment,
+                        createdAt = System.currentTimeMillis()
+                    )
+
+                    reviewRepo.addReview(review).fold(
+                        onSuccess = {
+                            Toast.makeText(context, "Review submitted successfully!", Toast.LENGTH_SHORT).show()
+                            // Reload reviews to show the new one
+                            loadReviews()
+                        },
+                        onFailure = { error ->
+                            Toast.makeText(
+                                context,
+                                "Failed to submit review: ${error.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                }
+            } else {
+                Toast.makeText(context, "Please login to submit a review", Toast.LENGTH_SHORT).show()
+            }
+        }
     )
 }

@@ -14,5 +14,9 @@ data class ProductModel(
     val tags: List<String> = emptyList(),
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    // New fields for enhanced UI
+    val discount: Int = 0,  // Discount percentage (0-100)
+    val rating: Double = 0.0,  // Rating (0.0 - 5.0)
+    val reviewCount: Int = 0  // Number of reviews
 )

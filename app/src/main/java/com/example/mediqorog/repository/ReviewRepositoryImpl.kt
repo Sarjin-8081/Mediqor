@@ -2,7 +2,6 @@ package com.example.mediqorog.repository
 
 import com.example.mediqorog.model.ProductRatingSummary
 import com.example.mediqorog.model.ReviewModel
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -14,6 +13,8 @@ class ReviewRepositoryImpl(
 
     override suspend fun addReview(review: ReviewModel): Result<String> {
         return try {
+            val currentTime = System.currentTimeMillis()
+
             val reviewData = hashMapOf(
                 "productId" to review.productId,
                 "userId" to review.userId,
@@ -25,8 +26,8 @@ class ReviewRepositoryImpl(
                 "images" to review.images,
                 "isVerifiedPurchase" to review.isVerifiedPurchase,
                 "likes" to 0,
-                "createdAt" to Timestamp.now(),
-                "updatedAt" to Timestamp.now()
+                "createdAt" to currentTime,
+                "updatedAt" to currentTime
             )
 
             val docRef = reviewsCollection.add(reviewData).await()
@@ -58,8 +59,8 @@ class ReviewRepositoryImpl(
                         images = doc.get("images") as? List<String> ?: emptyList(),
                         isVerifiedPurchase = doc.getBoolean("isVerifiedPurchase") ?: false,
                         likes = doc.getLong("likes")?.toInt() ?: 0,
-                        createdAt = doc.getTimestamp("createdAt") ?: Timestamp.now(),
-                        updatedAt = doc.getTimestamp("updatedAt") ?: Timestamp.now()
+                        createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
+                        updatedAt = doc.getLong("updatedAt") ?: System.currentTimeMillis()
                     )
                 } catch (e: Exception) {
                     null
@@ -126,8 +127,8 @@ class ReviewRepositoryImpl(
                     images = doc.get("images") as? List<String> ?: emptyList(),
                     isVerifiedPurchase = doc.getBoolean("isVerifiedPurchase") ?: false,
                     likes = doc.getLong("likes")?.toInt() ?: 0,
-                    createdAt = doc.getTimestamp("createdAt") ?: Timestamp.now(),
-                    updatedAt = doc.getTimestamp("updatedAt") ?: Timestamp.now()
+                    createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
+                    updatedAt = doc.getLong("updatedAt") ?: System.currentTimeMillis()
                 )
             }
 
@@ -145,7 +146,7 @@ class ReviewRepositoryImpl(
                     "title" to review.title,
                     "comment" to review.comment,
                     "images" to review.images,
-                    "updatedAt" to Timestamp.now()
+                    "updatedAt" to System.currentTimeMillis()
                 )
             ).await()
 
