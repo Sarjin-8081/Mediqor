@@ -19,6 +19,10 @@
         android:theme="@style/Theme.MediqorOG"
         tools:replace="android:fullBackupContent">
         <activity
+            android:name=".ui.theme.CheckoutActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".view.AdminChangePasswordActivity"
             android:exported="false"
             android:label="@string/title_activity_admin_change_password"
