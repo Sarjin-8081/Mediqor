@@ -1,13 +1,16 @@
-// ============================================================
-// FILE 3: AdminProductsScreen.kt
-// ============================================================
-package com.example.mediqorog.view.screens
+package com.example.mediqorog.screens
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,160 +18,140 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.mediqorog.components.*
 import com.example.mediqorog.model.ProductModel
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.mediqorog.viewmodel.AdminProductsViewModel
 
 @Composable
-fun AdminProductsScreen() {
-    var products by remember { mutableStateOf<List<ProductModel>>(emptyList()) }
-    var showAddDialog by remember { mutableStateOf(false) }
-    var editingProduct by remember { mutableStateOf<ProductModel?>(null) }
+fun AdminProductsScreenContent() {
+    val context = LocalContext.current
+    val viewModel: AdminProductsViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
 
-    val db = FirebaseFirestore.getInstance()
-
-    // Load products
-    LaunchedEffect(Unit) {
-        db.collection("products")
-            .addSnapshotListener { snapshot, _ ->
-                snapshot?.let {
-                    products = it.toObjects(ProductModel::class.java)
-                }
-            }
+    // Handle messages
+    LaunchedEffect(uiState.error, uiState.successMessage) {
+        uiState.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+        uiState.successMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = Color(0xFF0B8FAC)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Product", tint = Color.White)
-            }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
-                .padding(padding)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+    ) {
+        // Header
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.White,
+            shadowElevation = 2.dp
         ) {
-            // Header
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
-                shadowElevation = 2.dp
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
                 Text(
                     "Products Management",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0B8FAC),
-                    modifier = Modifier.padding(16.dp)
+                    color = Color(0xFF0B8FAC)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Search Bar
+                SearchBar(
+                    query = uiState.searchQuery,
+                    onQueryChange = { viewModel.searchProducts(it) },
+                    placeholder = "Search products..."
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Category Filter
+                val categories = listOf(
+                    "All", "Pharmacy", "Family Care", "Personal Care",
+                    "Surgical", "Devices", "Supplements"
+                )
+                FilterDropdown(
+                    selectedValue = uiState.selectedCategory,
+                    options = categories,
+                    onValueChange = { viewModel.filterByCategory(it) },
+                    label = "Category"
                 )
             }
+        }
 
-            // Products list
+        // Products List
+        if (uiState.isLoading) {
+            LoadingIndicator()
+        } else if (uiState.filteredProducts.isEmpty()) {
+            EmptyState(
+                icon = Icons.Default.Inventory,
+                message = "No products found"
+            )
+        } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(products) { product ->
+                items(uiState.filteredProducts) { product ->
+                    var showEditDialog by remember { mutableStateOf(false) }
+                    var showDeleteDialog by remember { mutableStateOf(false) }
+
                     ProductCard(
                         product = product,
-                        onEdit = { editingProduct = product },
-                        onDelete = {
-                            db.collection("products").document(product.id).delete()
-                        }
+                        onEdit = { showEditDialog = true },
+                        onDelete = { showDeleteDialog = true }
                     )
-                }
-            }
-        }
-    }
 
-    // Add/Edit dialog
-    if (showAddDialog || editingProduct != null) {
-        ProductDialog(
-            product = editingProduct,
-            onDismiss = {
-                showAddDialog = false
-                editingProduct = null
-            },
-            onSave = { product ->
-                if (product.id.isEmpty()) {
-                    // Add new
-                    val newId = db.collection("products").document().id
-                    db.collection("products").document(newId)
-                        .set(product.copy(id = newId))
-                } else {
-                    // Update existing
-                    db.collection("products").document(product.id)
-                        .set(product)
-                }
-                showAddDialog = false
-                editingProduct = null
-            }
-        )
-    }
-}
+                    if (showEditDialog) {
+                        EditProductDialog(
+                            product = product,
+                            onDismiss = { showEditDialog = false },
+                            onSave = { updatedProduct, imageUri ->
+                                viewModel.updateProduct(context, updatedProduct, imageUri)
+                                showEditDialog = false
+                            }
+                        )
+                    }
 
-@Composable
-fun ProductCard(
-    product: ProductModel,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            AsyncImage(
-                model = product.imageUrl,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp)
-            )
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    product.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                Text(
-                    product.category,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    "₹${product.price}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0B8FAC)
-                )
-                Text(
-                    "Stock: ${product.stock}",
-                    fontSize = 14.sp,
-                    color = if (product.stock < 10) Color.Red else Color.Gray
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF0B8FAC))
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+                    if (showDeleteDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDeleteDialog = false },
+                            title = { Text("Delete Product") },
+                            text = { Text("Are you sure you want to delete ${product.name}?") },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        viewModel.deleteProduct(product.id)
+                                        showDeleteDialog = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Red
+                                    )
+                                ) {
+                                    Text("Delete")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDeleteDialog = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -176,77 +159,227 @@ fun ProductCard(
 }
 
 @Composable
-fun ProductDialog(
-    product: ProductModel?,
+fun AddProductDialog(
     onDismiss: () -> Unit,
-    onSave: (ProductModel) -> Unit
+    onProductAdded: () -> Unit
 ) {
-    var name by remember { mutableStateOf(product?.name ?: "") }
-    var price by remember { mutableStateOf(product?.price?.toString() ?: "") }
-    var description by remember { mutableStateOf(product?.description ?: "") }
-    var imageUrl by remember { mutableStateOf(product?.imageUrl ?: "") }
-    var category by remember { mutableStateOf(product?.category ?: "") }
-    var stock by remember { mutableStateOf(product?.stock?.toString() ?: "") }
+    val context = LocalContext.current
+    val viewModel: AdminProductsViewModel = viewModel()
+
+    var name by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf("Pharmacy") }
+    var price by remember { mutableStateOf("") }
+    var stock by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> imageUri = uri }
+
+    val categories = listOf(
+        "Pharmacy", "Family Care", "Personal Care",
+        "Surgical", "Devices", "Supplements"
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (product == null) "Add Product" else "Edit Product") },
+        title = { Text("Add New Product") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Image Picker
+                Button(
+                    onClick = { imagePickerLauncher.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Image, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (imageUri == null) "Select Image" else "Image Selected")
+                }
+
+                if (imageUri != null) {
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Product Image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                    )
+                }
+
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Product Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                FilterDropdown(
+                    selectedValue = category,
+                    options = categories,
+                    onValueChange = { category = it },
+                    label = "Category"
+                )
+
                 OutlinedTextField(
                     value = price,
                     onValueChange = { price = it },
-                    label = { Text("Price") },
+                    label = { Text("Price (₹)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 OutlinedTextField(
                     value = stock,
                     onValueChange = { stock = it },
                     label = { Text("Stock Quantity") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = category,
-                    onValueChange = { category = it },
-                    label = { Text("Category") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = imageUrl,
-                    onValueChange = { imageUrl = it },
-                    label = { Text("Image URL") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3
+                    minLines = 3
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    onSave(
-                        ProductModel(
-                            id = product?.id ?: "",
-                            name = name,
-                            price = price.toDoubleOrNull() ?: 0.0,
-                            description = description,
-                            imageUrl = imageUrl,
-                            category = category,
-                            stock = stock.toIntOrNull() ?: 0
-                        )
+                    if (name.isBlank() || price.isBlank()) {
+                        Toast.makeText(
+                            context,
+                            "Please fill all required fields",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@Button
+                    }
+
+                    val product = ProductModel(
+                        name = name,
+                        category = category,
+                        price = price.toDoubleOrNull() ?: 0.0,
+                        stock = stock.toIntOrNull() ?: 0,
+                        description = description
                     )
+
+                    viewModel.addProduct(context, product, imageUri)
+                    onProductAdded()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0B8FAC)
+                )
+            ) {
+                Text("Add Product")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun EditProductDialog(
+    product: ProductModel,
+    onDismiss: () -> Unit,
+    onSave: (ProductModel, Uri?) -> Unit
+) {
+    var name by remember { mutableStateOf(product.name) }
+    var category by remember { mutableStateOf(product.category) }
+    var price by remember { mutableStateOf(product.price.toString()) }
+    var stock by remember { mutableStateOf(product.stock.toString()) }
+    var description by remember { mutableStateOf(product.description) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> imageUri = uri }
+
+    val categories = listOf(
+        "Pharmacy", "Family Care", "Personal Care",
+        "Surgical", "Devices", "Supplements"
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Product") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = { imagePickerLauncher.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Image, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (imageUri == null) "Change Image" else "New Image Selected")
                 }
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Product Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                FilterDropdown(
+                    selectedValue = category,
+                    options = categories,
+                    onValueChange = { category = it },
+                    label = "Category"
+                )
+
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it },
+                    label = { Text("Price (₹)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = stock,
+                    onValueChange = { stock = it },
+                    label = { Text("Stock Quantity") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val updatedProduct = product.copy(
+                        name = name,
+                        category = category,
+                        price = price.toDoubleOrNull() ?: 0.0,
+                        stock = stock.toIntOrNull() ?: 0,
+                        description = description
+                    )
+                    onSave(updatedProduct, imageUri)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0B8FAC)
+                )
             ) {
                 Text("Save")
             }

@@ -25,7 +25,7 @@ class ProductRepositoryImpl : ProductRepository {
                     Log.e(TAG, "Error parsing product ${doc.id}", e)
                     null
                 }
-            }.sortedByDescending { it.createdAt } // Sort in memory instead
+            }.sortedByDescending { it.createdAt }
 
             Log.d(TAG, "Loaded ${products.size} products")
             Result.success(products)
@@ -37,16 +37,13 @@ class ProductRepositoryImpl : ProductRepository {
 
     override suspend fun getProductsByCategory(category: String): Result<List<ProductModel>> {
         return try {
-            // Get all active products first
             val snapshot = productsCollection
                 .whereEqualTo("isActive", true)
                 .get()
                 .await()
 
-            // Filter in memory to support multiple categories (comma-separated)
             val products = snapshot.documents.mapNotNull { it.toProductModel() }
                 .filter { product ->
-                    // Split categories by comma and check if any match the selected category
                     product.category.split(",").any { cat ->
                         cat.trim().equals(category, ignoreCase = true)
                     }
@@ -70,7 +67,7 @@ class ProductRepositoryImpl : ProductRepository {
                 .await()
 
             val products = snapshot.documents.mapNotNull { it.toProductModel() }
-                .sortedByDescending { it.createdAt } // Sort in memory instead
+                .sortedByDescending { it.createdAt }
 
             Log.d(TAG, "Loaded ${products.size} featured products")
             Result.success(products)

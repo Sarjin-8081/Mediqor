@@ -32,6 +32,7 @@ import coil.compose.AsyncImage
 import com.example.mediqorog.model.User
 import com.example.mediqorog.view.*
 import com.example.mediqorog.viewmodel.UserViewModel
+import com.example.mediqorog.viewmodel.UserViewModelFactory
 import com.example.mediqorog.repository.UserRepoImpl
 import com.google.firebase.auth.FirebaseAuth
 
@@ -39,15 +40,12 @@ import com.google.firebase.auth.FirebaseAuth
 fun SettingsScreen() {
     val context = LocalContext.current
     val viewModel: UserViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                @Suppress("UNCHECKED_CAST")
-                return UserViewModel(UserRepoImpl()) as T
-            }
-        }
+        factory = UserViewModelFactory(UserRepoImpl())
     )
 
-    val currentUser by viewModel.currentUser.collectAsState()
+    // ✅ FIXED: Changed from currentUser to user
+    val currentUser by viewModel.user.collectAsState()
+
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }

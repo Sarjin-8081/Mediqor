@@ -62,21 +62,27 @@ android {
 }
 
 dependencies {
+    // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Compose BOM (manages all Compose versions together)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // Google Auth & Credentials
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.compose.foundation)
 
+    // Media
+    implementation(libs.androidx.media3.exoplayer)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -85,19 +91,38 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    implementation("com.airbnb.android:lottie-compose:6.1.0")
-    implementation("com.google.android.gms:play-services-auth:21.0.0")
-    implementation("com.google.firebase:firebase-database-ktx")
-    implementation("com.google.firebase:firebase-storage-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx")
+    // Firebase (use BOM for version management)
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Google Play Services
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // Lifecycle & ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+    // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
+
+    // Image Loading - Coil (FIXED: Use correct version)
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
+    // Lottie Animations
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
+
+    // Cloudinary (for image uploads)
     implementation("com.cloudinary:cloudinary-android:2.1.0")
-    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
 }
