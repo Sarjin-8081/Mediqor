@@ -2,6 +2,7 @@ package com.example.mediqorog.model
 
 import com.google.firebase.Timestamp
 
+
 data class ReviewModel(
     val id: String = "",
     val productId: String = "",
@@ -14,8 +15,8 @@ data class ReviewModel(
     val images: List<String> = emptyList(), // Review images
     val isVerifiedPurchase: Boolean = false,
     val likes: Int = 0,
-    val createdAt: Timestamp = Timestamp.now(),
-    val updatedAt: Timestamp = Timestamp.now()
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )
 
 data class ProductRatingSummary(

@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mediqorog.screens.AddProductDialog
 import com.example.mediqorog.screens.AdminProductsScreenContent
 import com.example.mediqorog.view.screens.AdminHomeScreen
 import com.example.mediqorog.view.screens.AdminSettingsScreen
@@ -41,7 +40,6 @@ data class BottomNavItem(
 @Composable
 fun AdminDashboardScreen() {
     var selectedTab by remember { mutableStateOf(0) }
-    var showAddProductDialog by remember { mutableStateOf(false) }
 
     val primaryColor = Color(0xFF0B8FAC)
 
@@ -87,22 +85,8 @@ fun AdminDashboardScreen() {
                     )
                 }
             }
-        },
-        floatingActionButton = {
-            // Show FAB only on Products tab
-            if (selectedTab == 1) {
-                FloatingActionButton(
-                    onClick = { showAddProductDialog = true },
-                    containerColor = primaryColor,
-                    contentColor = Color.White
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Product"
-                    )
-                }
-            }
         }
+        // FAB removed from here - it's now handled inside AdminProductsScreenContent
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -119,14 +103,6 @@ fun AdminDashboardScreen() {
                 2 -> AdminOrdersScreenContent()
                 3 -> AdminUsersScreenContent()
                 4 -> AdminSettingsScreen()
-            }
-
-            // Add Product Dialog/Screen
-            if (showAddProductDialog) {
-                AddProductDialog(
-                    onDismiss = { showAddProductDialog = false },
-                    onProductAdded = { showAddProductDialog = false }
-                )
             }
         }
     }
