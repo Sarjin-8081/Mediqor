@@ -1,5 +1,6 @@
 package com.example.mediqorog.view.screens
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,16 +23,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.mediqorog.model.CartModel
 import com.example.mediqorog.repository.CartRepositoryImpl
+import com.example.mediqorog.ui.theme.CheckoutActivity
 import com.example.mediqorog.viewmodel.CartViewModel
 import com.example.mediqorog.viewmodel.CartViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
+import kotlin.jvm.java
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CartScreen() {
+fun CartScreen(navController: NavController) {
     val context = LocalContext.current
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
@@ -86,7 +90,12 @@ fun CartScreen() {
                     total = cartUiState.cartTotal,
                     itemCount = cartUiState.itemCount,
                     onCheckout = {
-                        Toast.makeText(context, "Checkout coming soon!", Toast.LENGTH_SHORT).show()
+                        // Launch CheckoutActivity instead of navigation
+                        val intent = Intent(context, CheckoutActivity::class.java).apply {
+                            putExtra("CART_TOTAL", cartUiState.cartTotal)
+                            putExtra("ITEM_COUNT", cartUiState.itemCount)
+                        }
+                        context.startActivity(intent)
                     }
                 )
             }
