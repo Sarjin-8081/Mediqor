@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import com.example.mediqorog.view.screens.*
 import com.example.mediqorog.viewmodel.ChatbotViewModel
 
@@ -40,12 +41,15 @@ fun DashboardBody() {
     val chatbotViewModel: ChatbotViewModel = viewModel()
     val showChatbot by chatbotViewModel.showChatbot.collectAsState()
 
+    // Add NavController
+    val navController = rememberNavController()
+
     val navigationItems = remember {
         listOf(
             NavigationItem("Home", Icons.Filled.Home, "home"),
             NavigationItem("Cart", Icons.Filled.ShoppingCart, "cart"),
             NavigationItem("Features", Icons.Filled.Stars, "features"),
-            NavigationItem("Profile", Icons.Filled.Person, "profile")
+            NavigationItem("Settings", Icons.Filled.Settings, "settings")
         )
     }
 
@@ -85,7 +89,7 @@ fun DashboardBody() {
                 0 -> HomeScreen(
                     onChatbotClick = { chatbotViewModel.openChatbot() }
                 )
-                1 -> CartScreen()
+                1 -> CartScreen(navController = navController)  // Pass navController here
                 2 -> FeatureScreen()
                 3 -> SettingsScreen(onNavigateBack = { selectedTab = 0 })
             }

@@ -1,9 +1,13 @@
-// ========== SavedAddressesActivity.kt ==========
 package com.example.mediqorog.view
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,27 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.*
-
-class SavedAddressesActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            SavedAddressesScreen(onBackClick = { finish() })
-        }
-    }
-}
 
 data class Address(
     val id: String = "",
@@ -44,362 +35,514 @@ data class Address(
     val phone: String = "",
     val addressLine: String = "",
     val landmark: String = "",
+    val city: String = "",
+    val state: String = "",
     val pincode: String = "",
-    val isDefault: Boolean = false
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val isDefault: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
-class SavedAddressesViewModel : ViewModel() {
-    private val _addresses = MutableStateFlow<List<Address>>(emptyList())
-    val addresses: StateFlow<List<Address>> = _addresses
+class SavedAddressesActivity : ComponentActivity() {
 
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading
-
+    private val TAG = "SavedAddressesActivity"
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-    init {
-        loadAddresses()
-    }
-
-    private fun loadAddresses() {
-        _loading.value = true
-        val userId = auth.currentUser?.uid
-
-        if (userId != null) {
-            firestore.collection("users")
-                .document(userId)
-                .collection("addresses")
-                .get()
-                .addOnSuccessListener { documents ->
-                    _addresses.value = documents.mapNotNull { it.toObject(Address::class.java) }
-                    _loading.value = false
-                }
-                .addOnFailureListener {
-                    _loading.value = false
-                }
-        } else {
-            _loading.value = false
+    private val addAddressLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        Log.d(TAG, "Result received: ${result.resultCode}")
+        if (result.resultCode == RESULT_OK) {
+            Toast.makeText(this, "Address saved!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    suspend fun saveAddress(address: Address): Boolean {
-        return try {
-            val userId = auth.currentUser?.uid ?: throw Exception("Not logged in")
-            val addressId = if (address.id.isEmpty()) UUID.randomUUID().toString() else address.id
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d(TAG, "SavedAddressesActivity created")
 
-            firestore.collection("users")
-                .document(userId)
-                .collection("addresses")
-                .document(addressId)
-                .set(address.copy(id = addressId))
-                .await()
-
-            loadAddresses()
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    suspend fun deleteAddress(addressId: String): Boolean {
-        return try {
-            val userId = auth.currentUser?.uid ?: throw Exception("Not logged in")
-
-            firestore.collection("users")
-                .document(userId)
-                .collection("addresses")
-                .document(addressId)
-                .delete()
-                .await()
-
-            loadAddresses()
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SavedAddressesScreen(onBackClick: () -> Unit) {
-    val viewModel: SavedAddressesViewModel = viewModel()
-    val addresses by viewModel.addresses.collectAsState()
-    val loading by viewModel.loading.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
-    var editingAddress by remember { mutableStateOf<Address?>(null) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Saved Addresses", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0B8FAC),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = Color(0xFF0B8FAC)
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Address", tint = Color.White)
+        setContent {
+            MaterialTheme {
+                SavedAddressesScreen()
             }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        Box(
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun SavedAddressesScreen() {
+        var addresses by remember { mutableStateOf<List<Address>>(emptyList()) }
+        var isLoading by remember { mutableStateOf(true) }
+        val scope = rememberCoroutineScope()
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        // Load addresses
+        LaunchedEffect(Unit) {
+            Log.d(TAG, "Loading addresses...")
+            val userId = auth.currentUser?.uid
+            Log.d(TAG, "User ID: $userId")
+
+            if (userId != null) {
+                firestore.collection("users")
+                    .document(userId)
+                    .collection("addresses")
+                    .orderBy("createdAt", Query.Direction.DESCENDING)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            Log.e(TAG, "Error loading addresses", error)
+                            isLoading = false
+                            return@addSnapshotListener
+                        }
+
+                        val loadedAddresses = snapshot?.documents?.mapNotNull { doc ->
+                            try {
+                                Address(
+                                    id = doc.id,
+                                    name = doc.getString("name") ?: "",
+                                    phone = doc.getString("phone") ?: "",
+                                    addressLine = doc.getString("addressLine") ?: "",
+                                    landmark = doc.getString("landmark") ?: "",
+                                    city = doc.getString("city") ?: "",
+                                    state = doc.getString("state") ?: "",
+                                    pincode = doc.getString("pincode") ?: "",
+                                    latitude = doc.getDouble("latitude") ?: 0.0,
+                                    longitude = doc.getDouble("longitude") ?: 0.0,
+                                    isDefault = doc.getBoolean("isDefault") ?: false,
+                                    createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+                                )
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing address", e)
+                                null
+                            }
+                        } ?: emptyList()
+
+                        Log.d(TAG, "Loaded ${loadedAddresses.size} addresses")
+                        addresses = loadedAddresses
+                        isLoading = false
+                    }
+            } else {
+                Log.e(TAG, "No user logged in")
+                isLoading = false
+            }
+        }
+
+        fun openAddAddress() {
+            try {
+                Log.d(TAG, "Opening AddEditAddressActivity...")
+                val intent = Intent(this@SavedAddressesActivity, AddEditAddressActivity::class.java)
+                addAddressLauncher.launch(intent)
+                Log.d(TAG, "Intent launched successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error opening activity", e)
+                Toast.makeText(
+                    this@SavedAddressesActivity,
+                    "Error: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+        fun openEditAddress(addressId: String) {
+            try {
+                Log.d(TAG, "Opening edit for address: $addressId")
+                val intent = Intent(this@SavedAddressesActivity, AddEditAddressActivity::class.java).apply {
+                    putExtra("ADDRESS_ID", addressId)
+                }
+                addAddressLauncher.launch(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error opening edit", e)
+                Toast.makeText(
+                    this@SavedAddressesActivity,
+                    "Error: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Saved Addresses", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { finish() }) {
+                            Icon(Icons.Filled.ArrowBack, "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFF0B8FAC),
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        Log.d(TAG, "FAB clicked")
+                        openAddAddress()
+                    },
+                    containerColor = Color(0xFF0B8FAC)
+                ) {
+                    Icon(Icons.Filled.Add, "Add", tint = Color.White)
+                }
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Color(0xFFF5F5F5))
+            ) {
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = Color(0xFF0B8FAC)
+                        )
+                    }
+                    addresses.isEmpty() -> {
+                        EmptyView(onAddClick = {
+                            Log.d(TAG, "Empty view button clicked")
+                            openAddAddress()
+                        })
+                    }
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(addresses, key = { it.id }) { address ->
+                                AddressCard(
+                                    address = address,
+                                    onEdit = { openEditAddress(address.id) },
+                                    onDelete = {
+                                        scope.launch {
+                                            try {
+                                                val userId = auth.currentUser?.uid
+                                                if (userId != null) {
+                                                    firestore.collection("users")
+                                                        .document(userId)
+                                                        .collection("addresses")
+                                                        .document(address.id)
+                                                        .delete()
+                                                        .await()
+                                                    snackbarHostState.showSnackbar("Address deleted")
+                                                }
+                                            } catch (e: Exception) {
+                                                Log.e(TAG, "Delete error", e)
+                                                snackbarHostState.showSnackbar("Failed to delete")
+                                            }
+                                        }
+                                    },
+                                    onSetDefault = {
+                                        scope.launch {
+                                            try {
+                                                val userId = auth.currentUser?.uid
+                                                if (userId != null) {
+                                                    val batch = firestore.batch()
+                                                    val docs = firestore.collection("users")
+                                                        .document(userId)
+                                                        .collection("addresses")
+                                                        .get()
+                                                        .await()
+
+                                                    docs.documents.forEach { doc ->
+                                                        batch.update(
+                                                            doc.reference,
+                                                            "isDefault",
+                                                            doc.id == address.id
+                                                        )
+                                                    }
+                                                    batch.commit().await()
+                                                    snackbarHostState.showSnackbar("Default address updated")
+                                                }
+                                            } catch (e: Exception) {
+                                                Log.e(TAG, "Set default error", e)
+                                                snackbarHostState.showSnackbar("Failed to update")
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                            item { Spacer(modifier = Modifier.height(80.dp)) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun EmptyView(onAddClick: () -> Unit) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            if (loading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (addresses.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Filled.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("No saved addresses", fontSize = 18.sp, color = Color.Gray)
-                    Text("Add an address to get started", fontSize = 14.sp, color = Color.Gray)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(addresses) { address ->
-                        AddressCard(
-                            address = address,
-                            onEdit = { editingAddress = address },
-                            onDelete = {
-                                scope.launch {
-                                    val success = viewModel.deleteAddress(address.id)
-                                    if (success) {
-                                        snackbarHostState.showSnackbar("Address deleted")
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    if (showAddDialog) {
-        AddEditAddressDialog(
-            address = null,
-            onDismiss = { showAddDialog = false },
-            onSave = { address ->
-                scope.launch {
-                    val success = viewModel.saveAddress(address)
-                    if (success) {
-                        snackbarHostState.showSnackbar("Address saved!")
-                        showAddDialog = false
-                    }
-                }
-            }
-        )
-    }
-
-    editingAddress?.let { address ->
-        AddEditAddressDialog(
-            address = address,
-            onDismiss = { editingAddress = null },
-            onSave = { updatedAddress ->
-                scope.launch {
-                    val success = viewModel.saveAddress(updatedAddress)
-                    if (success) {
-                        snackbarHostState.showSnackbar("Address updated!")
-                        editingAddress = null
-                    }
-                }
-            }
-        )
-    }
-}
-
-@Composable
-fun AddressCard(address: Address, onEdit: () -> Unit, onDelete: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Color(0xFF0B8FAC))
-                    Text(address.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-
-                if (address.isDefault) {
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = Color(0xFF4CAF50)
-                    ) {
-                        Text(
-                            "DEFAULT",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontSize = 10.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
+            Icon(
+                Icons.Filled.LocationOn,
+                contentDescription = null,
+                modifier = Modifier.size(100.dp),
+                tint = Color(0xFF0B8FAC).copy(alpha = 0.3f)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "No saved addresses",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2D3748)
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(address.phone, fontSize = 14.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(address.addressLine, fontSize = 14.sp)
-            if (address.landmark.isNotEmpty()) {
-                Text("Landmark: ${address.landmark}", fontSize = 13.sp, color = Color.Gray)
-            }
-            Text("PIN: ${address.pincode}", fontSize = 13.sp, color = Color.Gray)
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+            Text(
+                "Add delivery addresses for quick checkout",
+                fontSize = 15.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    Log.d(TAG, "Add button in empty view clicked")
+                    onAddClick()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B8FAC)),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                TextButton(onClick = onEdit) {
-                    Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Edit")
-                }
-                TextButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Delete")
-                }
+                Icon(Icons.Filled.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add Your First Address", fontWeight = FontWeight.SemiBold)
             }
         }
     }
-}
 
-@Composable
-fun AddEditAddressDialog(address: Address?, onDismiss: () -> Unit, onSave: (Address) -> Unit) {
-    var name by remember { mutableStateOf(address?.name ?: "") }
-    var phone by remember { mutableStateOf(address?.phone ?: "") }
-    var addressLine by remember { mutableStateOf(address?.addressLine ?: "") }
-    var landmark by remember { mutableStateOf(address?.landmark ?: "") }
-    var pincode by remember { mutableStateOf(address?.pincode ?: "") }
-    var isDefault by remember { mutableStateOf(address?.isDefault ?: false) }
+    @Composable
+    fun AddressCard(
+        address: Address,
+        onEdit: () -> Unit,
+        onDelete: () -> Unit,
+        onSetDefault: () -> Unit
+    ) {
+        var showMenu by remember { mutableStateOf(false) }
+        var showDeleteDialog by remember { mutableStateOf(false) }
 
-    Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    if (address == null) "Add Address" else "Edit Address",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = addressLine,
-                    onValueChange = { addressLine = it },
-                    label = { Text("Address") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
-                )
-
-                OutlinedTextField(
-                    value = landmark,
-                    onValueChange = { landmark = it },
-                    label = { Text("Landmark (Optional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = pincode,
-                    onValueChange = { pincode = it },
-                    label = { Text("Pincode") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = isDefault, onCheckedChange = { isDefault = it })
-                    Text("Set as default address")
-                }
-
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Header Row - Name and Menu
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            val newAddress = Address(
-                                id = address?.id ?: "",
-                                name = name,
-                                phone = phone,
-                                addressLine = addressLine,
-                                landmark = landmark,
-                                pincode = pincode,
-                                isDefault = isDefault
-                            )
-                            onSave(newAddress)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B8FAC))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Save")
+                        Text(
+                            address.name,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1F2937)
+                        )
+                        if (address.isDefault) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF10B981)
+                            ) {
+                                Text(
+                                    "DEFAULT",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    fontSize = 10.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Filled.MoreVert, "Options", tint = Color(0xFF9CA3AF))
+                        }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            if (!address.isDefault) {
+                                DropdownMenuItem(
+                                    text = { Text("Set as Default") },
+                                    onClick = {
+                                        onSetDefault()
+                                        showMenu = false
+                                    },
+                                    leadingIcon = { Icon(Icons.Filled.CheckCircle, null) }
+                                )
+                            }
+                            DropdownMenuItem(
+                                text = { Text("Edit") },
+                                onClick = {
+                                    onEdit()
+                                    showMenu = false
+                                },
+                                leadingIcon = { Icon(Icons.Filled.Edit, null) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete", color = Color(0xFFEF4444)) },
+                                onClick = {
+                                    showDeleteDialog = true
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Delete, null, tint = Color(0xFFEF4444))
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Phone Number
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Phone,
+                        contentDescription = null,
+                        tint = Color(0xFF9CA3AF),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        address.phone,
+                        fontSize = 13.sp,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Address Line
+                Text(
+                    address.addressLine,
+                    fontSize = 14.sp,
+                    color = Color(0xFF374151),
+                    lineHeight = 20.sp
+                )
+
+                // Landmark
+                if (address.landmark.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Near ${address.landmark}",
+                        fontSize = 12.sp,
+                        color = Color(0xFF9CA3AF),
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Divider
+                Divider(color = Color(0xFFE5E7EB), thickness = 1.dp)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Bottom Row - City, State, Pincode
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.LocationOn,
+                            contentDescription = null,
+                            tint = Color(0xFF9CA3AF),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            buildString {
+                                if (address.city.isNotEmpty()) append(address.city)
+                                if (address.city.isNotEmpty() && address.state.isNotEmpty()) append(", ")
+                                if (address.state.isNotEmpty()) append(address.state)
+                            },
+                            fontSize = 12.sp,
+                            color = Color(0xFF6B7280)
+                        )
+                    }
+
+                    if (address.pincode.isNotEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFFF3F4F6)
+                        ) {
+                            Text(
+                                address.pincode,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF374151)
+                            )
+                        }
                     }
                 }
             }
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                icon = {
+                    Icon(
+                        Icons.Filled.Delete,
+                        null,
+                        tint = Color(0xFFEF4444),
+                        modifier = Modifier.size(48.dp)
+                    )
+                },
+                title = { Text("Delete Address?", fontWeight = FontWeight.Bold) },
+                text = {
+                    Text(
+                        "Are you sure you want to delete '${address.name}'?",
+                        textAlign = TextAlign.Center
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onDelete()
+                            showDeleteDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
