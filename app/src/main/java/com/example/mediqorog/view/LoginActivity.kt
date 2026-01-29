@@ -3,6 +3,7 @@ package com.example.mediqorog.view
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,11 +40,23 @@ import com.example.mediqorog.viewmodel.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class LoginActivity : ComponentActivity() {
 
     private lateinit var viewModel: UserViewModel
     private lateinit var auth: FirebaseAuth
+    private var isNavigating = false // ✅ Prevent double navigation
+
+    companion object {
+        private const val TAG = "LoginActivity"
+        private const val PREFS_NAME = "MediqorPrefs"
+        private const val KEY_REMEMBER_ME = "remember_me"
+        private const val KEY_SAVED_EMAIL = "saved_email"
+    }
 
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -84,9 +97,16 @@ class LoginActivity : ComponentActivity() {
         viewModel = UserViewModel(repo)
         auth = FirebaseAuth.getInstance()
 
+        // ✅ Load saved email if Remember Me was checked
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val rememberMe = prefs.getBoolean(KEY_REMEMBER_ME, false)
+        val savedEmail = prefs.getString(KEY_SAVED_EMAIL, "")
+
         setContent {
             LoginBody(
                 viewModel = viewModel,
+                savedEmail = if (rememberMe) savedEmail ?: "" else "",
+                rememberMeChecked = rememberMe,
                 onGoogleSignInClick = {
                     try {
                         val signInIntent = viewModel.getGoogleSignInClient(this).signInIntent
@@ -98,6 +118,9 @@ class LoginActivity : ComponentActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                     }
+                },
+                onRememberMeChanged = { email, checked ->
+                    saveRememberMe(email, checked)
                 }
             )
         }
@@ -107,37 +130,94 @@ class LoginActivity : ComponentActivity() {
         super.onStart()
 
         val currentUser = auth.currentUser
-        if (currentUser != null) {
-            viewModel.checkIfUserIsAdmin { isAdmin ->
-                runOnUiThread {
+        if (currentUser != null && !isNavigating) {
+            Log.d(TAG, "User already logged in: ${currentUser.email}")
+            isNavigating = true
+
+            // ✅ Use coroutine to properly wait for admin check
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val isAdmin = checkIfUserIsAdminSuspend()
+                    Log.d(TAG, "Admin check result: $isAdmin for user ${currentUser.email}")
                     navigateToDashboard(isAdmin)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error checking admin status: ${e.message}", e)
+                    isNavigating = false
+                    // Default to customer dashboard on error
+                    navigateToDashboard(false)
                 }
             }
         }
     }
 
-    private fun navigateToDashboard(isAdmin: Boolean) {
-        if (isAdmin) {
-            val intent = Intent(this, AdminDashboardActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            startActivity(intent)
-            Toast.makeText(this, "Welcome Admin!", Toast.LENGTH_SHORT).show()
-        } else {
-            val intent = Intent(this, DashboardActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            startActivity(intent)
+    /**
+     * ✅ Suspend function that properly waits for Firestore query
+     */
+    private suspend fun checkIfUserIsAdminSuspend(): Boolean {
+        return try {
+            val userId = auth.currentUser?.uid ?: return false
+            val userDoc = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .await()
+
+            val role = userDoc.getString("role") ?: "customer"
+            Log.d(TAG, "User role from Firestore: $role")
+
+            role.equals("admin", ignoreCase = true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in checkIfUserIsAdminSuspend: ${e.message}", e)
+            false
         }
-        finish()
+    }
+
+    private fun navigateToDashboard(isAdmin: Boolean) {
+        if (isNavigating && !isFinishing) {
+            Log.d(TAG, "Navigating to dashboard - isAdmin: $isAdmin")
+
+            val intent = if (isAdmin) {
+                Toast.makeText(this, "Welcome Admin!", Toast.LENGTH_SHORT).show()
+                Intent(this, AdminDashboardActivity::class.java)
+            } else {
+                Intent(this, DashboardActivity::class.java)
+            }
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(intent)
+            finish()
+        }
+    }
+
+    /**
+     * ✅ Save Remember Me preference
+     */
+    private fun saveRememberMe(email: String, checked: Boolean) {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().apply {
+            putBoolean(KEY_REMEMBER_ME, checked)
+            if (checked) {
+                putString(KEY_SAVED_EMAIL, email)
+            } else {
+                remove(KEY_SAVED_EMAIL)
+            }
+            apply()
+        }
+        Log.d(TAG, "Remember Me saved: $checked, Email: ${if (checked) email else "cleared"}")
     }
 }
 
 @Composable
 fun LoginBody(
     viewModel: UserViewModel? = null,
-    onGoogleSignInClick: () -> Unit = {}
+    savedEmail: String = "",
+    rememberMeChecked: Boolean = false,
+    onGoogleSignInClick: () -> Unit = {},
+    onRememberMeChanged: (String, Boolean) -> Unit = { _, _ -> }
 ) {
-    var email by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(savedEmail) }
     var password by remember { mutableStateOf("") }
+    var rememberMe by remember { mutableStateOf(rememberMeChecked) }
     var visibility by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
 
@@ -236,22 +316,56 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            Text(
-                text = "Forget Password",
-                style = TextStyle(
-                    color = Color(0xFF0B8FAC),
-                    textAlign = TextAlign.End
-                ),
+            // ✅ Remember Me Checkbox
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 15.dp, vertical = 15.dp)
-                    .clickable {
+                    .padding(horizontal = 15.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable(enabled = !loading) {
+                        rememberMe = !rememberMe
+                        onRememberMeChanged(email, rememberMe)
+                    }
+                ) {
+                    Checkbox(
+                        checked = rememberMe,
+                        onCheckedChange = {
+                            rememberMe = it
+                            onRememberMeChanged(email, it)
+                        },
+                        enabled = !loading,
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFF0B8FAC),
+                            uncheckedColor = Color.Gray
+                        )
+                    )
+                    Text(
+                        text = "Remember me",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+
+                Text(
+                    text = "Forget Password?",
+                    style = TextStyle(
+                        color = Color(0xFF0B8FAC),
+                        fontSize = 14.sp
+                    ),
+                    modifier = Modifier.clickable {
                         if (!loading) {
                             val intent = Intent(context, ForgotPasswordActivity::class.java)
                             context.startActivity(intent)
                         }
                     }
-            )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Button(
                 onClick = {
@@ -261,6 +375,10 @@ fun LoginBody(
                     }
 
                     loading = true
+
+                    // ✅ Save Remember Me preference before login
+                    onRememberMeChanged(email, rememberMe)
+
                     viewModel?.signIn(email, password) { success, message, isAdmin ->
                         activity?.runOnUiThread {
                             loading = false
@@ -271,6 +389,7 @@ fun LoginBody(
                                     val intent = Intent(context, AdminDashboardActivity::class.java)
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                     context.startActivity(intent)
+                                    Toast.makeText(context, "Welcome Admin!", Toast.LENGTH_SHORT).show()
                                 } else {
                                     val intent = Intent(context, DashboardActivity::class.java)
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
