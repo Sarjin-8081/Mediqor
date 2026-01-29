@@ -13,181 +13,216 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
-    private val _currentUser = MutableStateFlow<User?>(null)
-    val currentUser: StateFlow<User?> = _currentUser
+    // ✅ ADD THIS: StateFlow for current user
+    private val _user = MutableStateFlow<User?>(null)
+    val user: StateFlow<User?> = _user.asStateFlow()
 
+    // ✅ ADD THIS: Load current user on init
     init {
-        checkCurrentUser()
+        loadCurrentUser()
     }
 
-    private fun checkCurrentUser() {
+    // ✅ ADD THIS: Load user from repository
+    private fun loadCurrentUser() {
         viewModelScope.launch {
-            _currentUser.value = repository.getCurrentUser()
-        }
-    }
-
-    fun signIn(email: String, password: String, onResult: (Boolean, String, Boolean) -> Unit) {
-        viewModelScope.launch {
-            val result = repository.signIn(email, password)
-            result.onSuccess { user ->
-                _currentUser.value = user
-                val isAdmin = user.isAdmin()
-                Log.d("UserViewModel", "Sign in success - User: ${user.email}, Admin: $isAdmin")
-                onResult(true, "Login successful!", isAdmin)
-            }
-            result.onFailure { exception ->
-                Log.e("UserViewModel", "Sign in failed: ${exception.message}")
-                onResult(false, exception.message ?: "Login failed", false)
+            try {
+                val currentUser = repository.getCurrentUser()
+                _user.value = currentUser
+                Log.d("UserViewModel", "Loaded current user: ${currentUser?.email}")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Failed to load user: ${e.message}")
+                _user.value = null
             }
         }
     }
 
-    // ✅ UPDATED: Now saves all 18 fields with proper defaults
-    fun signUp(email: String, password: String, displayName: String, onResult: (Boolean, String) -> Unit) {
+    // ✅ ADD THIS: Update user function
+    fun updateUser(updatedUser: User) {
         viewModelScope.launch {
-            val result = repository.signUp(email, password, displayName)
-            result.onSuccess { user ->
-                _currentUser.value = user
-                Log.d("UserViewModel", "Sign up success - User created with all fields")
-                onResult(true, "Registration successful!")
-            }
-            result.onFailure { exception ->
-                Log.e("UserViewModel", "Sign up failed: ${exception.message}")
-                onResult(false, exception.message ?: "Registration failed")
+            try {
+                // Update in Firestore
+                val updates = hashMapOf<String, Any>(
+                    "displayName" to updatedUser.displayName,
+                    "phoneNumber" to updatedUser.phoneNumber,
+                    "bloodGroup" to updatedUser.bloodGroup,
+                    "dateOfBirth" to updatedUser.dateOfBirth,
+                    "gender" to updatedUser.gender,
+                    "address" to updatedUser.address,
+                    "emergencyContact" to updatedUser.emergencyContact
+                )
+
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(updatedUser.uid)
+                    .update(updates)
+                    .await()
+
+                // Update local state
+                _user.value = updatedUser
+                Log.d("UserViewModel", "User updated successfully")
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Failed to update user: ${e.message}")
             }
         }
     }
 
-    // ✅ NEW: Enhanced signup with phone and blood group
-    fun signUpEnhanced(
+    // ✅ Sign Up - Creates user with all 18 fields
+    fun signUp(
         email: String,
         password: String,
         displayName: String,
-        phoneNumber: String,
-        bloodGroup: String,
-        onResult: (Boolean, String) -> Unit
+        callback: (Boolean, String) -> Unit
     ) {
         viewModelScope.launch {
             try {
-                Log.d("UserViewModel", "Starting enhanced sign up for: $email")
-
-                // Call repository with enhanced fields
-                val result = repository.signUpEnhanced(email, password, displayName, phoneNumber, bloodGroup)
-
-                result.onSuccess { user ->
-                    _currentUser.value = user
-                    Log.d("UserViewModel", "Enhanced sign up success - User: ${user.email}")
-                    onResult(true, "Account created successfully!")
-                }
-                result.onFailure { exception ->
-                    Log.e("UserViewModel", "Enhanced sign up failed: ${exception.message}")
-                    onResult(false, exception.message ?: "Registration failed")
+                val result = repository.signUp(email, password, displayName)
+                if (result.isSuccess) {
+                    val user = result.getOrNull()
+                    _user.value = user // ✅ Update state
+                    Log.d("UserViewModel", "Sign up successful for: ${user?.email}")
+                    callback(true, "Account created successfully!")
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Sign up failed"
+                    Log.e("UserViewModel", "Sign up failed: $error")
+                    callback(false, error)
                 }
             } catch (e: Exception) {
-                Log.e("UserViewModel", "Exception in signUpEnhanced: ${e.message}", e)
-                onResult(false, e.message ?: "Registration failed")
+                Log.e("UserViewModel", "Sign up exception: ${e.message}")
+                callback(false, e.message ?: "Sign up failed")
             }
         }
     }
 
-    fun signInWithGoogle(account: GoogleSignInAccount, onResult: (Boolean, String, Boolean) -> Unit) {
+    // ✅ Sign In - Updates lastLoginAt automatically
+    fun signIn(
+        email: String,
+        password: String,
+        callback: (Boolean, String, Boolean) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                Log.d("UserViewModel", "Starting Google sign-in with account: ${account.email}")
-                val result = repository.signInWithGoogle(account)
-                result.onSuccess { user ->
-                    _currentUser.value = user
-                    val isAdmin = user.isAdmin()
-                    Log.d("UserViewModel", "Google sign-in success - User: ${user.email}, Admin: $isAdmin")
-                    onResult(true, "Google sign-in successful!", isAdmin)
-                }
-                result.onFailure { exception ->
-                    Log.e("UserViewModel", "Google sign-in failed: ${exception.message}")
-                    onResult(false, exception.message ?: "Google sign-in failed", false)
+                val result = repository.signIn(email, password)
+                if (result.isSuccess) {
+                    val user = result.getOrNull()
+                    _user.value = user // ✅ Update state
+                    val isAdmin = user?.isAdmin() ?: false
+                    Log.d("UserViewModel", "Sign in successful. IsAdmin: $isAdmin, LastLogin: ${user?.lastLoginAt}")
+                    callback(true, "Welcome back!", isAdmin)
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Sign in failed"
+                    Log.e("UserViewModel", "Sign in failed: $error")
+                    callback(false, error, false)
                 }
             } catch (e: Exception) {
-                Log.e("UserViewModel", "Exception in signInWithGoogle: ${e.message}")
-                onResult(false, "Error: ${e.message}", false)
+                Log.e("UserViewModel", "Sign in exception: ${e.message}")
+                callback(false, e.message ?: "Sign in failed", false)
             }
         }
     }
 
-    fun signOut(onResult: (Boolean, String) -> Unit) {
+    // ✅ Google Sign In - Handles both new and existing users
+    fun signInWithGoogle(
+        account: GoogleSignInAccount,
+        callback: (Boolean, String, Boolean) -> Unit
+    ) {
         viewModelScope.launch {
-            val result = repository.signOut()
-            result.onSuccess {
-                _currentUser.value = null
-                onResult(true, "Signed out successfully")
-            }
-            result.onFailure { exception ->
-                onResult(false, exception.message ?: "Sign out failed")
-            }
-        }
-    }
-
-    fun resetPassword(email: String, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            val result = repository.resetPassword(email)
-            result.onSuccess {
-                onResult(true, "Password reset email sent!")
-            }
-            result.onFailure { exception ->
-                onResult(false, exception.message ?: "Failed to send reset email")
-            }
-        }
-    }
-
-    fun checkIfUserIsAdmin(onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val user = _currentUser.value
-            if (user != null) {
-                val result = repository.checkIfAdmin(user.uid)
-                result.onSuccess { isAdmin ->
-                    onResult(isAdmin)
+            try {
+                val result = repository.signInWithGoogle(account)
+                if (result.isSuccess) {
+                    val user = result.getOrNull()
+                    _user.value = user // ✅ Update state
+                    val isAdmin = user?.isAdmin() ?: false
+                    Log.d("UserViewModel", "Google sign in successful. IsAdmin: $isAdmin")
+                    callback(true, "Welcome!", isAdmin)
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Google sign in failed"
+                    Log.e("UserViewModel", "Google sign in failed: $error")
+                    callback(false, error, false)
                 }
-                result.onFailure {
-                    onResult(false)
-                }
-            } else {
-                onResult(false)
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Google sign in exception: ${e.message}")
+                callback(false, e.message ?: "Google sign in failed", false)
             }
         }
     }
 
-    fun updateAllUsersWithRole(onResult: (Boolean, String) -> Unit) {
+    fun signOut(callback: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val result = repository.updateAllUsersWithRole()
-            result.onSuccess { message ->
-                Log.d("UserViewModel", message)
-                onResult(true, message)
+            try {
+                val result = repository.signOut()
+                if (result.isSuccess) {
+                    _user.value = null // ✅ Clear state
+                    callback(true, "Signed out successfully")
+                } else {
+                    callback(false, "Sign out failed")
+                }
+            } catch (e: Exception) {
+                callback(false, e.message ?: "Sign out failed")
             }
-            result.onFailure { exception ->
-                Log.e("UserViewModel", "Failed: ${exception.message}")
-                onResult(false, exception.message ?: "Update failed")
+        }
+    }
+
+    fun resetPassword(email: String, callback: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.resetPassword(email)
+                if (result.isSuccess) {
+                    callback(true, "Password reset email sent")
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Failed to send reset email"
+                    callback(false, error)
+                }
+            } catch (e: Exception) {
+                callback(false, e.message ?: "Failed to send reset email")
+            }
+        }
+    }
+
+    fun getCurrentUser(callback: (User?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val user = repository.getCurrentUser()
+                _user.value = user // ✅ Update state
+                callback(user)
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Get current user failed: ${e.message}")
+                callback(null)
+            }
+        }
+    }
+
+    // ✅ Migration function - Updates existing users with missing fields
+    fun updateAllUsersWithRole(callback: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.updateAllUsersWithRole()
+                if (result.isSuccess) {
+                    val message = result.getOrNull() ?: "Users updated"
+                    Log.d("UserViewModel", message)
+                    callback(true, message)
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Update failed"
+                    Log.e("UserViewModel", "Update failed: $error")
+                    callback(false, error)
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Update exception: ${e.message}")
+                callback(false, e.message ?: "Update failed")
             }
         }
     }
 
     fun getGoogleSignInClient(context: Context): GoogleSignInClient {
-        return try {
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(context.getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build()
-
-            Log.d("UserViewModel", "Creating GoogleSignInClient with Firebase config")
-            GoogleSignIn.getClient(context, gso)
-        } catch (e: Exception) {
-            Log.w("UserViewModel", "Firebase config not found, using basic Google Sign-In")
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build()
-
-            GoogleSignIn.getClient(context, gso)
-        }
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        return GoogleSignIn.getClient(context, gso)
     }
 }
