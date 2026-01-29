@@ -39,6 +39,11 @@
             android:label="@string/title_activity_privacy_policy"
             android:theme="@style/Theme.MediqorOG" />
         <activity
+            android:name=".view.TermsOfServiceActivity"
+            android:exported="false"
+            android:label="@string/title_activity_terms_of_service"
+            android:theme="@style/Theme.MediqorOG" />
+        <activity
             android:name=".view.NotificationSettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_notification_settings"
@@ -72,11 +77,7 @@
             android:name=".view.SavedAddressesActivity"
             android:exported="false"
             android:label="@string/title_activity_saved_addresses"
-            android:theme="@style/Theme.MediqorOG" /> <!-- <activity -->
-        <!-- android:name=".view.MyOrdersActivity" -->
-        <!-- android:exported="false" -->
-        <!-- android:label="@string/title_activity_my_orders" -->
-        <!-- android:theme="@style/Theme.MediqorOG" /> -->
+            android:theme="@style/Theme.MediqorOG" />
         <activity
             android:name=".view.SurgicalActivity"
             android:exported="false"
