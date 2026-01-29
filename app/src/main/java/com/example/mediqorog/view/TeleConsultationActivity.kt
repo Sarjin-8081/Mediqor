@@ -1,4 +1,3 @@
-// ========== TeleConsultationActivity.kt ==========
 package com.example.mediqorog.view
 
 import android.os.Bundle
@@ -6,9 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,204 +15,178 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.util.*
 
 class TeleConsultationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TeleConsultationScreen(onBackClick = { finish() })
+            MaterialTheme {
+                TeleConsultationScreen(onNavigateBack = { finish() })
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeleConsultationScreen(onBackClick: () -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var submitting by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
+fun TeleConsultationScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tele-consultation", fontWeight = FontWeight.Bold) },
+                title = { Text("Tele Consultation", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0B8FAC),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
             )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(Color(0xFFF5F7FA)),
+            contentPadding = PaddingValues(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Coming Soon Badge
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFFE91E63).copy(alpha = 0.1f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(4.dp)
                 ) {
-                    Icon(
-                        Icons.Filled.Bolt,
-                        contentDescription = null,
-                        tint = Color(0xFFE91E63),
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Column {
-                        Text(
-                            "Feature In Progress",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE91E63)
-                        )
-                        Text(
-                            "Phase 2 Development - API Integration Pending",
-                            fontSize = 13.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-            }
-
-            // Feature Description
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            Icons.Filled.VideoCall,
-                            contentDescription = null,
-                            tint = Color(0xFFE91E63)
-                        )
-                        Text(
-                            "About Tele-consultation",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Text(
-                        "Connect with qualified doctors via video call from the comfort of your home. Get prescriptions, medical advice, and follow-up consultations online.",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("Planned Features:", fontWeight = FontWeight.Medium)
-                    FeaturePoint("• Video/Audio consultation with doctors")
-                    FeaturePoint("• Instant prescription generation")
-                    FeaturePoint("• Medical record access")
-                    FeaturePoint("• Integration with telemedicine API")
-                    FeaturePoint("• Payment gateway integration")
-                }
-            }
-
-            // Request Form
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        "Express Interest",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "Submit your details and we'll notify you when this feature launches!",
-                        fontSize = 13.sp,
-                        color = Color.Gray
-                    )
-
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Your Name") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    OutlinedTextField(
-                        value = age,
-                        onValueChange = { age = it },
-                        label = { Text("Age") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text("Health Concern (Optional)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
-                    )
-
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                submitting = true
-                                val success = submitInterest("teleconsultation", name, age, description)
-                                submitting = false
-                                if (success) {
-                                    snackbarHostState.showSnackbar("Interest registered! We'll notify you soon.")
-                                    name = ""
-                                    age = ""
-                                    description = ""
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                        enabled = !submitting && name.isNotEmpty() && age.isNotEmpty()
-                    ) {
-                        if (submitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    RoundedCornerShape(50.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VideoCall,
+                                contentDescription = "Consultation",
+                                modifier = Modifier.size(50.dp),
+                                tint = MaterialTheme.colorScheme.primary
                             )
-                        } else {
-                            Icon(Icons.Filled.Send, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Submit Interest")
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "Feature Under Development",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1F2937),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "We're working hard to bring you video consultations with qualified doctors",
+                            fontSize = 14.sp,
+                            color = Color(0xFF6B7280),
+                            textAlign = TextAlign.Center,
+                            lineHeight = 20.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Divider(color = Color(0xFFE5E7EB))
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "Coming Soon:",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1F2937)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        FeatureItem(
+                            icon = Icons.Default.Schedule,
+                            text = "Book appointments with specialist doctors"
+                        )
+                        FeatureItem(
+                            icon = Icons.Default.VideoCall,
+                            text = "HD video and audio consultations"
+                        )
+                        FeatureItem(
+                            icon = Icons.Default.Description,
+                            text = "Digital prescriptions sent instantly"
+                        )
+                        FeatureItem(
+                            icon = Icons.Default.History,
+                            text = "Access consultation history anytime"
+                        )
+                        FeatureItem(
+                            icon = Icons.Default.Verified,
+                            text = "Verified and licensed healthcare professionals"
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Button(
+                            onClick = { },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = false,
+                            colors = ButtonDefaults.buttonColors(
+                                disabledContainerColor = Color(0xFFE5E7EB),
+                                disabledContentColor = Color(0xFF9CA3AF)
+                            )
+                        ) {
+                            Text("Coming Soon", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FeatureItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = Color(0xFF4B5563)
+        )
     }
 }
