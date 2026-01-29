@@ -46,15 +46,50 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
+    // ✅ UPDATED: Now saves all 18 fields with proper defaults
     fun signUp(email: String, password: String, displayName: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val result = repository.signUp(email, password, displayName)
             result.onSuccess { user ->
                 _currentUser.value = user
+                Log.d("UserViewModel", "Sign up success - User created with all fields")
                 onResult(true, "Registration successful!")
             }
             result.onFailure { exception ->
+                Log.e("UserViewModel", "Sign up failed: ${exception.message}")
                 onResult(false, exception.message ?: "Registration failed")
+            }
+        }
+    }
+
+    // ✅ NEW: Enhanced signup with phone and blood group
+    fun signUpEnhanced(
+        email: String,
+        password: String,
+        displayName: String,
+        phoneNumber: String,
+        bloodGroup: String,
+        onResult: (Boolean, String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                Log.d("UserViewModel", "Starting enhanced sign up for: $email")
+
+                // Call repository with enhanced fields
+                val result = repository.signUpEnhanced(email, password, displayName, phoneNumber, bloodGroup)
+
+                result.onSuccess { user ->
+                    _currentUser.value = user
+                    Log.d("UserViewModel", "Enhanced sign up success - User: ${user.email}")
+                    onResult(true, "Account created successfully!")
+                }
+                result.onFailure { exception ->
+                    Log.e("UserViewModel", "Enhanced sign up failed: ${exception.message}")
+                    onResult(false, exception.message ?: "Registration failed")
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Exception in signUpEnhanced: ${e.message}", e)
+                onResult(false, e.message ?: "Registration failed")
             }
         }
     }
@@ -123,7 +158,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    // ✅ NEW METHOD - Updates all users with correct roles
     fun updateAllUsersWithRole(onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val result = repository.updateAllUsersWithRole()
