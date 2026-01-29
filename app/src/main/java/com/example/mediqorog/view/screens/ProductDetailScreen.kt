@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,12 +39,18 @@ fun ProductDetailScreen(
     onAddToCart: (quantity: Int) -> Unit,
     onBuyNow: (quantity: Int) -> Unit,
     onBackClick: () -> Unit,
+    onSubmitReview: (rating: Int, comment: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var quantity by remember { mutableStateOf(1) }
     var selectedTab by remember { mutableStateOf(0) }
     var showAddressDialog by remember { mutableStateOf(false) }
     var selectedAddress by remember { mutableStateOf(userAddresses.firstOrNull() ?: "") }
+
+    // Review dialog states
+    var showReviewDialog by remember { mutableStateOf(false) }
+    var reviewRating by remember { mutableStateOf(5) }
+    var reviewText by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -56,19 +61,10 @@ fun ProductDetailScreen(
                         Icon(Icons.Default.ArrowBack, "Back")
                     }
                 },
-                actions = {
-                    IconButton(onClick = { /* Share */ }) {
-                        Icon(Icons.Default.Share, "Share")
-                    }
-                    IconButton(onClick = { /* Favorite */ }) {
-                        Icon(Icons.Default.FavoriteBorder, "Favorite")
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF0B8FAC),
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    navigationIconContentColor = Color.White
                 )
             )
         },
@@ -120,7 +116,7 @@ fun ProductDetailScreen(
                 )
             }
 
-            // Tabs: Description, Reviews, Q&A
+            // Tabs: Description and Reviews only (removed Questions)
             item {
                 TabSection(
                     selectedTab = selectedTab,
@@ -132,8 +128,11 @@ fun ProductDetailScreen(
             item {
                 when (selectedTab) {
                     0 -> DescriptionContent(product.description)
-                    1 -> ReviewsContent(reviews, ratingSummary)
-                    2 -> QuestionsContent()
+                    1 -> ReviewsContent(
+                        reviews = reviews,
+                        ratingSummary = ratingSummary,
+                        onWriteReview = { showReviewDialog = true }
+                    )
                 }
             }
         }
@@ -149,6 +148,29 @@ fun ProductDetailScreen(
                 showAddressDialog = false
             },
             onDismiss = { showAddressDialog = false }
+        )
+    }
+
+    // Write Review Dialog
+    if (showReviewDialog) {
+        WriteReviewDialog(
+            rating = reviewRating,
+            reviewText = reviewText,
+            onRatingChange = { reviewRating = it },
+            onReviewTextChange = { reviewText = it },
+            onSubmit = {
+                if (reviewText.isNotBlank()) {
+                    onSubmitReview(reviewRating, reviewText)
+                    showReviewDialog = false
+                    reviewText = ""
+                    reviewRating = 5
+                }
+            },
+            onDismiss = {
+                showReviewDialog = false
+                reviewText = ""
+                reviewRating = 5
+            }
         )
     }
 }
@@ -221,34 +243,13 @@ fun ProductInfoSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Price
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Rs. ${product.price.toInt()}",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF6B00)
-            )
-
-            if (product.price < product.price * 1.2) { // Mock discount
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Rs. ${(product.price * 1.2).toInt()}",
-                    fontSize = 16.sp,
-                    color = Color.Gray,
-                    textDecoration = TextDecoration.LineThrough
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "-17%",
-                    fontSize = 14.sp,
-                    color = Color(0xFFFF6B00),
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
+        // Price (removed discount)
+        Text(
+            text = "Rs. ${product.price.toInt()}",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFF6B00)
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -424,7 +425,7 @@ fun TabSection(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    val tabs = listOf("Description", "Reviews", "Questions")
+    val tabs = listOf("Description", "Reviews") // Removed "Questions"
 
     TabRow(
         selectedTabIndex = selectedTab,
@@ -473,7 +474,8 @@ fun DescriptionContent(description: String) {
 @Composable
 fun ReviewsContent(
     reviews: List<ReviewModel>,
-    ratingSummary: ProductRatingSummary
+    ratingSummary: ProductRatingSummary,
+    onWriteReview: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -485,14 +487,47 @@ fun ReviewsContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Write Review Button
+        Button(
+            onClick = onWriteReview,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF0B8FAC)
+            )
+        ) {
+            Icon(Icons.Default.Edit, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Write a Review")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Reviews List
         if (reviews.isEmpty()) {
-            Text(
-                text = "No reviews yet. Be the first to review!",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(vertical = 32.dp)
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    Icons.Default.RateReview,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "No reviews yet",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "Be the first to review this product!",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
         } else {
             reviews.forEach { review ->
                 ReviewCard(review)
@@ -616,7 +651,7 @@ fun ReviewCard(review: ReviewModel) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = review.userName.firstOrNull()?.toString() ?: "?",
+                        text = review.userName.firstOrNull()?.toString()?.uppercase() ?: "?",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -625,25 +660,14 @@ fun ReviewCard(review: ReviewModel) {
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = review.userName,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (review.isVerifiedPurchase) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Verified",
-                                tint = Color(0xFF00A651),
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = review.userName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     Text(
                         text = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
-                            .format(review.createdAt.toDate()),
+                            .format(Date(review.createdAt)),
                         fontSize = 11.sp,
                         color = Color.Gray
                     )
@@ -663,15 +687,6 @@ fun ReviewCard(review: ReviewModel) {
                 }
             }
 
-            if (review.title.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = review.title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
@@ -681,7 +696,7 @@ fun ReviewCard(review: ReviewModel) {
                 lineHeight = 18.sp
             )
 
-            // Review Images
+            // Review Images (if you have them)
             if (review.images.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(
@@ -704,30 +719,69 @@ fun ReviewCard(review: ReviewModel) {
 }
 
 @Composable
-fun QuestionsContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Default.QuestionAnswer,
-            contentDescription = null,
-            tint = Color.Gray,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "There are no questions yet.",
-            fontSize = 16.sp,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextButton(onClick = { /* Login/Register */ }) {
-            Text("Login or Register to ask the seller now")
+fun WriteReviewDialog(
+    rating: Int,
+    reviewText: String,
+    onRatingChange: (Int) -> Unit,
+    onReviewTextChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Write a Review") },
+        text = {
+            Column {
+                Text("Rating", fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    repeat(5) { index ->
+                        IconButton(onClick = { onRatingChange(index + 1) }) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = if (index < rating) Color(0xFFFFB800) else Color.Gray,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Your Review", fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = reviewText,
+                    onValueChange = onReviewTextChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    placeholder = { Text("Share your experience with this product...") },
+                    maxLines = 5
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSubmit,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0B8FAC)
+                ),
+                enabled = reviewText.isNotBlank()
+            ) {
+                Text("Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
         }
-    }
+    )
 }
 
 @Composable
