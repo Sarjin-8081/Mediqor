@@ -3,7 +3,6 @@ package com.example.mediqorog.view
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,8 +13,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,11 +35,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mediqorog.R
 import com.example.mediqorog.repository.UserRepoImpl
 import com.example.mediqorog.viewmodel.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.example.mediqorog.R
-
 
 class RegistrationActivity : ComponentActivity() {
 
@@ -51,16 +51,13 @@ class RegistrationActivity : ComponentActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(Exception::class.java)
-                // ✅ Updated callback with isAdmin parameter
                 viewModel.signInWithGoogle(account) { success, message, isAdmin ->
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     if (success) {
-                        // Navigate based on role
                         if (isAdmin) {
                             val intent = Intent(this, AdminDashboardActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                             startActivity(intent)
-                            Toast.makeText(this, "Welcome Admin!", Toast.LENGTH_SHORT).show()
                         } else {
                             val intent = Intent(this, DashboardActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -71,7 +68,6 @@ class RegistrationActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                Log.e("RegistrationActivity", "Google sign-in error", e)
             }
         }
     }
@@ -95,12 +91,12 @@ class RegistrationActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // ✅ Suppress experimental API warnings
 @Composable
 fun RegistrationBody(
     viewModel: UserViewModel? = null,
     onGoogleSignInClick: () -> Unit = {}
 ) {
-
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -115,6 +111,7 @@ fun RegistrationBody(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .background(Color.White)
         ) {
@@ -131,10 +128,10 @@ fun RegistrationBody(
                 )
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             Text(
-                "SIGN UP",
+                "CREATE ACCOUNT",
                 style = TextStyle(
                     textAlign = TextAlign.Center,
                     color = Color.Black,
@@ -144,8 +141,9 @@ fun RegistrationBody(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
+            // Full Name
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -163,8 +161,9 @@ fun RegistrationBody(
                 enabled = !loading
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(15.dp))
 
+            // Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -183,8 +182,9 @@ fun RegistrationBody(
                 enabled = !loading
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(15.dp))
 
+            // Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -234,11 +234,9 @@ fun RegistrationBody(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ✅ FIXED SIGN UP BUTTON
+            // Sign Up Button
             Button(
                 onClick = {
-                    Log.d("RegistrationActivity", "Sign up button clicked")
-
                     if (name.isBlank() || email.isBlank() || password.isBlank()) {
                         Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                         return@Button
@@ -250,16 +248,17 @@ fun RegistrationBody(
 
                     if (viewModel != null) {
                         loading = true
-                        Log.d("RegistrationActivity", "Starting sign up for: $email")
 
-                        viewModel.signUp(email, password, name) { success, message ->
-                            Log.d("RegistrationActivity", "Sign up callback: success=$success, message=$message")
+                        // ✅ FIXED: Changed 'name' to 'displayName'
+                        viewModel.signUp(
+                            email = email,
+                            password = password,
+                            displayName = name  // ✅ CORRECT parameter name
+                        ) { success, message ->
                             loading = false
-
                             activity?.runOnUiThread {
                                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                 if (success) {
-                                    // New signups always go to Customer Dashboard
                                     val intent = Intent(context, DashboardActivity::class.java)
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                     context.startActivity(intent)
@@ -267,8 +266,6 @@ fun RegistrationBody(
                                 }
                             }
                         }
-                    } else {
-                        Log.e("RegistrationActivity", "ViewModel is null!")
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -283,7 +280,7 @@ fun RegistrationBody(
                 shape = RoundedCornerShape(32.dp),
                 enabled = !loading
             ) {
-                Text(if (loading) "Loading..." else "SIGN UP")
+                Text(if (loading) "Creating Account..." else "CREATE ACCOUNT")
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -295,11 +292,7 @@ fun RegistrationBody(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
-                Text(
-                    text = "  OR  ",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+                Text(text = "  OR  ", color = Color.Gray, fontSize = 14.sp)
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
             }
 
