@@ -25,4 +25,6 @@
     <string name="title_activity_privacy_policy">PrivacyPolicyActivity</string>
     <string name="title_activity_terms_of_service">TermsOfServiceActivity</string>
     <string name="title_activity_product_detail">ProductDetail</string>
+    <string name="title_activity_admin_edit_profile">AdminEditProfileActivity</string>
+    <string name="title_activity_admin_change_password">AdminChangePasswordActivity</string>
 </resources>
