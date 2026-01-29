@@ -81,8 +81,6 @@ fun DashboardBody() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Main content - User screens only
-            // Main content - User screens only
             when (selectedTab) {
                 0 -> HomeScreen(
                     onChatbotClick = { chatbotViewModel.openChatbot() }
@@ -92,7 +90,6 @@ fun DashboardBody() {
                 3 -> SettingsScreen()
             }
 
-            // Chatbot overlay (full screen on top)
             if (showChatbot) {
                 ChatbotScreen(
                     onBackClick = { chatbotViewModel.closeChatbot() }
