@@ -87,8 +87,7 @@ fun DashboardBody() {
                 )
                 1 -> CartScreen()
                 2 -> FeatureScreen()
-                3 -> SettingsScreen(
-                )
+                3 -> SettingsScreen(onNavigateBack = { selectedTab = 0 })
             }
 
             if (showChatbot) {
