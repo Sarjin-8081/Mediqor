@@ -49,7 +49,7 @@ fun DashboardBody() {
             NavigationItem("Home", Icons.Filled.Home, "home"),
             NavigationItem("Cart", Icons.Filled.ShoppingCart, "cart"),
             NavigationItem("Features", Icons.Filled.Stars, "features"),
-            NavigationItem("Profile", Icons.Filled.Person, "profile")
+            NavigationItem("Settings", Icons.Filled.Settings, "settings")
         )
     }
 
@@ -91,7 +91,7 @@ fun DashboardBody() {
                 )
                 1 -> CartScreen(navController = navController)  // Pass navController here
                 2 -> FeatureScreen()
-                3 -> SettingsScreen()
+                3 -> SettingsScreen(onNavigateBack = { selectedTab = 0 })
             }
 
             if (showChatbot) {

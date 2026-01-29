@@ -1,18 +1,16 @@
-// ========== MedicineReminderActivity.kt ==========
 package com.example.mediqorog.view
 
-import android.Manifest
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,203 +26,75 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
 import java.util.*
 
 class MedicineReminderActivity : ComponentActivity() {
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (!isGranted) {
-            // Permission denied - show message
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Request notification permission on Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        setContent {
+            MaterialTheme {
+                MedicineReminderScreen(onNavigateBack = { finish() })
             }
         }
-
-        setContent {
-            MedicineReminderScreen(onBackClick = { finish() })
-        }
     }
 }
 
-data class Reminder(
-    val id: String = "",
-    val medicineName: String = "",
-    val dosage: String = "",
-    val time: String = "",
-    val frequency: String = "daily",
-    val enabled: Boolean = true
+data class MedicineReminder(
+    val id: String,
+    val medicineName: String,
+    val dosage: String,
+    val time: String,
+    val frequency: String,
+    val isActive: Boolean
 )
-
-class MedicineReminderViewModel : ViewModel() {
-    private val _reminders = MutableStateFlow<List<Reminder>>(emptyList())
-    val reminders: StateFlow<List<Reminder>> = _reminders
-
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading
-
-    private val firestore = FirebaseFirestore.getInstance()
-    private val auth = FirebaseAuth.getInstance()
-
-    init {
-        loadReminders()
-    }
-
-    private fun loadReminders() {
-        _loading.value = true
-        val userId = auth.currentUser?.uid
-
-        if (userId != null) {
-            firestore.collection("users")
-                .document(userId)
-                .collection("reminders")
-                .get()
-                .addOnSuccessListener { documents ->
-                    _reminders.value = documents.mapNotNull { it.toObject(Reminder::class.java) }
-                    _loading.value = false
-                }
-                .addOnFailureListener {
-                    _loading.value = false
-                }
-        } else {
-            _loading.value = false
-        }
-    }
-
-    suspend fun saveReminder(reminder: Reminder, context: Context): Boolean {
-        return try {
-            val userId = auth.currentUser?.uid ?: throw Exception("Not logged in")
-            val reminderId = if (reminder.id.isEmpty()) UUID.randomUUID().toString() else reminder.id
-
-            firestore.collection("users")
-                .document(userId)
-                .collection("reminders")
-                .document(reminderId)
-                .set(reminder.copy(id = reminderId))
-                .await()
-
-            // Schedule notification
-            scheduleReminder(context, reminder.copy(id = reminderId))
-
-            loadReminders()
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    suspend fun deleteReminder(reminderId: String, context: Context): Boolean {
-        return try {
-            val userId = auth.currentUser?.uid ?: throw Exception("Not logged in")
-
-            firestore.collection("users")
-                .document(userId)
-                .collection("reminders")
-                .document(reminderId)
-                .delete()
-                .await()
-
-            // Cancel notification
-            cancelReminder(context, reminderId)
-
-            loadReminders()
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    private fun scheduleReminder(context: Context, reminder: Reminder) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            putExtra("medicineName", reminder.medicineName)
-            putExtra("dosage", reminder.dosage)
-        }
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            reminder.id.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // Parse time and schedule
-        val timeParts = reminder.time.split(":")
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, timeParts[0].toInt())
-            set(Calendar.MINUTE, timeParts[1].toInt())
-            set(Calendar.SECOND, 0)
-        }
-
-        if (calendar.timeInMillis <= System.currentTimeMillis()) {
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
-        }
-
-        alarmManager.setRepeating(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            AlarmManager.INTERVAL_DAY,
-            pendingIntent
-        )
-    }
-
-    private fun cancelReminder(context: Context, reminderId: String) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            reminderId.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.cancel(pendingIntent)
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MedicineReminderScreen(onBackClick: () -> Unit) {
-    val viewModel: MedicineReminderViewModel = viewModel()
-    val reminders by viewModel.reminders.collectAsState()
-    val loading by viewModel.loading.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+fun MedicineReminderScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
+    var showAddDialog by remember { mutableStateOf(false) }
+    var reminders by remember {
+        mutableStateOf(
+            listOf(
+                MedicineReminder(
+                    "1",
+                    "Paracetamol 500mg",
+                    "1 tablet",
+                    "09:00 AM",
+                    "Daily",
+                    true
+                ),
+                MedicineReminder(
+                    "2",
+                    "Vitamin D3",
+                    "1 capsule",
+                    "08:00 AM",
+                    "Daily",
+                    true
+                ),
+                MedicineReminder(
+                    "3",
+                    "Blood Pressure Medication",
+                    "1 tablet",
+                    "07:30 PM",
+                    "Daily",
+                    false
+                )
+            )
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Medicine Reminder", fontWeight = FontWeight.Bold) },
+                title = { Text("Medicine Reminders", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0B8FAC),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -233,57 +103,99 @@ fun MedicineReminderScreen(onBackClick: () -> Unit) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = Color(0xFF0B8FAC)
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Reminder", tint = Color.White)
+                Icon(Icons.Default.Add, "Add Reminder", tint = Color.White)
             }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        }
     ) { padding ->
-        Box(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(Color(0xFFF5F7FA)),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (loading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (reminders.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFDBEAFE))
                 ) {
-                    Icon(
-                        Icons.Filled.Alarm,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("No reminders set", fontSize = 18.sp, color = Color.Gray)
-                    Text("Add a reminder to never miss your medicine", fontSize = 14.sp, color = Color.Gray)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(reminders) { reminder ->
-                        ReminderCard(
-                            reminder = reminder,
-                            onDelete = {
-                                scope.launch {
-                                    val success = viewModel.deleteReminder(reminder.id, context)
-                                    if (success) {
-                                        snackbarHostState.showSnackbar("Reminder deleted")
-                                    }
-                                }
-                            }
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Info",
+                            tint = Color(0xFF1E40AF)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Never miss your medication with timely reminders",
+                            fontSize = 13.sp,
+                            color = Color(0xFF1E3A8A)
                         )
                     }
+                }
+            }
+
+            if (reminders.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(40.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AlarmAdd,
+                                contentDescription = "No reminders",
+                                modifier = Modifier.size(80.dp),
+                                tint = Color(0xFFD1D5DB)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No Reminders Yet",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6B7280)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Add your first reminder to get started",
+                                fontSize = 14.sp,
+                                color = Color(0xFF9CA3AF)
+                            )
+                        }
+                    }
+                }
+            } else {
+                items(reminders) { reminder ->
+                    ReminderCard(
+                        reminder = reminder,
+                        onToggle = {
+                            reminders = reminders.map {
+                                if (it.id == reminder.id) it.copy(isActive = !it.isActive) else it
+                            }
+                            Toast.makeText(
+                                context,
+                                if (!reminder.isActive) "Reminder enabled" else "Reminder disabled",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        onDelete = {
+                            reminders = reminders.filter { it.id != reminder.id }
+                            Toast.makeText(context, "Reminder deleted", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 }
             }
         }
@@ -292,113 +204,152 @@ fun MedicineReminderScreen(onBackClick: () -> Unit) {
     if (showAddDialog) {
         AddReminderDialog(
             onDismiss = { showAddDialog = false },
-            onSave = { reminder ->
-                scope.launch {
-                    val success = viewModel.saveReminder(reminder, context)
-                    if (success) {
-                        snackbarHostState.showSnackbar("Reminder set!")
-                        showAddDialog = false
-                    }
-                }
+            onAdd = { name, dosage, time, frequency ->
+                val newReminder = MedicineReminder(
+                    id = System.currentTimeMillis().toString(),
+                    medicineName = name,
+                    dosage = dosage,
+                    time = time,
+                    frequency = frequency,
+                    isActive = true
+                )
+                reminders = reminders + newReminder
+                showAddDialog = false
+                scheduleReminder(context, newReminder)
+                Toast.makeText(context, "Reminder added successfully", Toast.LENGTH_SHORT).show()
             }
         )
     }
 }
 
 @Composable
-fun ReminderCard(reminder: Reminder, onDelete: () -> Unit) {
+fun ReminderCard(
+    reminder: MedicineReminder,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .background(
+                        if (reminder.isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        else Color(0xFFF3F4F6),
+                        RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFFF5722).copy(alpha = 0.1f)
-                ) {
-                    Icon(
-                        Icons.Filled.Alarm,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .padding(12.dp),
-                        tint = Color(0xFFFF5722)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.MedicalServices,
+                    contentDescription = "Medicine",
+                    tint = if (reminder.isActive) MaterialTheme.colorScheme.primary else Color(0xFF9CA3AF),
+                    modifier = Modifier.size(30.dp)
+                )
+            }
 
-                Column {
-                    Text(
-                        reminder.medicineName,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = reminder.medicineName,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = reminder.dosage,
+                    fontSize = 13.sp,
+                    color = Color(0xFF6B7280)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = "Time",
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "Dosage: ${reminder.dosage}",
-                        fontSize = 13.sp,
-                        color = Color.Gray
+                        text = "${reminder.time} • ${reminder.frequency}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(
-                            Icons.Filled.Schedule,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.Gray
-                        )
-                        Text(
-                            reminder.time,
-                            fontSize = 13.sp,
-                            color = Color.Gray
-                        )
-                        Text(
-                            "• ${reminder.frequency}",
-                            fontSize = 13.sp,
-                            color = Color.Gray
-                        )
-                    }
                 }
             }
 
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = Color(0xFFE53935))
+            Column(horizontalAlignment = Alignment.End) {
+                Switch(
+                    checked = reminder.isActive,
+                    onCheckedChange = { onToggle() }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color(0xFFEF4444),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Reminder") },
+            text = { Text("Are you sure you want to delete this reminder?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteDialog = false
+                }) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddReminderDialog(onDismiss: () -> Unit, onSave: (Reminder) -> Unit) {
+fun AddReminderDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String, String, String, String) -> Unit
+) {
+    val context = LocalContext.current
     var medicineName by remember { mutableStateOf("") }
     var dosage by remember { mutableStateOf("") }
-    var selectedHour by remember { mutableStateOf(9) }
-    var selectedMinute by remember { mutableStateOf(0) }
-    var frequency by remember { mutableStateOf("daily") }
+    var selectedTime by remember { mutableStateOf("09:00 AM") }
+    var selectedFrequency by remember { mutableStateOf("Daily") }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text("Add Reminder", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Medicine Reminder") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = medicineName,
                     onValueChange = { medicineName = it },
@@ -413,62 +364,107 @@ fun AddReminderDialog(onDismiss: () -> Unit, onSave: (Reminder) -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Text("Reminder Time", fontWeight = FontWeight.Medium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = selectedHour.toString(),
-                        onValueChange = { selectedHour = it.toIntOrNull() ?: 0 },
-                        label = { Text("Hour") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = selectedMinute.toString(),
-                        onValueChange = { selectedMinute = it.toIntOrNull() ?: 0 },
-                        label = { Text("Minute") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Text("Frequency", fontWeight = FontWeight.Medium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = frequency == "daily",
-                        onClick = { frequency = "daily" },
-                        label = { Text("Daily") }
-                    )
-                    FilterChip(
-                        selected = frequency == "weekly",
-                        onClick = { frequency = "weekly" },
-                        label = { Text("Weekly") }
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            val time = String.format("%02d:%02d", selectedHour, selectedMinute)
-                            val reminder = Reminder(
-                                medicineName = medicineName,
-                                dosage = dosage,
-                                time = time,
-                                frequency = frequency
-                            )
-                            onSave(reminder)
+                OutlinedTextField(
+                    value = selectedTime,
+                    onValueChange = {},
+                    label = { Text("Time") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val calendar = Calendar.getInstance()
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    val amPm = if (hour < 12) "AM" else "PM"
+                                    val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+                                    selectedTime = String.format("%02d:%02d %s", displayHour, minute, amPm)
+                                },
+                                calendar.get(Calendar.HOUR_OF_DAY),
+                                calendar.get(Calendar.MINUTE),
+                                false
+                            ).show()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0B8FAC))
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(Icons.Default.Schedule, "Pick time")
+                    }
+                )
+
+                var expandedFrequency by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expandedFrequency,
+                    onExpandedChange = { expandedFrequency = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedFrequency,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Frequency") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expandedFrequency) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedFrequency,
+                        onDismissRequest = { expandedFrequency = false }
                     ) {
-                        Text("Save")
+                        listOf("Daily", "Twice a day", "Three times a day", "Weekly").forEach { freq ->
+                            DropdownMenuItem(
+                                text = { Text(freq) },
+                                onClick = {
+                                    selectedFrequency = freq
+                                    expandedFrequency = false
+                                }
+                            )
+                        }
                     }
                 }
             }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (medicineName.isNotBlank() && dosage.isNotBlank()) {
+                        onAdd(medicineName, dosage, selectedTime, selectedFrequency)
+                    }
+                },
+                enabled = medicineName.isNotBlank() && dosage.isNotBlank()
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
         }
-    }
+    )
 }
 
+fun scheduleReminder(context: Context, reminder: MedicineReminder) {
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    val intent = Intent(context, MedicineReminderReceiver::class.java).apply {
+        putExtra("medicine_name", reminder.medicineName)
+        putExtra("dosage", reminder.dosage)
+    }
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        reminder.id.toInt(),
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
+    val calendar = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 9)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+    }
+
+    alarmManager.setRepeating(
+        AlarmManager.RTC_WAKEUP,
+        calendar.timeInMillis,
+        AlarmManager.INTERVAL_DAY,
+        pendingIntent
+    )
+}

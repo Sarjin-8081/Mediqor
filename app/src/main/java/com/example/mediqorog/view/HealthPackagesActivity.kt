@@ -1,13 +1,12 @@
-// ========== HealthPackagesActivity.kt ==========
 package com.example.mediqorog.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,196 +15,151 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.util.UUID
 
 class HealthPackagesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            HealthPackagesScreen(onBackClick = { finish() })
+            MaterialTheme {
+                HealthPackagesScreen(onNavigateBack = { finish() })
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HealthPackagesScreen(onBackClick: () -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var packageInterest by remember { mutableStateOf("") }
-    var submitting by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
+fun HealthPackagesScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Health Packages", fontWeight = FontWeight.Bold) },
+                title = { Text("Health Packages", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0B8FAC),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
             )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(Color(0xFFF5F7FA)),
+            contentPadding = PaddingValues(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Coming Soon Badge
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF8BC34A).copy(alpha = 0.1f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(4.dp)
                 ) {
-                    Icon(
-                        Icons.Filled.LocalHospital,
-                        contentDescription = null,
-                        tint = Color(0xFF8BC34A),
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .background(
+                                    Color(0xFF8B5CF6).copy(alpha = 0.1f),
+                                    RoundedCornerShape(50.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.HealthAndSafety,
+                                contentDescription = "Health Packages",
+                                modifier = Modifier.size(50.dp),
+                                tint = Color(0xFF8B5CF6)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
                         Text(
-                            "Launching Soon",
-                            fontSize = 16.sp,
+                            text = "Feature Under Development",
+                            fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF8BC34A)
+                            color = Color(0xFF1F2937),
+                            textAlign = TextAlign.Center
                         )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         Text(
-                            "Comprehensive health checkup packages",
-                            fontSize = 13.sp,
-                            color = Color.Gray
+                            text = "Comprehensive health checkup packages tailored for your needs",
+                            fontSize = 14.sp,
+                            color = Color(0xFF6B7280),
+                            textAlign = TextAlign.Center,
+                            lineHeight = 20.sp
                         )
-                    }
-                }
-            }
 
-            // Feature Description
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Filled.HealthAndSafety,
-                            contentDescription = null,
-                            tint = Color(0xFF8BC34A)
-                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Divider(color = Color(0xFFE5E7EB))
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
                         Text(
-                            "Health Packages",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "What's Coming:",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1F2937)
                         )
-                    }
 
-                    Text(
-                        "Comprehensive health checkup packages tailored for different age groups and health concerns. Preventive care made simple and affordable.",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        HealthFeatureItem(
+                            icon = Icons.Default.FitnessCenter,
+                            text = "Complete health checkup packages"
+                        )
+                        HealthFeatureItem(
+                            icon = Icons.Default.Favorite,
+                            text = "Heart, diabetes, and thyroid profiles"
+                        )
+                        HealthFeatureItem(
+                            icon = Icons.Default.Group,
+                            text = "Family health packages at special rates"
+                        )
+                        HealthFeatureItem(
+                            icon = Icons.Default.Assessment,
+                            text = "Personalized health risk assessment"
+                        )
+                        HealthFeatureItem(
+                            icon = Icons.Default.MedicalServices,
+                            text = "Free doctor consultation with packages"
+                        )
 
-                    Text("Upcoming Packages:", fontWeight = FontWeight.Medium)
-                    FeaturePoint("• Basic Health Checkup")
-                    FeaturePoint("• Senior Citizen Package")
-                    FeaturePoint("• Women's Health Package")
-                    FeaturePoint("• Diabetes Care Package")
-                    FeaturePoint("• Heart Health Package")
-                }
-            }
+                        Spacer(modifier = Modifier.height(24.dp))
 
-            // Interest Form
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        "Get Notified",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "Share your details to receive updates about health packages!",
-                        fontSize = 13.sp,
-                        color = Color.Gray
-                    )
-
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Your Name") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    OutlinedTextField(
-                        value = age,
-                        onValueChange = { age = it },
-                        label = { Text("Age") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    OutlinedTextField(
-                        value = packageInterest,
-                        onValueChange = { packageInterest = it },
-                        label = { Text("Package Interest") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                submitting = true
-                                val success = submitInterest("healthpackages", name, age, packageInterest)
-                                submitting = false
-                                if (success) {
-                                    snackbarHostState.showSnackbar("Subscribed! We'll keep you updated.")
-                                    name = ""
-                                    age = ""
-                                    packageInterest = ""
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8BC34A)),
-                        enabled = !submitting && name.isNotEmpty()
-                    ) {
-                        if (submitting) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
-                        } else {
-                            Icon(Icons.Filled.Notifications, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Subscribe")
+                        Button(
+                            onClick = { },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = false,
+                            colors = ButtonDefaults.buttonColors(
+                                disabledContainerColor = Color(0xFFE5E7EB),
+                                disabledContentColor = Color(0xFF9CA3AF)
+                            )
+                        ) {
+                            Text("Coming Soon", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -213,40 +167,26 @@ fun HealthPackagesScreen(onBackClick: () -> Unit) {
         }
     }
 }
-// ========== Shared Components ==========
+
 @Composable
-fun FeaturePoint(text: String) {
-    Text(
-        text,
-        fontSize = 14.sp,
-        color = Color.Gray,
-        modifier = Modifier.padding(vertical = 2.dp)
-    )
-}
-
-// Shared Firebase function for interest submissions
-suspend fun submitInterest(featureType: String, name: String, age: String, details: String): Boolean {
-    return try {
-        val firestore = FirebaseFirestore.getInstance()
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
-
-        val data = hashMapOf(
-            "featureType" to featureType,
-            "userId" to userId,
-            "name" to name,
-            "age" to age,
-            "details" to details,
-            "timestamp" to System.currentTimeMillis(),
-            "status" to "pending"
+fun HealthFeatureItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color(0xFF8B5CF6),
+            modifier = Modifier.size(20.dp)
         )
-
-        firestore.collection("feature_interests")
-            .document(UUID.randomUUID().toString())
-            .set(data)
-            .await()
-
-        true
-    } catch (e: Exception) {
-        false
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = Color(0xFF4B5563)
+        )
     }
 }

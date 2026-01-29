@@ -27,5 +27,5 @@
     <string name="title_activity_product_detail">ProductDetail</string>
     <string name="title_activity_admin_edit_profile">AdminEditProfileActivity</string>
     <string name="title_activity_admin_change_password">AdminChangePasswordActivity</string>
-    <string name="title_activity_checkout">CheckoutActivity</string>
+    <string name="title_activity_add_edit_address_activity">AddEditAddressActivityActivity</string>
 </resources>

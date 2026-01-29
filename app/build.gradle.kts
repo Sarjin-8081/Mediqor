@@ -100,7 +100,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Google Play Services
-    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.1")
+    // Google Play Services Location (for FusedLocationProviderClient)
+    implementation("com.google.android.gms:play-services-location:21.1.0")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
