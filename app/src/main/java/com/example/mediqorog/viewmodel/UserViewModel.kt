@@ -123,6 +123,21 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
+    // ✅ NEW METHOD - Updates all users with correct roles
+    fun updateAllUsersWithRole(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.updateAllUsersWithRole()
+            result.onSuccess { message ->
+                Log.d("UserViewModel", message)
+                onResult(true, message)
+            }
+            result.onFailure { exception ->
+                Log.e("UserViewModel", "Failed: ${exception.message}")
+                onResult(false, exception.message ?: "Update failed")
+            }
+        }
+    }
+
     fun getGoogleSignInClient(context: Context): GoogleSignInClient {
         return try {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

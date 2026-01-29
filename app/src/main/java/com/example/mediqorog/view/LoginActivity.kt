@@ -40,8 +40,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 
-
-
 class LoginActivity : ComponentActivity() {
 
     private lateinit var viewModel: UserViewModel
@@ -264,22 +262,22 @@ fun LoginBody(
 
                     loading = true
                     viewModel?.signIn(email, password) { success, message, isAdmin ->
-                        loading = false
-                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                        if (success) {
-                            if (isAdmin) {
-                                // ✅ ADMIN USER → AdminDashboardActivity
-                                val intent = Intent(context, AdminDashboardActivity::class.java)
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                                context.startActivity(intent)
-                                Toast.makeText(context, "Welcome Admin!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                // ✅ REGULAR USER → DashboardActivity (FIXED!)
-                                val intent = Intent(context, DashboardActivity::class.java)
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                                context.startActivity(intent)
+                        activity?.runOnUiThread {
+                            loading = false
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+                            if (success) {
+                                if (isAdmin) {
+                                    val intent = Intent(context, AdminDashboardActivity::class.java)
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                    context.startActivity(intent)
+                                } else {
+                                    val intent = Intent(context, DashboardActivity::class.java)
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                    context.startActivity(intent)
+                                }
+                                activity?.finish()
                             }
-                            activity?.finish()
                         }
                     }
                 },
