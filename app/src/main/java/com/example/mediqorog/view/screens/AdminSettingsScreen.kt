@@ -395,7 +395,7 @@ fun AdminSettingsScreen(
         Spacer(modifier = Modifier.height(80.dp))
     }
 
-    // Logout Dialog
+    // ✅ FIXED: Logout Dialog with proper navigation
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
@@ -404,9 +404,19 @@ fun AdminSettingsScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        // ✅ Sign out from Firebase
                         auth.signOut()
-                        onNavigateToLogin()
+
+                        // ✅ Navigate to LoginActivity
+                        val intent = Intent(context, LoginActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        context.startActivity(intent)
+
+                        // ✅ Close the dialog
                         showLogoutDialog = false
+
+                        // ✅ Finish the current activity (if it's an Activity)
+                        (context as? android.app.Activity)?.finish()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
                     shape = RoundedCornerShape(12.dp)
@@ -423,7 +433,7 @@ fun AdminSettingsScreen(
         )
     }
 
-    // Delete Account Dialog
+    // ✅ FIXED: Delete Account Dialog with proper navigation
     if (showDeleteAccountDialog) {
         AdminDeleteAccountDialog(
             onDismiss = { showDeleteAccountDialog = false },
@@ -435,8 +445,15 @@ fun AdminSettingsScreen(
                             user.reauthenticate(credential).await()
                             firestore.collection("users").document(user.uid).delete().await()
                             user.delete().await()
+
                             Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_SHORT).show()
-                            onNavigateToLogin()
+
+                            // ✅ Navigate to LoginActivity after deletion
+                            val intent = Intent(context, LoginActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                            context.startActivity(intent)
+
+                            (context as? android.app.Activity)?.finish()
                         }
                     } catch (e: Exception) {
                         Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
