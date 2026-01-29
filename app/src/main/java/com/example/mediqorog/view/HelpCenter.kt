@@ -5,12 +5,14 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,8 +20,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,245 +29,249 @@ import androidx.compose.ui.unit.sp
 class HelpCenterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
         setContent {
-            MaterialTheme {
-                HelpCenterScreen(onNavigateBack = { finish() })
-            }
-        }
-    }
-}
-
-data class FAQItem(
-    val question: String,
-    val answer: String
-)
-
-data class ContactOption(
-    val icon: ImageVector,
-    val title: String,
-    val subtitle: String,
-    val action: String,
-    val color: Color
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HelpCenterScreen(onNavigateBack: () -> Unit) {
-    val context = LocalContext.current
-
-    val faqItems = listOf(
-        FAQItem(
-            "How do I place an order?",
-            "Browse medicines, add to cart, upload prescription if required, and proceed to checkout. You can pay online or choose cash on delivery."
-        ),
-        FAQItem(
-            "Do I need a prescription for all medicines?",
-            "Prescription medicines require a valid prescription from a registered doctor. OTC medicines and health products can be purchased without prescription."
-        ),
-        FAQItem(
-            "What is the delivery time?",
-            "Standard delivery takes 24-48 hours. Express delivery is available in select cities with delivery within 2-4 hours."
-        ),
-        FAQItem(
-            "How can I track my order?",
-            "Go to Order Tracking section from the Features menu. Enter your order ID to see real-time tracking information."
-        ),
-        FAQItem(
-            "What payment methods are accepted?",
-            "We accept UPI, credit/debit cards, net banking, digital wallets, and cash on delivery."
-        ),
-        FAQItem(
-            "Can I cancel or return an order?",
-            "Orders can be cancelled before dispatch. Returns are accepted for damaged or wrong products within 7 days of delivery with valid prescription."
-        ),
-        FAQItem(
-            "How do I upload a prescription?",
-            "Go to Prescription Upload from Features menu. You can upload an image from gallery or take a photo. Our pharmacist will verify it."
-        ),
-        FAQItem(
-            "Is my health data secure?",
-            "Yes, we use bank-grade encryption to protect your data. All information is stored securely and never shared with third parties without consent."
-        )
-    )
-
-    val contactOptions = listOf(
-        ContactOption(
-            Icons.Default.Email,
-            "Email Support",
-            "support@mediqor.com",
-            "mailto:support@mediqor.com",
-            Color(0xFF3B82F6)
-        ),
-        ContactOption(
-            Icons.Default.Phone,
-            "Call Us",
-            "+91-11-4567-8900",
-            "tel:+911145678900",
-            Color(0xFF10B981)
-        ),
-        ContactOption(
-            Icons.Default.Chat,
-            "Live Chat",
-            "Available 24/7",
-            "chat",
-            Color(0xFF8B5CF6)
-        )
-    )
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Help Center", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
+            HelpCenterScreen(
+                onBackClick = { finish() }
             )
         }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFF5F7FA)),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.SupportAgent,
-                            contentDescription = "Support",
-                            modifier = Modifier.size(48.dp),
-                            tint = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "How can we help you?",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "We're here to assist you 24/7",
-                            fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
-                    }
-                }
-            }
-
-            item {
-                Text(
-                    text = "Contact Us",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
-                )
-            }
-
-            items(contactOptions) { option ->
-                ContactOptionCard(
-                    option = option,
-                    onClick = {
-                        when (option.action) {
-                            "chat" -> {
-                                // Open chat functionality
-                            }
-                            else -> {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(option.action))
-                                context.startActivity(intent)
-                            }
-                        }
-                    }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Frequently Asked Questions",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937)
-                )
-            }
-
-            items(faqItems) { faqItem ->
-                FAQCard(faqItem = faqItem)
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF))
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = "Still need help?",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E40AF)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Our customer support team is available 24/7 to assist you with any questions or concerns.",
-                            fontSize = 14.sp,
-                            color = Color(0xFF1E3A8A),
-                            lineHeight = 20.sp
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("mailto:support@mediqor.com"))
-                                    context.startActivity(intent)
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Icon(Icons.Default.Email, null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Email Us")
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
 @Composable
-fun ContactOptionCard(option: ContactOption, onClick: () -> Unit) {
+fun HelpCenterScreen(onBackClick: () -> Unit) {
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8FAFB))
+            .verticalScroll(scrollState)
+    ) {
+        // Top Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF0B8FAC))
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
+            }
+            Text(
+                text = "Help Center",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Contact Support Section
+        Text(
+            text = "Contact Support",
+            style = TextStyle(
+                color = Color(0xFF2D3748),
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            ),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+        )
+
+        // Email Support
+        SupportOptionCard(
+            icon = Icons.Default.Email,
+            title = "Email Support",
+            subtitle = "mediqor@gmail.com",
+            onClick = {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:mediqor@gmail.com")
+                }
+                context.startActivity(intent)
+            }
+        )
+
+        // Report a Bug
+        SupportOptionCard(
+            icon = Icons.Default.BugReport,
+            title = "Report a Bug",
+            subtitle = "Help us improve Mediqor",
+            onClick = {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:mediqor@gmail.com?subject=Bug Report - Mediqor App")
+                }
+                context.startActivity(intent)
+            }
+        )
+
+        // Send Feedback
+        SupportOptionCard(
+            icon = Icons.Default.Feedback,
+            title = "Send Feedback",
+            subtitle = "Share your suggestions",
+            onClick = {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:mediqor@gmail.com?subject=Mediqor Feedback")
+                }
+                context.startActivity(intent)
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // FAQs Section
+        Text(
+            text = "Frequently Asked Questions",
+            style = TextStyle(
+                color = Color(0xFF2D3748),
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            ),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+        )
+
+        // Account & Profile FAQs
+        FAQCategoryHeader(title = "Account & Profile")
+
+        FAQItem(
+            question = "How do I create a Mediqor account?",
+            answer = "You can sign up using your email or phone number. Once registered, you can manage your profile and health info."
+        )
+
+        FAQItem(
+            question = "Can I update my profile information later?",
+            answer = "Yes, go to your profile page and update your details anytime."
+        )
+
+        FAQItem(
+            question = "How do I delete my Mediqor account?",
+            answer = "Contact our support team from the app, and they will guide you through the account deletion process."
+        )
+
+        // Chatbot & Health Guidance FAQs
+        FAQCategoryHeader(title = "Chatbot & Health Guidance")
+
+        FAQItem(
+            question = "How does the AI chatbot work?",
+            answer = "The chatbot provides guidance on health-related queries and medicine reminders. It can't replace professional medical advice but can assist with general questions."
+        )
+
+        FAQItem(
+            question = "Is my conversation with the chatbot private?",
+            answer = "Yes, all chat interactions are secure and encrypted. Your data is never shared without your consent."
+        )
+
+        // Prescriptions & Medicine Reminders FAQs
+        FAQCategoryHeader(title = "Prescriptions & Medicine Reminders")
+
+        FAQItem(
+            question = "How do I upload my prescription?",
+            answer = "Tap \"Upload Prescription\" in the app, take a clear photo of your prescription, and submit."
+        )
+
+        FAQItem(
+            question = "Can I get reminders for my medicines?",
+            answer = "Yes, Mediqor will automatically send notifications for each dose based on your uploaded prescription."
+        )
+
+        // Finding Healthcare Facilities FAQs
+        FAQCategoryHeader(title = "Finding Healthcare Facilities")
+
+        FAQItem(
+            question = "How do I find nearby hospitals, clinics, or pharmacies?",
+            answer = "Use the \"Nearby\" feature to locate healthcare facilities around your current location. You can filter by type (hospital, pharmacy, clinic)."
+        )
+
+        FAQItem(
+            question = "Can I get directions to a facility?",
+            answer = "Yes, tapping on a facility will provide a map and directions."
+        )
+
+        // Buying Medicines & Order Tracking FAQs
+        FAQCategoryHeader(title = "Buying Medicines & Order Tracking")
+
+        FAQItem(
+            question = "How do I order medicines?",
+            answer = "Browse available medicines in the e-pharmacy section, add to cart, and complete checkout using supported payment methods."
+        )
+
+        FAQItem(
+            question = "Can I track my orders?",
+            answer = "Yes, go to \"My Orders\" to see the status of your purchase in real-time."
+        )
+
+        FAQItem(
+            question = "What payment methods are supported?",
+            answer = "Mediqor supports all major online payments including cards, mobile wallets, and UPI (if available in your region)."
+        )
+
+        // Donor Services FAQs
+        FAQCategoryHeader(title = "Donor Services")
+
+        FAQItem(
+            question = "How can I register as a blood or organ donor?",
+            answer = "Go to the \"Donor List\" section and submit your details. You will be added to the registry securely."
+        )
+
+        FAQItem(
+            question = "Can others see my donor information?",
+            answer = "Only verified healthcare authorities can access your donor info when required. Your privacy is always protected."
+        )
+
+        // Technical & Support FAQs
+        FAQCategoryHeader(title = "Technical & Support")
+
+        FAQItem(
+            question = "The app is not working correctly. What should I do?",
+            answer = "Try updating the app to the latest version or restarting your device. If the problem persists, contact support via the app."
+        )
+
+        FAQItem(
+            question = "How can I contact Mediqor support?",
+            answer = "Use the \"Help & Support\" section in the app to send a message or chat with our support team."
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+fun FAQCategoryHeader(title: String) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = title,
+        style = TextStyle(
+            color = Color(0xFF0B8FAC),
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp
+        ),
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+    )
+}
+
+@Composable
+fun SupportOptionCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -275,82 +281,106 @@ fun ContactOptionCard(option: ContactOption, onClick: () -> Unit) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .background(option.color.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                    .size(48.dp)
+                    .background(
+                        Color(0xFF0B8FAC).copy(alpha = 0.12f),
+                        RoundedCornerShape(10.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = option.icon,
-                    contentDescription = option.title,
-                    tint = option.color,
-                    modifier = Modifier.size(28.dp)
+                    icon,
+                    contentDescription = null,
+                    tint = Color(0xFF0B8FAC),
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+
+            Spacer(modifier = Modifier.width(14.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = option.title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1F2937)
+                    text = title,
+                    style = TextStyle(
+                        color = Color(0xFF2D3748),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp
+                    )
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = option.subtitle,
-                    fontSize = 14.sp,
-                    color = Color(0xFF6B7280)
+                    text = subtitle,
+                    style = TextStyle(
+                        color = Color.Gray,
+                        fontSize = 12.sp
+                    )
                 )
             }
+
             Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = "Go",
-                tint = Color(0xFF9CA3AF)
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color.Gray.copy(alpha = 0.5f),
+                modifier = Modifier.size(18.dp)
             )
         }
     }
 }
 
 @Composable
-fun FAQCard(faqItem: FAQItem) {
+fun FAQItem(question: String, answer: String) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp)
             .clickable { expanded = !expanded },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = faqItem.question,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1F2937),
+                    text = question,
+                    style = TextStyle(
+                        color = Color(0xFF2D3748),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    ),
                     modifier = Modifier.weight(1f)
                 )
+
                 Icon(
-                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
-                    tint = MaterialTheme.colorScheme.primary
+                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = Color(0xFF0B8FAC),
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            if (expanded) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = Color(0xFFE5E7EB))
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = faqItem.answer,
-                    fontSize = 14.sp,
-                    color = Color(0xFF6B7280),
-                    lineHeight = 20.sp
-                )
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Divider(color = Color.Gray.copy(alpha = 0.2f))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = answer,
+                        style = TextStyle(
+                            color = Color.Gray,
+                            fontSize = 13.sp,
+                            lineHeight = 20.sp
+                        )
+                    )
+                }
             }
         }
     }
