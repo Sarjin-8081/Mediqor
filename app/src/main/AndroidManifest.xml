@@ -180,22 +180,6 @@
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.MediqorOG" />
         <activity
-            android:name=".view.OffersActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.PrescriptionUploadActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.RepeatOrdersActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
-            android:name=".view.OrderInvoicesActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MediqorOG" />
-        <activity
             android:name=".view.LabTestsActivity"
             android:exported="false"
             android:theme="@style/Theme.MediqorOG" />

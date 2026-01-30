@@ -19,10 +19,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mediqorog.view.CalorieScannerActivity
 import com.example.mediqorog.view.NutritionTrackerActivity
-import com.example.mediqorog.view.PrescriptionUploadActivity
 import com.example.mediqorog.view.MyOrdersActivity
 import com.example.mediqorog.view.NearbyMedicalActivity
 import com.example.mediqorog.view.EmergencyContactsActivity
+import com.example.mediqorog.view.HealthPackagesActivity
+import com.example.mediqorog.view.LabTestsActivity
+import com.example.mediqorog.view.PrescriptionsActivity
 
 data class FeatureItem(
     val title: String,
@@ -50,29 +52,41 @@ fun FeatureScreen() {
             activityClass = NutritionTrackerActivity::class.java
         ),
         FeatureItem(
-            title = "Prescription Upload",
-            icon = Icons.Default.UploadFile,
-            color = Color(0xFF2196F3),
-            activityClass = PrescriptionUploadActivity::class.java
-        ),
-        FeatureItem(
             title = "My Orders",
             icon = Icons.Default.ShoppingBag,
-            color = Color(0xFF4CAF50),
+            color = Color(0xFFFF9800),
             activityClass = MyOrdersActivity::class.java
         ),
         FeatureItem(
             title = "Nearby Medical",
-            icon = Icons.Default.LocalHospital,
+            icon = Icons.Default.Place,
             color = Color(0xFF9C27B0),
             activityClass = NearbyMedicalActivity::class.java
         ),
         FeatureItem(
             title = "Emergency Contacts",
-            icon = Icons.Default.Emergency,
+            icon = Icons.Default.Warning,
             color = Color(0xFFEF4444),
             activityClass = EmergencyContactsActivity::class.java
-        )
+        ),
+        FeatureItem(
+            title = "Lab Tests",
+            icon = Icons.Default.Science,
+            color = Color(0xFF00BCD4),
+            activityClass = LabTestsActivity::class.java
+        ),
+        FeatureItem(
+            title = "Prescriptions",
+            icon = Icons.Default.Receipt,
+            color = Color(0xFF673AB7),
+            activityClass = PrescriptionsActivity::class.java
+        ),
+        FeatureItem(
+            title = "Health Packages",
+            icon = Icons.Default.Favorite,
+            color = Color(0xFFE91E63),
+            activityClass = HealthPackagesActivity::class.java
+        ),
     )
 
     Scaffold(
