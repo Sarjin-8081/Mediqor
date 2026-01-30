@@ -172,7 +172,7 @@ class OrderRepoImpl : OrderRepository {
             val filteredOrders = allOrders.filter { order ->
                 order.orderNumber.contains(query, ignoreCase = true) ||
                         order.items.any {
-                            (it.productName ?: it.name).contains(query, ignoreCase = true)
+                            (it.productName.ifEmpty { it.name }).contains(query, ignoreCase = true)
                         }
             }
 
@@ -198,7 +198,8 @@ class OrderRepoImpl : OrderRepository {
             val orderWithDetails = order.copy(
                 id = orderId,
                 userId = userId,
-                date = java.util.Date()
+                date = java.util.Date(),
+                timestamp = com.google.firebase.Timestamp.now()
             )
 
             // Save to Firestore

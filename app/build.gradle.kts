@@ -27,9 +27,12 @@ android {
             localProperties.load(FileInputStream(localPropertiesFile))
         }
 
-        // Inject API key into BuildConfig
+        // Inject API keys
         val groqApiKey = localProperties.getProperty("GROQ_API_KEY", "")
+        val spoonacularApiKey = localProperties.getProperty("SPOONACULAR_API_KEY", "")
+
         buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
+        buildConfigField("String", "SPOONACULAR_API_KEY", "\"$spoonacularApiKey\"")
     }
 
     buildTypes {
@@ -39,10 +42,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-        }
-
-        debug {
-            // Debug configuration (API key already injected in defaultConfig)
         }
     }
 
@@ -67,7 +66,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // Compose BOM (manages all Compose versions together)
+    // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -91,7 +90,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    // Firebase (use BOM for version management)
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
@@ -101,7 +100,6 @@ dependencies {
 
     // Google Play Services
     implementation("com.google.android.gms:play-services-auth:21.0.1")
-    // Google Play Services Location (for FusedLocationProviderClient)
     implementation("com.google.android.gms:play-services-location:21.1.0")
 
     // Coroutines
@@ -116,7 +114,7 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
-    // Image Loading - Coil (FIXED: Use correct version)
+    // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Material Icons Extended
@@ -125,6 +123,12 @@ dependencies {
     // Lottie Animations
     implementation("com.airbnb.android:lottie-compose:6.1.0")
 
-    // Cloudinary (for image uploads)
+    // Cloudinary
     implementation("com.cloudinary:cloudinary-android:2.1.0")
+
+    // Retrofit for API calls (Spoonacular)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 }
