@@ -40,6 +40,7 @@ fun ProductDetailScreen(
     onBuyNow: (quantity: Int) -> Unit,
     onBackClick: () -> Unit,
     onSubmitReview: (rating: Int, comment: String) -> Unit = { _, _ -> },
+    onRefreshReviews: () -> Unit = {}, // Add this callback to refresh reviews
     modifier: Modifier = Modifier
 ) {
     var quantity by remember { mutableStateOf(1) }
@@ -164,6 +165,8 @@ fun ProductDetailScreen(
                     showReviewDialog = false
                     reviewText = ""
                     reviewRating = 5
+                    // Refresh reviews after submission
+                    onRefreshReviews()
                 }
             },
             onDismiss = {

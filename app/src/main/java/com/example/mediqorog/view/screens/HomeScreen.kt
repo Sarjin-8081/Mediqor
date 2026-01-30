@@ -197,7 +197,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFFFF8F0)) // Warm peachy background
+                .background(Color(0xFFE8F4F8)) // Warm soft teal background
         ) {
             // Categories Section
             item {
@@ -207,8 +207,8 @@ fun HomeScreen(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0xFFFFE5D9),
-                                    Color(0xFFFFF8F0)
+                                    Color(0xFFD4EEF5), // Warm light teal
+                                    Color(0xFFE8F4F8)  // Softer warm teal
                                 )
                             )
                         )
@@ -279,8 +279,8 @@ fun HomeScreen(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0xFFFFF8F0),
-                                    Color(0xFFFFE5D9)
+                                    Color(0xFFE8F4F8),  // Softer warm teal
+                                    Color(0xFFD4EEF5)   // Warm light teal
                                 )
                             )
                         )

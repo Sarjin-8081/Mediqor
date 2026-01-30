@@ -39,9 +39,10 @@ class ReviewRepositoryImpl(
 
     override suspend fun getProductReviews(productId: String): Result<List<ReviewModel>> {
         return try {
+            // FIXED: Removed .orderBy() to avoid Firebase index requirement
+            // Instead, we'll sort in code after fetching
             val snapshot = reviewsCollection
                 .whereEqualTo("productId", productId)
-                .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
 
@@ -65,7 +66,7 @@ class ReviewRepositoryImpl(
                 } catch (e: Exception) {
                     null
                 }
-            }
+            }.sortedByDescending { it.createdAt } // Sort in code instead of in query
 
             Result.success(reviews)
         } catch (e: Exception) {

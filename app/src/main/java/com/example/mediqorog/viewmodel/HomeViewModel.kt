@@ -10,13 +10,16 @@ import com.example.mediqorog.model.CategoryModel
 import com.example.mediqorog.model.ProductModel
 import com.example.mediqorog.repository.ProductRepository
 import com.example.mediqorog.repository.ProductRepositoryImpl
+import com.example.mediqorog.repository.ReviewRepo
+import com.example.mediqorog.repository.ReviewRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val productRepository: ProductRepository = ProductRepositoryImpl()
+    private val productRepository: ProductRepository = ProductRepositoryImpl(),
+    private val reviewRepository: ReviewRepo = ReviewRepositoryImpl()  // ✅ FIXED: Use ReviewRepo interface
 ) : ViewModel() {
 
     // StateFlow for products loaded from Firebase
@@ -79,12 +82,37 @@ class HomeViewModel(
 
             val result = productRepository.getAllProducts()
             result.onSuccess { productList ->
-                _products.value = productList
+                // Load rating summaries for all products
+                val productsWithRatings = productList.map { product ->
+                    loadRatingSummaryForProduct(product)
+                }
+                _products.value = productsWithRatings
                 _isLoading.value = false
             }.onFailure { exception ->
                 _error.value = exception.message ?: "Failed to load products"
                 _isLoading.value = false
             }
+        }
+    }
+
+    private suspend fun loadRatingSummaryForProduct(product: ProductModel): ProductModel {
+        return try {
+            // ✅ FIXED: Use getRatingSummary() (not getReviewSummary)
+            val summary = reviewRepository.getRatingSummary(product.id)
+            summary.onSuccess { ratingSummary ->
+                // ✅ FIXED: Use totalRatings (not totalReviews)
+                return product.copy(
+                    rating = ratingSummary.averageRating,
+                    reviewCount = ratingSummary.totalRatings
+                )
+            }.onFailure {
+                // If failed to get rating, return product as is
+                return product
+            }
+            product
+        } catch (e: Exception) {
+            // If any error, return product as is
+            product
         }
     }
 
