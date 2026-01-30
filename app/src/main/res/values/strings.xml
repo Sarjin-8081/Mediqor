@@ -32,4 +32,7 @@
     <string name="title_activity_emergency_contacts">EmergencyContactsActivity</string>
     <string name="title_activity_calorie_scanner">CalorieScannerActivity</string>
     <string name="title_activity_nutrition_tracker">NutritionTrackerActivity</string>
+    <string name="title_activity_lab_test">LabTestActivity</string>
+    <string name="title_activity_health_packages">HealthPackagesActivity</string>
+    <string name="title_activity_prescription">PrescriptionActivity</string>
 </resources>
