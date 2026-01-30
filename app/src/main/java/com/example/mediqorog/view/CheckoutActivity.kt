@@ -1,18 +1,20 @@
-package com.example.mediqorog.ui.theme
+package com.example.mediqorog.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,21 +36,43 @@ import com.example.mediqorog.viewmodel.CheckoutViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 
 class CheckoutActivity : ComponentActivity() {
+
+    private val selectAddressLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val selectedAddress = result.data?.getParcelableExtra<Address>("SELECTED_ADDRESS")
+            selectedAddress?.let {
+                // Store selected address to be picked up by the composable
+                intent.putExtra("SELECTED_ADDRESS", it)
+                recreate() // Recreate to update UI with selected address
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val cartTotal = intent.getDoubleExtra("CART_TOTAL", 0.0)
         val itemCount = intent.getIntExtra("ITEM_COUNT", 0)
+        val selectedAddress = intent.getParcelableExtra<Address>("SELECTED_ADDRESS")
 
         setContent {
             MaterialTheme {
                 CheckoutScreenContent(
                     cartTotal = cartTotal,
                     itemCount = itemCount,
+                    preSelectedAddress = selectedAddress,
                     onBackClick = { finish() },
                     onOrderPlaced = {
                         Toast.makeText(this, "Order placed successfully!", Toast.LENGTH_LONG).show()
                         finish()
+                    },
+                    onSelectAddress = {
+                        val intent = Intent(this, SavedAddressesActivity::class.java).apply {
+                            putExtra("SELECT_MODE", true)
+                        }
+                        selectAddressLauncher.launch(intent)
                     }
                 )
             }
@@ -62,8 +85,10 @@ class CheckoutActivity : ComponentActivity() {
 fun CheckoutScreenContent(
     cartTotal: Double,
     itemCount: Int,
+    preSelectedAddress: Address?,
     onBackClick: () -> Unit,
-    onOrderPlaced: () -> Unit
+    onOrderPlaced: () -> Unit,
+    onSelectAddress: () -> Unit
 ) {
     val context = LocalContext.current
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -75,6 +100,7 @@ fun CheckoutScreenContent(
     )
 
     val checkoutUiState by checkoutViewModel.uiState.collectAsState()
+    var selectedAddress by remember { mutableStateOf(preSelectedAddress) }
 
     // Load cart items when screen opens
     LaunchedEffect(currentUserId) {
@@ -82,6 +108,16 @@ fun CheckoutScreenContent(
             checkoutViewModel.loadCartItems(currentUserId)
         } else {
             Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Auto-populate fields when address is selected
+    LaunchedEffect(selectedAddress) {
+        selectedAddress?.let { addr ->
+            checkoutViewModel.updateFullName(addr.name)
+            checkoutViewModel.updatePhoneNumber(addr.phone)
+            checkoutViewModel.updateAddress(addr.addressLine)
+            checkoutViewModel.updateColonyLandmark(addr.landmark)
         }
     }
 
@@ -152,17 +188,11 @@ fun CheckoutScreenContent(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Delivery Information Section
+                    // Delivery Address Selection Card
                     item {
-                        DeliveryInformationCard(
-                            fullName = checkoutUiState.fullName,
-                            phoneNumber = checkoutUiState.phoneNumber,
-                            address = checkoutUiState.address,
-                            colonyLandmark = checkoutUiState.colonyLandmark,
-                            onFullNameChange = { checkoutViewModel.updateFullName(it) },
-                            onPhoneNumberChange = { checkoutViewModel.updatePhoneNumber(it) },
-                            onAddressChange = { checkoutViewModel.updateAddress(it) },
-                            onColonyLandmarkChange = { checkoutViewModel.updateColonyLandmark(it) }
+                        DeliveryAddressSelectionCard(
+                            selectedAddress = selectedAddress,
+                            onSelectAddress = onSelectAddress
                         )
                     }
 
@@ -188,7 +218,13 @@ fun CheckoutScreenContent(
                     item {
                         Button(
                             onClick = {
-                                if (currentUserId.isNotEmpty()) {
+                                if (selectedAddress == null) {
+                                    Toast.makeText(
+                                        context,
+                                        "Please select a delivery address",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else if (currentUserId.isNotEmpty()) {
                                     checkoutViewModel.placeOrder(currentUserId)
                                 } else {
                                     Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
@@ -201,7 +237,9 @@ fun CheckoutScreenContent(
                                 containerColor = Color(0xFF0B8FAC)
                             ),
                             shape = RoundedCornerShape(8.dp),
-                            enabled = !checkoutUiState.isLoading && checkoutUiState.cartItems.isNotEmpty()
+                            enabled = !checkoutUiState.isLoading &&
+                                    checkoutUiState.cartItems.isNotEmpty() &&
+                                    selectedAddress != null
                         ) {
                             if (checkoutUiState.isLoading) {
                                 CircularProgressIndicator(
@@ -227,17 +265,10 @@ fun CheckoutScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DeliveryInformationCard(
-    fullName: String,
-    phoneNumber: String,
-    address: String,
-    colonyLandmark: String,
-    onFullNameChange: (String) -> Unit,
-    onPhoneNumberChange: (String) -> Unit,
-    onAddressChange: (String) -> Unit,
-    onColonyLandmarkChange: (String) -> Unit
+private fun DeliveryAddressSelectionCard(
+    selectedAddress: Address?,
+    onSelectAddress: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -250,78 +281,186 @@ private fun DeliveryInformationCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Delivery Information",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Full Name
-            OutlinedTextField(
-                value = fullName,
-                onValueChange = onFullNameChange,
-                label = { Text("Full name") },
-                placeholder = { Text("Enter your first and last name") },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF0B8FAC),
-                    focusedLabelColor = Color(0xFF0B8FAC)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Delivery Address",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
                 )
-            )
+
+                TextButton(
+                    onClick = onSelectAddress
+                ) {
+                    Text(
+                        text = if (selectedAddress == null) "Select" else "Change",
+                        color = Color(0xFF0B8FAC),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Phone Number
-            OutlinedTextField(
-                value = phoneNumber,
-                onValueChange = onPhoneNumberChange,
-                label = { Text("Phone Number") },
-                placeholder = { Text("Please enter your phone number") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF0B8FAC),
-                    focusedLabelColor = Color(0xFF0B8FAC)
-                )
-            )
+            if (selectedAddress != null) {
+                // Display selected address
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectAddress() },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFF0F9FF)
+                    ),
+                    border = BorderStroke(1.dp, Color(0xFF0B8FAC))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                selectedAddress.name,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (selectedAddress.isDefault) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF10B981)
+                                ) {
+                                    Text(
+                                        "DEFAULT",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontSize = 9.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-            // Colony/Landmark
-            OutlinedTextField(
-                value = colonyLandmark,
-                onValueChange = onColonyLandmarkChange,
-                label = { Text("Colony / Suburb / Locality / Landmark") },
-                placeholder = { Text("Please enter") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF0B8FAC),
-                    focusedLabelColor = Color(0xFF0B8FAC)
-                )
-            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Phone,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                selectedAddress.phone,
+                                fontSize = 13.sp,
+                                color = Color.Gray
+                            )
+                        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
-            // Address
-            OutlinedTextField(
-                value = address,
-                onValueChange = onAddressChange,
-                label = { Text("Address") },
-                placeholder = { Text("For Example: House# 123, Street# 123, ABC Road") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 2,
-                maxLines = 3,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF0B8FAC),
-                    focusedLabelColor = Color(0xFF0B8FAC)
-                )
-            )
+                        Text(
+                            selectedAddress.addressLine,
+                            fontSize = 14.sp,
+                            color = Color(0xFF374151),
+                            lineHeight = 20.sp
+                        )
+
+                        if (selectedAddress.landmark.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Near ${selectedAddress.landmark}",
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            if (selectedAddress.city.isNotEmpty()) {
+                                Text(
+                                    selectedAddress.city,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                            if (selectedAddress.pincode.isNotEmpty()) {
+                                Text(
+                                    "- ${selectedAddress.pincode}",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                // No address selected - show prompt
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectAddress() },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFEF3C7)
+                    ),
+                    border = BorderStroke(1.dp, Color(0xFFF59E0B))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color(0xFFF59E0B),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "No address selected",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF92400E)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                "Tap to select a delivery address",
+                                fontSize = 12.sp,
+                                color = Color(0xFFA16207)
+                            )
+                        }
+                        Icon(
+                            Icons.Default.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = Color(0xFFF59E0B)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -466,7 +605,7 @@ private fun PackageCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 color = Color(0xFFE3F2FD),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0B8FAC))
+                border = BorderStroke(1.dp, Color(0xFF0B8FAC))
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp)
