@@ -30,4 +30,5 @@
     <string name="title_activity_add_edit_address_activity">AddEditAddressActivityActivity</string>
     <string name="title_activity_nearby_medical">NearbyMedicalActivity</string>
     <string name="title_activity_emergency_contacts">EmergencyContactsActivity</string>
+    <string name="title_activity_process_to_pay">ProcessToPayActivity</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.mediqorog.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mediqorog.model.Order
@@ -34,7 +35,12 @@ class OrderViewModel(
     private val _uiState = MutableStateFlow(UserOrdersUiState())
     val uiState: StateFlow<UserOrdersUiState> = _uiState.asStateFlow()
 
+    companion object {
+        private const val TAG = "OrderViewModel"
+    }
+
     init {
+        Log.d(TAG, "OrderViewModel initialized")
         loadOrders()
     }
 
@@ -45,25 +51,51 @@ class OrderViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            repository.getUserOrders().fold(
-                onSuccess = { orders ->
+            try {
+                // Call getUserOrders() - no userId parameter needed
+                // The repository gets userId from FirebaseAuth internally
+                val result = repository.getUserOrders()
+
+                // Handle Result
+                if (result.isSuccess) {
+                    val orders = result.getOrNull() ?: emptyList()
+                    Log.d(TAG, "Successfully loaded ${orders.size} orders")
+
+                    orders.forEach { order ->
+                        Log.d(TAG, "Order: ${order.orderNumber}, Status: ${order.status}")
+                    }
+
                     _uiState.update { state ->
                         state.copy(
                             orders = orders,
-                            filteredOrders = filterOrders(orders, state.selectedTab, state.searchQuery),
-                            isLoading = false
+                            filteredOrders = filterOrders(
+                                orders,
+                                state.selectedTab,
+                                state.searchQuery
+                            ),
+                            isLoading = false,
+                            error = null
                         )
                     }
-                },
-                onFailure = { error ->
+                } else {
+                    val error = result.exceptionOrNull()
+                    Log.e(TAG, "Failed to load orders: ${error?.message}", error)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = error.message ?: "Failed to load orders"
+                            error = error?.message ?: "Failed to load orders"
                         )
                     }
                 }
-            )
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception loading orders: ${e.message}", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "An error occurred while loading orders"
+                    )
+                }
+            }
         }
     }
 
@@ -71,6 +103,7 @@ class OrderViewModel(
      * Refresh orders
      */
     fun refreshOrders() {
+        Log.d(TAG, "Refreshing orders")
         loadOrders()
     }
 
@@ -78,10 +111,15 @@ class OrderViewModel(
      * Change selected tab and filter orders
      */
     fun selectTab(tabIndex: Int) {
+        Log.d(TAG, "Selected tab: $tabIndex")
         _uiState.update { state ->
             state.copy(
                 selectedTab = tabIndex,
-                filteredOrders = filterOrders(state.orders, tabIndex, state.searchQuery)
+                filteredOrders = filterOrders(
+                    state.orders,
+                    tabIndex,
+                    state.searchQuery
+                )
             )
         }
     }
@@ -90,10 +128,15 @@ class OrderViewModel(
      * Update search query and filter orders
      */
     fun updateSearchQuery(query: String) {
+        Log.d(TAG, "Search query: $query")
         _uiState.update { state ->
             state.copy(
                 searchQuery = query,
-                filteredOrders = filterOrders(state.orders, state.selectedTab, query)
+                filteredOrders = filterOrders(
+                    state.orders,
+                    state.selectedTab,
+                    query
+                )
             )
         }
     }
@@ -102,6 +145,7 @@ class OrderViewModel(
      * Clear search
      */
     fun clearSearch() {
+        Log.d(TAG, "Clearing search")
         updateSearchQuery("")
     }
 
@@ -110,15 +154,24 @@ class OrderViewModel(
      */
     fun cancelOrder(orderId: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            repository.cancelOrder(orderId).fold(
-                onSuccess = {
+            Log.d(TAG, "Cancelling order: $orderId")
+
+            try {
+                val result = repository.cancelOrder(orderId)
+
+                if (result.isSuccess) {
+                    Log.d(TAG, "Order cancelled successfully")
                     loadOrders() // Refresh list
                     onResult(true, "Order cancelled successfully")
-                },
-                onFailure = { error ->
-                    onResult(false, error.message ?: "Failed to cancel order")
+                } else {
+                    val error = result.exceptionOrNull()
+                    Log.e(TAG, "Failed to cancel order: ${error?.message}", error)
+                    onResult(false, error?.message ?: "Failed to cancel order")
                 }
-            )
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception cancelling order: ${e.message}", e)
+                onResult(false, e.message ?: "An error occurred")
+            }
         }
     }
 
@@ -127,22 +180,34 @@ class OrderViewModel(
      */
     fun reorder(order: Order, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val newOrder = order.copy(
-                id = "",
-                orderNumber = generateOrderNumber(),
-                date = java.util.Date(),
-                status = OrderStatus.PENDING
-            )
+            Log.d(TAG, "Reordering: ${order.orderNumber}")
 
-            repository.createOrder(newOrder).fold(
-                onSuccess = { orderId ->
+            try {
+                val newOrder = order.copy(
+                    id = "",
+                    orderNumber = generateOrderNumber(),
+                    date = java.util.Date(),
+                    timestamp = com.google.firebase.Timestamp.now(),
+                    status = OrderStatus.PENDING,
+                    isPaid = false
+                )
+
+                val result = repository.createOrder(newOrder)
+
+                if (result.isSuccess) {
+                    val orderId = result.getOrNull()
+                    Log.d(TAG, "Reorder successful: $orderId")
                     loadOrders() // Refresh list
                     onResult(true, "Order placed successfully!")
-                },
-                onFailure = { error ->
-                    onResult(false, error.message ?: "Failed to place order")
+                } else {
+                    val error = result.exceptionOrNull()
+                    Log.e(TAG, "Failed to reorder: ${error?.message}", error)
+                    onResult(false, error?.message ?: "Failed to place order")
                 }
-            )
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception reordering: ${e.message}", e)
+                onResult(false, e.message ?: "An error occurred")
+            }
         }
     }
 
@@ -175,14 +240,20 @@ class OrderViewModel(
         }
 
         // Filter by search query
-        return if (query.isBlank()) {
+        val filtered = if (query.isBlank()) {
             tabFiltered
         } else {
             tabFiltered.filter { order ->
                 order.orderNumber.contains(query, ignoreCase = true) ||
-                        order.items.any { it.name.contains(query, ignoreCase = true) }
+                        order.items.any {
+                            it.name.contains(query, ignoreCase = true) ||
+                                    it.productName.contains(query, ignoreCase = true)
+                        }
             }
         }
+
+        Log.d(TAG, "Filtered ${filtered.size} orders (tab: $tabIndex, query: '$query')")
+        return filtered
     }
 
     /**
@@ -191,6 +262,6 @@ class OrderViewModel(
     private fun generateOrderNumber(): String {
         val timestamp = System.currentTimeMillis()
         val random = (1000..9999).random()
-        return "ORD-${timestamp}-${random}"
+        return "ORD-$timestamp-$random"
     }
 }
