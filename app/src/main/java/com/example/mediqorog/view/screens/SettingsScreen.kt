@@ -48,7 +48,6 @@ fun SettingsScreen() {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     // ✅ CRITICAL FIX: Reload user data when screen becomes visible
@@ -190,14 +189,7 @@ fun SettingsScreen() {
             }
         )
 
-        SettingsItem(
-            icon = Icons.Default.DateRange,
-            title = "Prescriptions",
-            subtitle = "Upload and manage prescriptions",
-            onClick = {
-                context.startActivity(Intent(context, PrescriptionsActivity::class.java))
-            }
-        )
+        // ✅ REMOVED: Prescriptions item (it's already in Features section)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -211,13 +203,6 @@ fun SettingsScreen() {
             onClick = {
                 context.startActivity(Intent(context, NotificationSettingsActivity::class.java))
             }
-        )
-
-        SettingsItem(
-            icon = Icons.Default.Language,
-            title = "Language",
-            subtitle = "Select app language",
-            onClick = { showLanguageDialog = true }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -365,77 +350,6 @@ fun SettingsScreen() {
             },
             confirmButton = {
                 TextButton(onClick = { showAboutDialog = false }) {
-                    Text("Close", color = Color(0xFF0B8FAC), fontWeight = FontWeight.Bold)
-                }
-            },
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
-
-    // Language Dialog
-    if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = {
-                Text(
-                    "Select Language",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                // TODO: Implement language change to English
-                                showLanguageDialog = false
-                            }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = true, // TODO: Get from preferences
-                            onClick = {
-                                // TODO: Implement language change
-                                showLanguageDialog = false
-                            },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = Color(0xFF0B8FAC)
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("English")
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                // TODO: Implement language change to Nepali
-                                showLanguageDialog = false
-                            }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = false, // TODO: Get from preferences
-                            onClick = {
-                                // TODO: Implement language change
-                                showLanguageDialog = false
-                            },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = Color(0xFF0B8FAC)
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Nepali")
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
                     Text("Close", color = Color(0xFF0B8FAC), fontWeight = FontWeight.Bold)
                 }
             },
