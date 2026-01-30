@@ -43,7 +43,6 @@ fun SettingsScreen() {
         factory = UserViewModelFactory(UserRepoImpl())
     )
 
-    // ✅ FIXED: Changed from currentUser to user
     val currentUser by viewModel.user.collectAsState()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -51,6 +50,11 @@ fun SettingsScreen() {
     var showAboutDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+
+    // ✅ CRITICAL FIX: Reload user data when screen becomes visible
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUser()
+    }
 
     Column(
         modifier = Modifier
