@@ -190,14 +190,7 @@ fun SettingsScreen() {
             }
         )
 
-        SettingsItem(
-            icon = Icons.Default.DateRange,
-            title = "Prescriptions",
-            subtitle = "Upload and manage prescriptions",
-            onClick = {
-                context.startActivity(Intent(context, PrescriptionsActivity::class.java))
-            }
-        )
+        // ✅ REMOVED: Prescriptions item (it's already in Features section)
 
         Spacer(modifier = Modifier.height(16.dp))
 
