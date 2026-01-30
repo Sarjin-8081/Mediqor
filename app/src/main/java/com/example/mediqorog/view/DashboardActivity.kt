@@ -89,9 +89,9 @@ fun DashboardBody() {
                 0 -> HomeScreen(
                     onChatbotClick = { chatbotViewModel.openChatbot() }
                 )
-                1 -> CartScreen(navController = navController)  // Pass navController here
+                1 -> CartScreen(navController = navController)
                 2 -> FeatureScreen()
-                3 -> SettingsScreen(onNavigateBack = { selectedTab = 0 })
+                3 -> SettingsScreen()  // Removed onNavigateBack parameter
             }
 
             if (showChatbot) {

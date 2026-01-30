@@ -1,13 +1,17 @@
 package com.example.mediqorog.view
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,13 +46,51 @@ data class Address(
     val longitude: Double = 0.0,
     val isDefault: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
-)
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readDouble(),
+        parcel.readDouble(),
+        parcel.readByte() != 0.toByte(),
+        parcel.readLong()
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(id)
+        parcel.writeString(name)
+        parcel.writeString(phone)
+        parcel.writeString(addressLine)
+        parcel.writeString(landmark)
+        parcel.writeString(city)
+        parcel.writeString(state)
+        parcel.writeString(pincode)
+        parcel.writeDouble(latitude)
+        parcel.writeDouble(longitude)
+        parcel.writeByte(if (isDefault) 1 else 0)
+        parcel.writeLong(createdAt)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<Address> {
+        override fun createFromParcel(parcel: Parcel): Address = Address(parcel)
+        override fun newArray(size: Int): Array<Address?> = arrayOfNulls(size)
+    }
+}
 
 class SavedAddressesActivity : ComponentActivity() {
 
     private val TAG = "SavedAddressesActivity"
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private var isSelectMode = false
 
     private val addAddressLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -61,7 +103,11 @@ class SavedAddressesActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "SavedAddressesActivity created")
+
+        // Check if we're in selection mode
+        isSelectMode = intent.getBooleanExtra("SELECT_MODE", false)
+
+        Log.d(TAG, "SavedAddressesActivity created, SELECT_MODE: $isSelectMode")
 
         setContent {
             MaterialTheme {
@@ -161,10 +207,32 @@ class SavedAddressesActivity : ComponentActivity() {
             }
         }
 
+        fun selectAddress(address: Address) {
+            Log.d(TAG, "Address selected: ${address.name}")
+            val resultIntent = Intent().apply {
+                putExtra("SELECTED_ADDRESS", address)
+            }
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish()
+        }
+
+        // Auto-navigate to AddEditAddressActivity if no addresses and in select mode
+        LaunchedEffect(isLoading, addresses.isEmpty()) {
+            if (!isLoading && addresses.isEmpty() && isSelectMode) {
+                Log.d(TAG, "No addresses found, opening AddEditAddressActivity")
+                openAddAddress()
+            }
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Saved Addresses", fontWeight = FontWeight.Bold) },
+                    title = {
+                        Text(
+                            if (isSelectMode) "Select Delivery Address" else "Saved Addresses",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { finish() }) {
                             Icon(Icons.Filled.ArrowBack, "Back")
@@ -218,6 +286,8 @@ class SavedAddressesActivity : ComponentActivity() {
                             items(addresses, key = { it.id }) { address ->
                                 AddressCard(
                                     address = address,
+                                    isSelectMode = isSelectMode,
+                                    onSelect = { selectAddress(address) },
                                     onEdit = { openEditAddress(address.id) },
                                     onDelete = {
                                         scope.launch {
@@ -324,6 +394,8 @@ class SavedAddressesActivity : ComponentActivity() {
     @Composable
     fun AddressCard(
         address: Address,
+        isSelectMode: Boolean,
+        onSelect: () -> Unit,
         onEdit: () -> Unit,
         onDelete: () -> Unit,
         onSetDefault: () -> Unit
@@ -332,7 +404,15 @@ class SavedAddressesActivity : ComponentActivity() {
         var showDeleteDialog by remember { mutableStateOf(false) }
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (isSelectMode) {
+                        Modifier.clickable { onSelect() }
+                    } else {
+                        Modifier
+                    }
+                ),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
@@ -374,44 +454,52 @@ class SavedAddressesActivity : ComponentActivity() {
                         }
                     }
 
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Filled.MoreVert, "Options", tint = Color(0xFF9CA3AF))
-                        }
+                    if (!isSelectMode) {
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Filled.MoreVert, "Options", tint = Color(0xFF9CA3AF))
+                            }
 
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            if (!address.isDefault) {
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                if (!address.isDefault) {
+                                    DropdownMenuItem(
+                                        text = { Text("Set as Default") },
+                                        onClick = {
+                                            onSetDefault()
+                                            showMenu = false
+                                        },
+                                        leadingIcon = { Icon(Icons.Filled.CheckCircle, null) }
+                                    )
+                                }
                                 DropdownMenuItem(
-                                    text = { Text("Set as Default") },
+                                    text = { Text("Edit") },
                                     onClick = {
-                                        onSetDefault()
+                                        onEdit()
                                         showMenu = false
                                     },
-                                    leadingIcon = { Icon(Icons.Filled.CheckCircle, null) }
+                                    leadingIcon = { Icon(Icons.Filled.Edit, null) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Delete", color = Color(0xFFEF4444)) },
+                                    onClick = {
+                                        showDeleteDialog = true
+                                        showMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.Delete, null, tint = Color(0xFFEF4444))
+                                    }
                                 )
                             }
-                            DropdownMenuItem(
-                                text = { Text("Edit") },
-                                onClick = {
-                                    onEdit()
-                                    showMenu = false
-                                },
-                                leadingIcon = { Icon(Icons.Filled.Edit, null) }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Delete", color = Color(0xFFEF4444)) },
-                                onClick = {
-                                    showDeleteDialog = true
-                                    showMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Filled.Delete, null, tint = Color(0xFFEF4444))
-                                }
-                            )
                         }
+                    } else {
+                        Icon(
+                            Icons.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = Color(0xFF0B8FAC)
+                        )
                     }
                 }
 
@@ -503,6 +591,21 @@ class SavedAddressesActivity : ComponentActivity() {
                                 color = Color(0xFF374151)
                             )
                         }
+                    }
+                }
+
+                // Select button in select mode
+                if (isSelectMode) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onSelect,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0B8FAC)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Deliver Here", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

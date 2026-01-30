@@ -27,7 +27,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.mediqorog.model.CartModel
 import com.example.mediqorog.repository.CartRepositoryImpl
-import com.example.mediqorog.ui.theme.CheckoutActivity
+import com.example.mediqorog.view.CheckoutActivity
 import com.example.mediqorog.viewmodel.CartViewModel
 import com.example.mediqorog.viewmodel.CartViewModelFactory
 import com.google.firebase.auth.FirebaseAuth

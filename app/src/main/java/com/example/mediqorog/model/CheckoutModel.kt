@@ -17,7 +17,7 @@ data class CheckoutModel(
     val orderStatus: String = "pending" // pending, confirmed, delivered, cancelled
 )
 
-data class OrderModel(
+data class CheckoutOrder(
     val orderId: String = "",
     val userId: String = "",
     val fullName: String = "",
