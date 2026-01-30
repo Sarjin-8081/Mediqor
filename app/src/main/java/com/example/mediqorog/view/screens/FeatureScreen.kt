@@ -19,10 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mediqorog.view.CalorieScannerActivity
 import com.example.mediqorog.view.NutritionTrackerActivity
-import com.example.mediqorog.view.PrescriptionUploadActivity
 import com.example.mediqorog.view.MyOrdersActivity
 import com.example.mediqorog.view.NearbyMedicalActivity
 import com.example.mediqorog.view.EmergencyContactsActivity
+import com.example.mediqorog.view.PrescriptionsActivity
 
 data class FeatureItem(
     val title: String,
@@ -53,7 +53,7 @@ fun FeatureScreen() {
             title = "Prescription Upload",
             icon = Icons.Default.UploadFile,
             color = Color(0xFF2196F3),
-            activityClass = PrescriptionUploadActivity::class.java
+            activityClass = PrescriptionsActivity::class.java
         ),
         FeatureItem(
             title = "My Orders",
