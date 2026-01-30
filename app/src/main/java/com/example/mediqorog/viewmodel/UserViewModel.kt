@@ -19,22 +19,20 @@ import kotlinx.coroutines.tasks.await
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
-    // ✅ ADD THIS: StateFlow for current user
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
 
-    // ✅ ADD THIS: Load current user on init
     init {
         loadCurrentUser()
     }
 
-    // ✅ ADD THIS: Load user from repository
-    private fun loadCurrentUser() {
+    // ✅ CRITICAL: Made this function public so SettingsScreen can call it
+    fun loadCurrentUser() {
         viewModelScope.launch {
             try {
                 val currentUser = repository.getCurrentUser()
                 _user.value = currentUser
-                Log.d("UserViewModel", "Loaded current user: ${currentUser?.email}")
+                Log.d("UserViewModel", "Loaded current user: ${currentUser?.email}, photoUrl: ${currentUser?.photoUrl}")
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Failed to load user: ${e.message}")
                 _user.value = null
@@ -42,7 +40,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    // ✅ ADD THIS: Update user function
     fun updateUser(updatedUser: User) {
         viewModelScope.launch {
             try {
@@ -50,6 +47,8 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 val updates = hashMapOf<String, Any>(
                     "displayName" to updatedUser.displayName,
                     "phoneNumber" to updatedUser.phoneNumber,
+                    "photoUrl" to (updatedUser.photoUrl ?: ""), // ✅ Include photoUrl
+                    "photoPublicId" to (updatedUser.photoPublicId ?: ""), // ✅ Include photoPublicId
                     "bloodGroup" to updatedUser.bloodGroup,
                     "dateOfBirth" to updatedUser.dateOfBirth,
                     "gender" to updatedUser.gender,
@@ -72,7 +71,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    // ✅ Sign Up - Creates user with all 18 fields
     fun signUp(
         email: String,
         password: String,
@@ -84,7 +82,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 val result = repository.signUp(email, password, displayName)
                 if (result.isSuccess) {
                     val user = result.getOrNull()
-                    _user.value = user // ✅ Update state
+                    _user.value = user
                     Log.d("UserViewModel", "Sign up successful for: ${user?.email}")
                     callback(true, "Account created successfully!")
                 } else {
@@ -99,7 +97,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    // ✅ Sign In - Updates lastLoginAt automatically
     fun signIn(
         email: String,
         password: String,
@@ -110,7 +107,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 val result = repository.signIn(email, password)
                 if (result.isSuccess) {
                     val user = result.getOrNull()
-                    _user.value = user // ✅ Update state
+                    _user.value = user
                     val isAdmin = user?.isAdmin() ?: false
                     Log.d("UserViewModel", "Sign in successful. IsAdmin: $isAdmin, LastLogin: ${user?.lastLoginAt}")
                     callback(true, "Welcome back!", isAdmin)
@@ -126,7 +123,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    // ✅ Google Sign In - Handles both new and existing users
     fun signInWithGoogle(
         account: GoogleSignInAccount,
         callback: (Boolean, String, Boolean) -> Unit
@@ -136,7 +132,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 val result = repository.signInWithGoogle(account)
                 if (result.isSuccess) {
                     val user = result.getOrNull()
-                    _user.value = user // ✅ Update state
+                    _user.value = user
                     val isAdmin = user?.isAdmin() ?: false
                     Log.d("UserViewModel", "Google sign in successful. IsAdmin: $isAdmin")
                     callback(true, "Welcome!", isAdmin)
@@ -157,7 +153,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             try {
                 val result = repository.signOut()
                 if (result.isSuccess) {
-                    _user.value = null // ✅ Clear state
+                    _user.value = null
                     callback(true, "Signed out successfully")
                 } else {
                     callback(false, "Sign out failed")
@@ -188,7 +184,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 val user = repository.getCurrentUser()
-                _user.value = user // ✅ Update state
+                _user.value = user
                 callback(user)
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Get current user failed: ${e.message}")
@@ -197,7 +193,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    // ✅ Migration function - Updates existing users with missing fields
     fun updateAllUsersWithRole(callback: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {

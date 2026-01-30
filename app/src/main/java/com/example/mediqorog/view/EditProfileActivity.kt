@@ -37,10 +37,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import com.example.mediqorog.repository.CommonRepoImpl
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
 
 class EditProfileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +64,7 @@ fun EditProfileScreen(onBackClick: () -> Unit) {
 
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
-    val storage = FirebaseStorage.getInstance()
+    val cloudinaryRepo = remember { CommonRepoImpl() }
     val currentUser = auth.currentUser
 
     var isLoading by remember { mutableStateOf(false) }
@@ -76,6 +75,8 @@ fun EditProfileScreen(onBackClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var profileImageUrl by remember { mutableStateOf("") }
+    var originalImageUrl by remember { mutableStateOf("") }
+    var profileImagePublicId by remember { mutableStateOf<String?>(null) }
 
     // Medical Information
     var bloodGroup by remember { mutableStateOf("") }
@@ -102,6 +103,7 @@ fun EditProfileScreen(onBackClick: () -> Unit) {
         currentUser?.let { user ->
             email = user.email ?: ""
             profileImageUrl = user.photoUrl?.toString() ?: ""
+            originalImageUrl = profileImageUrl
 
             try {
                 val doc = firestore.collection("users")
@@ -112,6 +114,8 @@ fun EditProfileScreen(onBackClick: () -> Unit) {
                 displayName = doc.getString("displayName") ?: ""
                 phoneNumber = doc.getString("phoneNumber") ?: ""
                 profileImageUrl = doc.getString("photoUrl") ?: ""
+                originalImageUrl = profileImageUrl
+                profileImagePublicId = doc.getString("photoPublicId")
                 bloodGroup = doc.getString("bloodGroup") ?: ""
                 dateOfBirth = doc.getString("dateOfBirth") ?: ""
                 gender = doc.getString("gender") ?: ""
@@ -123,32 +127,41 @@ fun EditProfileScreen(onBackClick: () -> Unit) {
         }
     }
 
-    // Image picker launcher
+    // Image picker launcher - Using your existing Cloudinary repository
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
+            profileImageUrl = uri.toString()
             isUploadingImage = true
 
-            scope.launch {
-                try {
-                    currentUser?.let { user ->
-                        val imageRef = storage.reference
-                            .child("profile_images/${user.uid}/${UUID.randomUUID()}.jpg")
-
-                        imageRef.putFile(uri).await()
-                        val downloadUrl = imageRef.downloadUrl.await().toString()
-
-                        profileImageUrl = downloadUrl
+            currentUser?.let { user ->
+                cloudinaryRepo.uploadImage(
+                    context = context,
+                    imageUri = uri,
+                    folder = "profile_images",
+                    callback = { success, message, imageUrl, publicId ->
                         isUploadingImage = false
-                        Toast.makeText(context, "Image uploaded successfully!", Toast.LENGTH_SHORT).show()
+                        if (success && imageUrl != null) {
+                            profileImageUrl = imageUrl
+                            originalImageUrl = imageUrl
+                            profileImagePublicId = publicId
+                            Toast.makeText(context, "Image uploaded successfully!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            profileImageUrl = originalImageUrl
+                            selectedImageUri = null
+                            Toast.makeText(context, "Upload failed: $message", Toast.LENGTH_LONG).show()
+                        }
                     }
-                } catch (e: Exception) {
-                    isUploadingImage = false
-                    Toast.makeText(context, "Upload failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+                )
+            } ?: run {
+                isUploadingImage = false
+                profileImageUrl = originalImageUrl
+                Toast.makeText(context, "User not authenticated", Toast.LENGTH_SHORT).show()
             }
+        } else {
+            Toast.makeText(context, "No image selected", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -522,6 +535,7 @@ fun EditProfileScreen(onBackClick: () -> Unit) {
                                                 "displayName" to displayName,
                                                 "phoneNumber" to phoneNumber,
                                                 "photoUrl" to profileImageUrl,
+                                                "photoPublicId" to profileImagePublicId,
                                                 "bloodGroup" to bloodGroup,
                                                 "dateOfBirth" to dateOfBirth,
                                                 "gender" to gender,
@@ -593,6 +607,7 @@ fun EditProfileScreen(onBackClick: () -> Unit) {
                     onClick = {
                         profileImageUrl = ""
                         selectedImageUri = null
+                        profileImagePublicId = null
                         Toast.makeText(context, "Photo removed", Toast.LENGTH_SHORT).show()
                         showDeleteDialog = false
                     }
