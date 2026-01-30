@@ -1,12 +1,12 @@
 package com.example.mediqorog.repository
 
 import com.example.mediqorog.model.CartModel
-import com.example.mediqorog.model.OrderModel
+import com.example.mediqorog.model.CheckoutOrder
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 interface CheckoutRepository {
-    suspend fun placeOrder(orderModel: OrderModel): Result<String>
+    suspend fun placeOrder(checkoutOrder: CheckoutOrder): Result<String>
     suspend fun clearCart(userId: String): Result<Unit>
     suspend fun getCartItems(userId: String): Result<List<CartModel>>
 }
@@ -16,10 +16,10 @@ class CheckoutRepositoryImpl : CheckoutRepository {
     private val ordersCollection = firestore.collection("orders")
     private val cartCollection = firestore.collection("cart")
 
-    override suspend fun placeOrder(orderModel: OrderModel): Result<String> {
+    override suspend fun placeOrder(checkoutOrder: CheckoutOrder): Result<String> {
         return try {
             val orderId = ordersCollection.document().id
-            val orderWithId = orderModel.copy(orderId = orderId)
+            val orderWithId = checkoutOrder.copy(orderId = orderId)
 
             ordersCollection.document(orderId)
                 .set(orderWithId)
