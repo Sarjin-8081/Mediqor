@@ -1,69 +1,182 @@
 package com.example.mediqorog.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.mediqorog.model.CartModel
-import com.example.mediqorog.model.CheckoutOrder
+import com.example.mediqorog.model.Order
+import com.example.mediqorog.model.OrderItem
+import com.example.mediqorog.model.OrderStatus
 import com.example.mediqorog.repository.CheckoutRepository
+import com.example.mediqorog.repository.OrderRepository
+import com.example.mediqorog.repository.OrderRepositoryImpl
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 data class CheckoutUiState(
     val isLoading: Boolean = false,
+    val cartItems: List<CartModel> = emptyList(),
     val fullName: String = "",
     val phoneNumber: String = "",
     val address: String = "",
     val colonyLandmark: String = "",
-    val cartItems: List<CartModel> = emptyList(),
     val itemsTotal: Double = 0.0,
     val deliveryFee: Double = 83.0,
     val total: Double = 0.0,
-    val error: String? = null,
-    val successMessage: String? = null,
     val orderPlaced: Boolean = false,
-    val orderId: String = ""
+    val error: String? = null,
+    val successMessage: String? = null
 )
 
 class CheckoutViewModel(
-    private val repository: CheckoutRepository
+    private val checkoutRepository: CheckoutRepository
 ) : ViewModel() {
+
+    private val orderRepository: OrderRepository = OrderRepositoryImpl()
 
     private val _uiState = MutableStateFlow(CheckoutUiState())
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
 
+    companion object {
+        private const val TAG = "CheckoutViewModel"
+    }
+
     fun loadCartItems(userId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
+            try {
+                Log.d(TAG, "Loading cart items for user: $userId")
 
-            repository.getCartItems(userId).fold(
-                onSuccess = { items ->
+                // Get Result from repository
+                val result = checkoutRepository.getCartItems(userId)
+
+                // Handle Result properly
+                if (result.isSuccess) {
+                    val items = result.getOrNull() ?: emptyList()
                     val itemsTotal = items.sumOf { it.price * it.quantity }
-                    val total = itemsTotal + _uiState.value.deliveryFee
+                    val deliveryFee = if (items.isEmpty()) 0.0 else 83.0
+                    val total = itemsTotal + deliveryFee
 
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             cartItems = items,
                             itemsTotal = itemsTotal,
+                            deliveryFee = deliveryFee,
                             total = total
                         )
                     }
-                },
-                onFailure = { error ->
+                    Log.d(TAG, "Loaded ${items.size} cart items")
+                } else {
+                    throw result.exceptionOrNull() ?: Exception("Failed to load cart items")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading cart items", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load cart items"
+                    )
+                }
+            }
+        }
+    }
+
+    fun placeOrder(userId: String, paymentMethod: String = "Cash on Delivery") {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val currentState = _uiState.value
+
+                // Validate
+                if (currentState.cartItems.isEmpty()) {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = error.message ?: "Failed to load cart items"
+                            error = "Cart is empty"
                         )
                     }
+                    return@launch
                 }
-            )
+
+                // Create order items
+                val orderItems = currentState.cartItems.map { cartItem ->
+                    OrderItem(
+                        id = cartItem.productId,
+                        name = cartItem.productName,
+                        productName = cartItem.productName,
+                        price = cartItem.price,
+                        quantity = cartItem.quantity,
+                        imageUrl = cartItem.productImage
+                    )
+                }
+
+                // Generate order number
+                val orderNumber = "ORD-${System.currentTimeMillis()}"
+
+                // Create order with your existing Order model structure
+                val order = Order(
+                    id = "", // Will be generated by repository
+                    userId = userId,
+                    orderNumber = orderNumber,
+                    items = orderItems,
+                    totalAmount = currentState.total,
+                    status = OrderStatus.PENDING,
+                    date = Date(), // Current date
+                    timestamp = Timestamp.now(), // Current timestamp
+                    deliveryAddress = currentState.address,
+                    contactPhone = currentState.phoneNumber,
+                    contactName = currentState.fullName,
+                    paymentMethod = paymentMethod,
+                    isPaid = paymentMethod == "eSewa", // Assume eSewa payments are paid
+                    orderNotes = currentState.colonyLandmark
+                )
+
+                Log.d(TAG, "Placing order: $orderNumber")
+
+                // Save order using your existing repository
+                val result = orderRepository.createOrder(order)
+
+                if (result.isSuccess) {
+                    val orderId = result.getOrNull()
+                    Log.d(TAG, "Order placed successfully: $orderId")
+
+                    // Clear cart after successful order
+                    clearCart(userId)
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            orderPlaced = true,
+                            successMessage = "Order placed successfully!"
+                        )
+                    }
+                } else {
+                    throw result.exceptionOrNull() ?: Exception("Failed to place order")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error placing order", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to place order"
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun clearCart(userId: String) {
+        try {
+            Log.d(TAG, "Clearing cart for user: $userId")
+            checkoutRepository.clearCart(userId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing cart", e)
         }
     }
 
@@ -79,118 +192,16 @@ class CheckoutViewModel(
         _uiState.update { it.copy(address = address) }
     }
 
-    fun updateColonyLandmark(colony: String) {
-        _uiState.update { it.copy(colonyLandmark = colony) }
-    }
-
-    fun placeOrder(userId: String) {
-        val state = _uiState.value
-
-        // Validation
-        if (state.fullName.isBlank()) {
-            _uiState.update { it.copy(error = "Please enter your full name") }
-            return
-        }
-
-        if (state.phoneNumber.isBlank()) {
-            _uiState.update { it.copy(error = "Please enter your phone number") }
-            return
-        }
-
-        if (state.phoneNumber.length < 10) {
-            _uiState.update { it.copy(error = "Please enter a valid phone number") }
-            return
-        }
-
-        if (state.address.isBlank()) {
-            _uiState.update { it.copy(error = "Please enter your address") }
-            return
-        }
-
-        if (state.cartItems.isEmpty()) {
-            _uiState.update { it.copy(error = "Your cart is empty") }
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-
-            // Calculate estimated delivery date (2-3 days from now)
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.DAY_OF_YEAR, 2)
-            val startDate = SimpleDateFormat("d MMM", Locale.getDefault()).format(calendar.time)
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
-            val endDate = SimpleDateFormat("d MMM", Locale.getDefault()).format(calendar.time)
-            val estimatedDelivery = "Get by $startDate-$endDate"
-
-            val order = CheckoutOrder(
-                userId = userId,
-                fullName = state.fullName,
-                phoneNumber = state.phoneNumber,
-                address = state.address,
-                colonyLandmark = state.colonyLandmark,
-                items = state.cartItems,
-                itemsTotal = state.itemsTotal,
-                deliveryFee = state.deliveryFee,
-                discount = 0.0,
-                total = state.total,
-                orderStatus = "pending",
-                orderDate = System.currentTimeMillis(),
-                estimatedDelivery = estimatedDelivery
-            )
-
-            repository.placeOrder(order).fold(
-                onSuccess = { orderId ->
-                    // Clear cart after successful order
-                    repository.clearCart(userId).fold(
-                        onSuccess = {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    orderPlaced = true,
-                                    orderId = orderId,
-                                    successMessage = "Order placed successfully!"
-                                )
-                            }
-                        },
-                        onFailure = { error ->
-                            // Order placed but cart not cleared
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    orderPlaced = true,
-                                    orderId = orderId,
-                                    successMessage = "Order placed successfully!"
-                                )
-                            }
-                        }
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = error.message ?: "Failed to place order"
-                        )
-                    }
-                }
-            )
-        }
+    fun updateColonyLandmark(landmark: String) {
+        _uiState.update { it.copy(colonyLandmark = landmark) }
     }
 
     fun clearMessages() {
-        _uiState.update { it.copy(error = null, successMessage = null) }
-    }
-}
-
-class CheckoutViewModelFactory(
-    private val repository: CheckoutRepository
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CheckoutViewModel::class.java)) {
-            return CheckoutViewModel(repository) as T
+        _uiState.update {
+            it.copy(
+                error = null,
+                successMessage = null
+            )
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

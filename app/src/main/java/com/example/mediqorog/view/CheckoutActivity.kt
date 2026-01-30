@@ -50,18 +50,24 @@ class CheckoutActivity : ComponentActivity() {
         }
     }
 
+    // Payment Activity Launcher
+    private val processToPayLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            Toast.makeText(this, "Payment successful! Order placed.", Toast.LENGTH_LONG).show()
+            finish()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val cartTotal = intent.getDoubleExtra("CART_TOTAL", 0.0)
-        val itemCount = intent.getIntExtra("ITEM_COUNT", 0)
         val selectedAddress = intent.getParcelableExtra<Address>("SELECTED_ADDRESS")
 
         setContent {
             MaterialTheme {
                 CheckoutScreenContent(
-                    cartTotal = cartTotal,
-                    itemCount = itemCount,
                     preSelectedAddress = selectedAddress,
                     onBackClick = { finish() },
                     onOrderPlaced = {
@@ -73,6 +79,25 @@ class CheckoutActivity : ComponentActivity() {
                             putExtra("SELECT_MODE", true)
                         }
                         selectAddressLauncher.launch(intent)
+                    },
+                    onProceedToPay = { userId, total, deliveryFee, itemsTotal, itemCount ->
+                        // Launch ProcessToPayActivity with address data
+                        val intent = Intent(this, ProcessToPayActivity::class.java).apply {
+                            putExtra(ProcessToPayActivity.EXTRA_TOTAL_AMOUNT, total)
+                            putExtra(ProcessToPayActivity.EXTRA_DELIVERY_FEE, deliveryFee)
+                            putExtra(ProcessToPayActivity.EXTRA_ITEMS_TOTAL, itemsTotal)
+                            putExtra(ProcessToPayActivity.EXTRA_ITEM_COUNT, itemCount)
+                            putExtra(ProcessToPayActivity.EXTRA_USER_ID, userId)
+
+                            // Pass address data
+                            selectedAddress?.let { addr ->
+                                putExtra(ProcessToPayActivity.EXTRA_ADDRESS_NAME, addr.name)
+                                putExtra(ProcessToPayActivity.EXTRA_ADDRESS_PHONE, addr.phone)
+                                putExtra(ProcessToPayActivity.EXTRA_ADDRESS_LINE, addr.addressLine)
+                                putExtra(ProcessToPayActivity.EXTRA_ADDRESS_LANDMARK, addr.landmark)
+                            }
+                        }
+                        processToPayLauncher.launch(intent)
                     }
                 )
             }
@@ -83,12 +108,11 @@ class CheckoutActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreenContent(
-    cartTotal: Double,
-    itemCount: Int,
     preSelectedAddress: Address?,
     onBackClick: () -> Unit,
     onOrderPlaced: () -> Unit,
-    onSelectAddress: () -> Unit
+    onSelectAddress: () -> Unit,
+    onProceedToPay: (String, Double, Double, Double, Int) -> Unit
 ) {
     val context = LocalContext.current
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -214,7 +238,7 @@ fun CheckoutScreenContent(
                         )
                     }
 
-                    // Proceed to Pay Button
+                    // Proceed to Pay Button - UPDATED
                     item {
                         Button(
                             onClick = {
@@ -225,7 +249,14 @@ fun CheckoutScreenContent(
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else if (currentUserId.isNotEmpty()) {
-                                    checkoutViewModel.placeOrder(currentUserId)
+                                    // Launch ProcessToPayActivity
+                                    onProceedToPay(
+                                        currentUserId,
+                                        checkoutUiState.total,
+                                        checkoutUiState.deliveryFee,
+                                        checkoutUiState.itemsTotal,
+                                        checkoutUiState.cartItems.size
+                                    )
                                 } else {
                                     Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
                                 }
