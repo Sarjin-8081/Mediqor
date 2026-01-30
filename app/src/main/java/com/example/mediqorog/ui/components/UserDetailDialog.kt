@@ -657,7 +657,7 @@ private fun StatCard(
     }
 }
 
-private fun formatDate(timestamp: Long): String {
+fun formatDate(timestamp: Long): String {
     val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     return sdf.format(Date(timestamp))
 }

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.mediqorog.model.CartModel
-import com.example.mediqorog.model.OrderModel
+import com.example.mediqorog.model.CheckoutOrder
 import com.example.mediqorog.repository.CheckoutRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -123,7 +123,7 @@ class CheckoutViewModel(
             val endDate = SimpleDateFormat("d MMM", Locale.getDefault()).format(calendar.time)
             val estimatedDelivery = "Get by $startDate-$endDate"
 
-            val order = OrderModel(
+            val order = CheckoutOrder(
                 userId = userId,
                 fullName = state.fullName,
                 phoneNumber = state.phoneNumber,

@@ -28,4 +28,6 @@
     <string name="title_activity_admin_edit_profile">AdminEditProfileActivity</string>
     <string name="title_activity_admin_change_password">AdminChangePasswordActivity</string>
     <string name="title_activity_add_edit_address_activity">AddEditAddressActivityActivity</string>
+    <string name="title_activity_nearby_medical">NearbyMedicalActivity</string>
+    <string name="title_activity_emergency_contacts">EmergencyContactsActivity</string>
 </resources>
