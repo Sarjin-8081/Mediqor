@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -232,6 +233,7 @@ fun LoginBody(
                 .background(Color.White)
                 .padding(horizontal = 24.dp)
         ) {
+            // Logo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -247,6 +249,7 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(50.dp))
 
+            // Login Title
             Text(
                 text = "LOGIN",
                 style = TextStyle(
@@ -260,12 +263,14 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(40.dp))
 
+            // ✅ Email Field with Test Tag
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 15.dp),
+                    .padding(horizontal = 15.dp)
+                    .testTag("emailField"), // ✅ Test Tag
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("Email") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -280,11 +285,15 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // ✅ Password Field with Test Tag
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 trailingIcon = {
-                    IconButton(onClick = { visibility = !visibility }) {
+                    IconButton(
+                        onClick = { visibility = !visibility },
+                        modifier = Modifier.testTag("passwordVisibilityToggle") // ✅ Test Tag
+                    ) {
                         Icon(
                             painter = if (visibility) {
                                 painterResource(R.drawable.baseline_visibility_off_24)
@@ -302,7 +311,8 @@ fun LoginBody(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 15.dp),
+                    .padding(horizontal = 15.dp)
+                    .testTag("passwordField"), // ✅ Test Tag
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("Password") },
                 colors = OutlinedTextFieldDefaults.colors(
@@ -316,7 +326,7 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // ✅ Remember Me Checkbox
+            // ✅ Remember Me Checkbox & Forgot Password
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -324,6 +334,7 @@ fun LoginBody(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Remember Me
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable(enabled = !loading) {
@@ -338,6 +349,7 @@ fun LoginBody(
                             onRememberMeChanged(email, it)
                         },
                         enabled = !loading,
+                        modifier = Modifier.testTag("rememberMeCheckbox"), // ✅ Test Tag
                         colors = CheckboxDefaults.colors(
                             checkedColor = Color(0xFF0B8FAC),
                             uncheckedColor = Color.Gray
@@ -350,23 +362,27 @@ fun LoginBody(
                     )
                 }
 
+                // ✅ Forgot Password Link with Test Tag
                 Text(
                     text = "Forget Password?",
                     style = TextStyle(
                         color = Color(0xFF0B8FAC),
                         fontSize = 14.sp
                     ),
-                    modifier = Modifier.clickable {
-                        if (!loading) {
-                            val intent = Intent(context, ForgotPasswordActivity::class.java)
-                            context.startActivity(intent)
+                    modifier = Modifier
+                        .clickable {
+                            if (!loading) {
+                                val intent = Intent(context, ForgotPasswordActivity::class.java)
+                                context.startActivity(intent)
+                            }
                         }
-                    }
+                        .testTag("forgotPasswordLink") // ✅ Test Tag
                 )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // ✅ Login Button with Test Tag
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
@@ -407,7 +423,8 @@ fun LoginBody(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp)
-                    .height(60.dp),
+                    .height(60.dp)
+                    .testTag("loginButton"), // ✅ Test Tag
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 15.dp),
                 shape = RoundedCornerShape(32.dp),
                 enabled = !loading
@@ -417,6 +434,7 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // OR Divider
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -434,6 +452,7 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // ✅ Google Sign In Button with Test Tag
             OutlinedButton(
                 onClick = {
                     if (!loading) {
@@ -447,7 +466,8 @@ fun LoginBody(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp)
-                    .height(60.dp),
+                    .height(60.dp)
+                    .testTag("googleSignInButton"), // ✅ Test Tag
                 shape = RoundedCornerShape(32.dp),
                 border = BorderStroke(1.dp, Color.LightGray),
                 enabled = !loading
@@ -468,6 +488,7 @@ fun LoginBody(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // ✅ Register Link with Test Tag
             Text(
                 text = buildAnnotatedString {
                     append("Don't have an account? ")
@@ -485,6 +506,7 @@ fun LoginBody(
                             context.startActivity(intent)
                         }
                     }
+                    .testTag("registerLink") // ✅ Test Tag
             )
         }
     }
