@@ -15,20 +15,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.mediqorog.ui.components.FeatureCard
-import com.example.mediqorog.view.CategoriesFiltersActivity
-import com.example.mediqorog.view.HealthPackagesActivity
-import com.example.mediqorog.view.LabTestsActivity
-import com.example.mediqorog.view.MedicineReminderActivity
-import com.example.mediqorog.view.OffersActivity
-import com.example.mediqorog.view.OrderInvoicesActivity
-import com.example.mediqorog.view.OrderTrackingActivity
-import com.example.mediqorog.view.PaymentMethodsActivity
 import com.example.mediqorog.view.PrescriptionUploadActivity
-import com.example.mediqorog.view.RepeatOrdersActivity
-import com.example.mediqorog.view.SavedAddressesActivity
-import com.example.mediqorog.view.TeleConsultationActivity
+import com.example.mediqorog.view.MyOrdersActivity
+import com.example.mediqorog.view.NearbyMedicalActivity
+import com.example.mediqorog.view.EmergencyContactsActivity
 
 data class Feature(
     val title: String,
@@ -43,18 +34,30 @@ fun FeatureScreen() {
     val context = LocalContext.current
 
     val features = listOf(
-        Feature("Categories & Filters", Icons.Filled.Category, Color(0xFF4CAF50), CategoriesFiltersActivity::class.java),
-        Feature("Discounts & Offers", Icons.Filled.LocalOffer, Color(0xFFFF9800), OffersActivity::class.java),
-        Feature("Prescription Upload", Icons.Filled.UploadFile, Color(0xFF2196F3), PrescriptionUploadActivity::class.java),
-        Feature("Repeat Orders", Icons.Filled.Autorenew, Color(0xFF9C27B0), RepeatOrdersActivity::class.java),
-        Feature("Payment Methods", Icons.Filled.Payment, Color(0xFF00BCD4), PaymentMethodsActivity::class.java),
-        Feature("Order Tracking", Icons.Filled.LocalShipping, Color(0xFF009688), OrderTrackingActivity::class.java),
-        Feature("Order Invoices", Icons.Filled.Receipt, Color(0xFF795548), OrderInvoicesActivity::class.java),
-        Feature("Tele-consultation", Icons.Filled.VideoCall, Color(0xFFE91E63), TeleConsultationActivity::class.java),
-        Feature("Lab Test Booking", Icons.Filled.Biotech, Color(0xFF3F51B5), LabTestsActivity::class.java),
-        Feature("Health Packages", Icons.Filled.HealthAndSafety, Color(0xFF8BC34A), HealthPackagesActivity::class.java),
-        Feature("Medicine Reminder", Icons.Filled.Alarm, Color(0xFFFF5722), MedicineReminderActivity::class.java),
-        Feature("Saved Addresses", Icons.Filled.LocationOn, Color(0xFF607D8B), SavedAddressesActivity::class.java)
+        Feature(
+            "Prescription Upload",
+            Icons.Filled.UploadFile,
+            Color(0xFF2196F3),
+            PrescriptionUploadActivity::class.java
+        ),
+        Feature(
+            "My Orders",
+            Icons.Filled.ShoppingBag,
+            Color(0xFF4CAF50),
+            MyOrdersActivity::class.java
+        ),
+        Feature(
+            "Nearby Medical",
+            Icons.Filled.LocalHospital,
+            Color(0xFF9C27B0),
+            NearbyMedicalActivity::class.java
+        ),
+        Feature(
+            "Emergency Contacts",
+            Icons.Filled.Emergency,
+            Color(0xFFEF4444),
+            EmergencyContactsActivity::class.java
+        )
     )
 
     Scaffold(

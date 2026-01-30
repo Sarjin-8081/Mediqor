@@ -9,8 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -18,11 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mediqorog.components.*
-import com.example.mediqorog.model.Order
 import com.example.mediqorog.model.OrderStatus
+import com.example.mediqorog.ui.components.AdminOrderCard
 import com.example.mediqorog.viewmodel.AdminOrdersViewModel
-import com.example.mediqorog.utils.DateUtils
-import com.example.mediqorog.utils.NumberUtils
 
 @Composable
 fun AdminOrdersScreenContent() {
@@ -30,6 +28,7 @@ fun AdminOrdersScreenContent() {
     val viewModel: AdminOrdersViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
+    // Handle messages
     LaunchedEffect(uiState.error, uiState.successMessage) {
         uiState.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -46,66 +45,145 @@ fun AdminOrdersScreenContent() {
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
+        // Header Section
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color.White,
             shadowElevation = 2.dp
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    "Orders Management",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0B8FAC)
-                )
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Orders Management",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0B8FAC)
+                    )
+
+                    IconButton(
+                        onClick = { viewModel.loadOrders() }
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = Color(0xFF0B8FAC)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Search Bar
                 SearchBar(
                     query = uiState.searchQuery,
                     onQueryChange = { viewModel.searchOrders(it) },
-                    placeholder = "Search orders..."
+                    placeholder = "Search by order number or user ID..."
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                FilterDropdown(
-                    selectedValue = uiState.selectedStatus,
-                    options = listOf("All", "PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"),
-                    onValueChange = { viewModel.filterByStatus(it) },
-                    label = "Status"
+                // Status Filter Chips Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = uiState.selectedStatus == "All",
+                        onClick = { viewModel.filterByStatus("All") },
+                        label = { Text("All") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFF0B8FAC),
+                            selectedLabelColor = Color.White
+                        )
+                    )
+
+                    OrderStatus.values().take(5).forEach { status ->
+                        FilterChip(
+                            selected = uiState.selectedStatus == status.name,
+                            onClick = { viewModel.filterByStatus(status.name) },
+                            label = { Text(status.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF0B8FAC),
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Orders Count
+                Text(
+                    text = "${uiState.filteredOrders.size} order(s)",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
 
-        if (uiState.isLoading) {
-            LoadingIndicator()
-        } else if (uiState.filteredOrders.isEmpty()) {
-            EmptyState(
-                icon = Icons.Default.ShoppingCart,
-                message = "No orders found"
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(uiState.filteredOrders) { order ->
-                    var showDialog by remember { mutableStateOf(false) }
+        // Content Section
+        when {
+            uiState.isLoading -> {
+                LoadingIndicator()
+            }
 
-                    OrderCard(
-                        order = order,
-                        onClick = { showDialog = true }
+            uiState.error != null && uiState.filteredOrders.isEmpty() -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = Color.Red
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = uiState.error ?: "An error occurred",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.loadOrders() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0B8FAC)
+                        )
+                    ) {
+                        Text("Retry")
+                    }
+                }
+            }
 
-                    if (showDialog) {
-                        OrderDetailsDialog(
+            uiState.filteredOrders.isEmpty() -> {
+                EmptyState(
+                    icon = Icons.Default.ShoppingCart,
+                    message = "No orders found"
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(uiState.filteredOrders) { order ->
+                        AdminOrderCard(
                             order = order,
-                            onDismiss = { showDialog = false },
-                            onUpdateStatus = { newStatus ->
+                            onStatusChange = { newStatus ->
                                 viewModel.updateOrderStatus(order.id, newStatus)
-                                showDialog = false
                             }
                         )
                     }
@@ -113,65 +191,4 @@ fun AdminOrdersScreenContent() {
             }
         }
     }
-}
-
-@Composable
-fun OrderDetailsDialog(
-    order: Order,
-    onDismiss: () -> Unit,
-    onUpdateStatus: (OrderStatus) -> Unit
-) {
-    var selectedStatus by remember { mutableStateOf(order.status) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Order #${order.orderNumber}") },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 400.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text("User ID: ${order.userId}", fontWeight = FontWeight.Bold)
-                Text("Date: ${DateUtils.formatDateTime(order.date.time)}")
-                Text("Items: ${order.items.size}")
-                Text("Total: ${NumberUtils.formatCurrencyWithDecimals(order.totalAmount)}")
-                Text("Address: ${order.deliveryAddress}")
-                Text("Payment: ${order.paymentMethod}")
-
-                HorizontalDivider()
-
-                Text("Update Status:", fontWeight = FontWeight.Bold)
-
-                OrderStatus.values().forEach { status ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = selectedStatus == status,
-                            onClick = { selectedStatus = status }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(status.toDisplayString())
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onUpdateStatus(selectedStatus) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF0B8FAC)
-                )
-            ) {
-                Text("Update")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
 }

@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class OrdersUiState(
+/**
+ * UI State for Admin Orders Screen
+ */
+data class AdminOrdersUiState(
     val isLoading: Boolean = false,
     val orders: List<Order> = emptyList(),
     val filteredOrders: List<Order> = emptyList(),
@@ -21,10 +24,13 @@ data class OrdersUiState(
     val successMessage: String? = null
 )
 
+/**
+ * ViewModel for managing admin orders view
+ */
 class AdminOrdersViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(OrdersUiState())
-    val uiState: StateFlow<OrdersUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(AdminOrdersUiState())
+    val uiState: StateFlow<AdminOrdersUiState> = _uiState.asStateFlow()
 
     private val db = FirebaseFirestore.getInstance()
     private val TAG = "AdminOrdersVM"
