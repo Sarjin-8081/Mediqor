@@ -33,213 +33,214 @@ class HelpCenterActivity : ComponentActivity() {
 
         setContent {
             HelpCenterScreen(
-                onBackClick = { finish() }
+                onBackClick = { finish() } // ✅ This will close the activity
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpCenterScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8FAFB))
-            .verticalScroll(scrollState)
-    ) {
-        // Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF0B8FAC))
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Help Center") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) { // ✅ Connected to finish()
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF0B8FAC),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
-            }
-            Text(
-                text = "Help Center",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
             )
         }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFFF8FAFB))
+                .verticalScroll(scrollState)
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+            // Contact Support Section
+            Text(
+                text = "Contact Support",
+                style = TextStyle(
+                    color = Color(0xFF2D3748),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                ),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
 
-        // Contact Support Section
-        Text(
-            text = "Contact Support",
-            style = TextStyle(
-                color = Color(0xFF2D3748),
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            ),
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
-
-        // Email Support
-        SupportOptionCard(
-            icon = Icons.Default.Email,
-            title = "Email Support",
-            subtitle = "mediqor@gmail.com",
-            onClick = {
-                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:mediqor@gmail.com")
+            // Email Support
+            SupportOptionCard(
+                icon = Icons.Default.Email,
+                title = "Email Support",
+                subtitle = "mediqor@gmail.com",
+                onClick = {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:mediqor@gmail.com")
+                    }
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
-            }
-        )
+            )
 
-        // Report a Bug
-        SupportOptionCard(
-            icon = Icons.Default.BugReport,
-            title = "Report a Bug",
-            subtitle = "Help us improve Mediqor",
-            onClick = {
-                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:mediqor@gmail.com?subject=Bug Report - Mediqor App")
+            // Report a Bug
+            SupportOptionCard(
+                icon = Icons.Default.BugReport,
+                title = "Report a Bug",
+                subtitle = "Help us improve Mediqor",
+                onClick = {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:mediqor@gmail.com?subject=Bug Report - Mediqor App")
+                    }
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
-            }
-        )
+            )
 
-        // Send Feedback
-        SupportOptionCard(
-            icon = Icons.Default.Feedback,
-            title = "Send Feedback",
-            subtitle = "Share your suggestions",
-            onClick = {
-                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:mediqor@gmail.com?subject=Mediqor Feedback")
+            // Send Feedback
+            SupportOptionCard(
+                icon = Icons.Default.Feedback,
+                title = "Send Feedback",
+                subtitle = "Share your suggestions",
+                onClick = {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:mediqor@gmail.com?subject=Mediqor Feedback")
+                    }
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
-            }
-        )
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // FAQs Section
-        Text(
-            text = "Frequently Asked Questions",
-            style = TextStyle(
-                color = Color(0xFF2D3748),
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            ),
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
+            // FAQs Section
+            Text(
+                text = "Frequently Asked Questions",
+                style = TextStyle(
+                    color = Color(0xFF2D3748),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                ),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
 
-        // Account & Profile FAQs
-        FAQCategoryHeader(title = "Account & Profile")
+            // Account & Profile FAQs
+            FAQCategoryHeader(title = "Account & Profile")
 
-        FAQItem(
-            question = "How do I create a Mediqor account?",
-            answer = "You can sign up using your email or phone number. Once registered, you can manage your profile and health info."
-        )
+            FAQItem(
+                question = "How do I create a Mediqor account?",
+                answer = "You can sign up using your email or phone number. Once registered, you can manage your profile and health info."
+            )
 
-        FAQItem(
-            question = "Can I update my profile information later?",
-            answer = "Yes, go to your profile page and update your details anytime."
-        )
+            FAQItem(
+                question = "Can I update my profile information later?",
+                answer = "Yes, go to your profile page and update your details anytime."
+            )
 
-        FAQItem(
-            question = "How do I delete my Mediqor account?",
-            answer = "Contact our support team from the app, and they will guide you through the account deletion process."
-        )
+            FAQItem(
+                question = "How do I delete my Mediqor account?",
+                answer = "Contact our support team from the app, and they will guide you through the account deletion process."
+            )
 
-        // Chatbot & Health Guidance FAQs
-        FAQCategoryHeader(title = "Chatbot & Health Guidance")
+            // Chatbot & Health Guidance FAQs
+            FAQCategoryHeader(title = "Chatbot & Health Guidance")
 
-        FAQItem(
-            question = "How does the AI chatbot work?",
-            answer = "The chatbot provides guidance on health-related queries and medicine reminders. It can't replace professional medical advice but can assist with general questions."
-        )
+            FAQItem(
+                question = "How does the AI chatbot work?",
+                answer = "The chatbot provides guidance on health-related queries and medicine reminders. It can't replace professional medical advice but can assist with general questions."
+            )
 
-        FAQItem(
-            question = "Is my conversation with the chatbot private?",
-            answer = "Yes, all chat interactions are secure and encrypted. Your data is never shared without your consent."
-        )
+            FAQItem(
+                question = "Is my conversation with the chatbot private?",
+                answer = "Yes, all chat interactions are secure and encrypted. Your data is never shared without your consent."
+            )
 
-        // Prescriptions & Medicine Reminders FAQs
-        FAQCategoryHeader(title = "Prescriptions & Medicine Reminders")
+            // Prescriptions & Medicine Reminders FAQs
+            FAQCategoryHeader(title = "Prescriptions & Medicine Reminders")
 
-        FAQItem(
-            question = "How do I upload my prescription?",
-            answer = "Tap \"Upload Prescription\" in the app, take a clear photo of your prescription, and submit."
-        )
+            FAQItem(
+                question = "How do I upload my prescription?",
+                answer = "Tap \"Upload Prescription\" in the app, take a clear photo of your prescription, and submit."
+            )
 
-        FAQItem(
-            question = "Can I get reminders for my medicines?",
-            answer = "Yes, Mediqor will automatically send notifications for each dose based on your uploaded prescription."
-        )
+            FAQItem(
+                question = "Can I get reminders for my medicines?",
+                answer = "Yes, Mediqor will automatically send notifications for each dose based on your uploaded prescription."
+            )
 
-        // Finding Healthcare Facilities FAQs
-        FAQCategoryHeader(title = "Finding Healthcare Facilities")
+            // Finding Healthcare Facilities FAQs
+            FAQCategoryHeader(title = "Finding Healthcare Facilities")
 
-        FAQItem(
-            question = "How do I find nearby hospitals, clinics, or pharmacies?",
-            answer = "Use the \"Nearby\" feature to locate healthcare facilities around your current location. You can filter by type (hospital, pharmacy, clinic)."
-        )
+            FAQItem(
+                question = "How do I find nearby hospitals, clinics, or pharmacies?",
+                answer = "Use the \"Nearby\" feature to locate healthcare facilities around your current location. You can filter by type (hospital, pharmacy, clinic)."
+            )
 
-        FAQItem(
-            question = "Can I get directions to a facility?",
-            answer = "Yes, tapping on a facility will provide a map and directions."
-        )
+            FAQItem(
+                question = "Can I get directions to a facility?",
+                answer = "Yes, tapping on a facility will provide a map and directions."
+            )
 
-        // Buying Medicines & Order Tracking FAQs
-        FAQCategoryHeader(title = "Buying Medicines & Order Tracking")
+            // Buying Medicines & Order Tracking FAQs
+            FAQCategoryHeader(title = "Buying Medicines & Order Tracking")
 
-        FAQItem(
-            question = "How do I order medicines?",
-            answer = "Browse available medicines in the e-pharmacy section, add to cart, and complete checkout using supported payment methods."
-        )
+            FAQItem(
+                question = "How do I order medicines?",
+                answer = "Browse available medicines in the e-pharmacy section, add to cart, and complete checkout using supported payment methods."
+            )
 
-        FAQItem(
-            question = "Can I track my orders?",
-            answer = "Yes, go to \"My Orders\" to see the status of your purchase in real-time."
-        )
+            FAQItem(
+                question = "Can I track my orders?",
+                answer = "Yes, go to \"My Orders\" to see the status of your purchase in real-time."
+            )
 
-        FAQItem(
-            question = "What payment methods are supported?",
-            answer = "Mediqor supports all major online payments including cards, mobile wallets, and UPI (if available in your region)."
-        )
+            FAQItem(
+                question = "What payment methods are supported?",
+                answer = "Mediqor supports all major online payments including cards, mobile wallets, and UPI (if available in your region)."
+            )
 
-        // Donor Services FAQs
-        FAQCategoryHeader(title = "Donor Services")
+            // Donor Services FAQs
+            FAQCategoryHeader(title = "Donor Services")
 
-        FAQItem(
-            question = "How can I register as a blood or organ donor?",
-            answer = "Go to the \"Donor List\" section and submit your details. You will be added to the registry securely."
-        )
+            FAQItem(
+                question = "How can I register as a blood or organ donor?",
+                answer = "Go to the \"Donor List\" section and submit your details. You will be added to the registry securely."
+            )
 
-        FAQItem(
-            question = "Can others see my donor information?",
-            answer = "Only verified healthcare authorities can access your donor info when required. Your privacy is always protected."
-        )
+            FAQItem(
+                question = "Can others see my donor information?",
+                answer = "Only verified healthcare authorities can access your donor info when required. Your privacy is always protected."
+            )
 
-        // Technical & Support FAQs
-        FAQCategoryHeader(title = "Technical & Support")
+            // Technical & Support FAQs
+            FAQCategoryHeader(title = "Technical & Support")
 
-        FAQItem(
-            question = "The app is not working correctly. What should I do?",
-            answer = "Try updating the app to the latest version or restarting your device. If the problem persists, contact support via the app."
-        )
+            FAQItem(
+                question = "The app is not working correctly. What should I do?",
+                answer = "Try updating the app to the latest version or restarting your device. If the problem persists, contact support via the app."
+            )
 
-        FAQItem(
-            question = "How can I contact Mediqor support?",
-            answer = "Use the \"Help & Support\" section in the app to send a message or chat with our support team."
-        )
+            FAQItem(
+                question = "How can I contact Mediqor support?",
+                answer = "Use the \"Help & Support\" section in the app to send a message or chat with our support team."
+            )
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 
