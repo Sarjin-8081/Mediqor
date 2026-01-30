@@ -1,9 +1,10 @@
-package com.example.mediqorog.ui.theme
+package com.example.mediqorog.view
 
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -466,7 +467,7 @@ private fun PackageCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 color = Color(0xFFE3F2FD),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0B8FAC))
+                border = BorderStroke(1.dp, Color(0xFF0B8FAC))
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp)
