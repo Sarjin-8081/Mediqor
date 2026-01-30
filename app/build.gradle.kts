@@ -30,9 +30,15 @@ android {
         // Inject API keys
         val groqApiKey = localProperties.getProperty("GROQ_API_KEY", "")
         val spoonacularApiKey = localProperties.getProperty("SPOONACULAR_API_KEY", "")
+        val cloudinaryCloudName = localProperties.getProperty("CLOUDINARY_CLOUD_NAME", "")
+        val cloudinaryApiKey = localProperties.getProperty("CLOUDINARY_API_KEY", "")
+        val cloudinaryApiSecret = localProperties.getProperty("CLOUDINARY_API_SECRET", "")
 
         buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
         buildConfigField("String", "SPOONACULAR_API_KEY", "\"$spoonacularApiKey\"")
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
+        buildConfigField("String", "CLOUDINARY_API_KEY", "\"$cloudinaryApiKey\"")
+        buildConfigField("String", "CLOUDINARY_API_SECRET", "\"$cloudinaryApiSecret\"")
     }
 
     buildTypes {

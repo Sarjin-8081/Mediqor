@@ -213,6 +213,15 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.MediqorOG"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- ADD THIS: ProcessToPayActivity -->
+        <activity
+            android:name=".view.ProcessToPayActivity"
+            android:exported="false"
+            android:label="Payment"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.MediqorOG" />
+
     </application>
 
 </manifest>
