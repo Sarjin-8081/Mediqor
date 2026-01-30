@@ -80,6 +80,8 @@ dependencies {
 
     // Media
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.foundation)
 
     // Testing
     testImplementation(libs.junit)
